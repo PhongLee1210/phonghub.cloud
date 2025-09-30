@@ -32,7 +32,7 @@ observeSectionChange();
 
         <div class="flex flex-col items-center gap-2">
           <IntroductionText />
-          <FlipWords />
+          <FlipWords :words="words" />
         </div>
 
         <SocialLinks />
