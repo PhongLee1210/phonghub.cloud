@@ -137,7 +137,7 @@ export const skillCategories: SkillCategory[] = [
       {
         name: "LangChain",
         description: "LLM Framework",
-        icon: "simple-icons:chainlink",
+        icon: "simple-icons:langchain",
       },
       {
         name: "Qdrant",
@@ -162,7 +162,7 @@ export const skillCategories: SkillCategory[] = [
       {
         name: "Claude",
         description: "Anthropic Language Model",
-        icon: "simple-icons:anthropic",
+        icon: "simple-icons:claude",
       },
       {
         name: "Apache Pulsar",
@@ -274,7 +274,7 @@ export const skillCategories: SkillCategory[] = [
       {
         name: "REST API",
         description: "API Architecture",
-        icon: "lucide:api",
+        icon: "mdi:api",
       },
       {
         name: "PostgreSQL",
@@ -421,7 +421,13 @@ export const projectsList: Project[] = [
     name: "OASIS",
     description:
       "Developed a comprehensive web application for the efficient management of vessel equipment maintenance. The application provides sailors with real-time insights into maintenance schedules and timelines, facilitating proactive resource management.",
-    tech: ["Vue.js", "TypeScript", "Vite", "TailwindCSS", "Component Architecture"],
+    tech: [
+      "Vue.js",
+      "TypeScript",
+      "Vite",
+      "TailwindCSS",
+      "Component Architecture",
+    ],
     features: [
       "Real-time Maintenance Tracking",
       "Component-driven Architecture",
@@ -434,7 +440,13 @@ export const projectsList: Project[] = [
     name: "My Garment",
     description:
       "Developed a sophisticated B2B web application specifically for the textile industry. The platform serves as a central resource for users, providing specialized dictionaries, documents, and educational courses for textile professionals.",
-    tech: ["Vue.js", "TypeScript", "Vite", "TailwindCSS", "Component Architecture"],
+    tech: [
+      "Vue.js",
+      "TypeScript",
+      "Vite",
+      "TailwindCSS",
+      "Component Architecture",
+    ],
     features: [
       "Industry-specific Resource Management",
       "Educational Course Platform",
@@ -460,7 +472,13 @@ export const projectsList: Project[] = [
     name: "JetCare",
     description:
       "Developed a comprehensive insurance platform for the automobile industry with full-stack capabilities. The project encompassed the creation of both a customer-facing Sales application and a segregated Admin management web application.",
-    tech: ["Vue.js", "TypeScript", "Vite", "TailwindCSS", "Component Architecture"],
+    tech: [
+      "Vue.js",
+      "TypeScript",
+      "Vite",
+      "TailwindCSS",
+      "Component Architecture",
+    ],
     features: [
       "Dual Application Architecture",
       "Customer Sales Portal",
@@ -473,7 +491,13 @@ export const projectsList: Project[] = [
     name: "SVTech Cloudcam",
     description:
       "Designed and implemented a sophisticated surveillance system capable of monitoring and capturing real-time video feeds. Implemented AI video analytics and provided an intuitive interface for comprehensive surveillance management.",
-    tech: ["Vue.js", "TypeScript", "Vite", "TailwindCSS", "Component Architecture"],
+    tech: [
+      "Vue.js",
+      "TypeScript",
+      "Vite",
+      "TailwindCSS",
+      "Component Architecture",
+    ],
     features: [
       "Real-time Video Monitoring",
       "AI Video Analytics",

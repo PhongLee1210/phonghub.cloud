@@ -22,7 +22,7 @@ observeSectionChange();
       <div class="flex flex-col gap-12">
         <h1 fetchpriority="high">
           <TextGenerateEffect
-            words="Hello"
+            words="Hello 👋"
             class="text-foreground text-9xl font-bold"
             :duration="0.3"
             :delay="0"
@@ -32,7 +32,7 @@ observeSectionChange();
 
         <div class="flex flex-col items-center gap-2">
           <IntroductionText />
-          <FlipWords :words />
+          <FlipWords />
         </div>
 
         <SocialLinks />

@@ -4,10 +4,10 @@
     :class="cn('relative z-0 h-[200vh]', $props.class)"
   >
     <div
-      class="sticky top-0 mx-auto flex h-1/2 max-w-4xl items-center bg-transparent px-4 py-20"
+      class="sticky top-0 mx-auto flex h-screen items-center bg-transparent px-4 py-20"
     >
       <p
-        class="flex flex-wrap p-5 text-2xl font-bold text-black/20 xl:text-5xl lg:p-10 lg:text-4xl md:p-8 md:text-3xl dark:text-white/20"
+        class="flex flex-wrap p-5 text-2xl font-bold text-black/20 xl:text-4xl lg:p-10 lg:text-3xl md:p-8 md:text-2xl dark:text-white/20"
       >
         <ScrollWord
           v-for="(word, i) in words"
