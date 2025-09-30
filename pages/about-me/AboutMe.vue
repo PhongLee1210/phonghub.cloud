@@ -11,7 +11,7 @@ const sectionRef: Ref<HTMLElement | null> = ref(null);
 const { age } = await $fetch<LifetimeStats>("/api/lifetime-stats");
 
 const text = computed(() => {
-  return `I'm a software engineer, constantly learning and passionate about building my future with zeros and ones. I'm ${age} years old, born and raised in Turkey.`;
+  return `I'm a software engineer, constantly learning and passionate about building innovative solutions with modern web technologies. I'm ${age} years old, born and raised in Vietnam. I specialize in Vue.js, Node.js, and cloud technologies, with a focus on microservices architecture and AI-first workflows.`;
 });
 
 const { observeSectionChange } = useObserver("About Me", sectionRef);
@@ -22,7 +22,7 @@ observeSectionChange();
 <template>
   <section id="about-me" ref="sectionRef">
     <div class="bg-gradient-to-b from-slate-950 to-violet-950 flex">
-      <TextScrollReveal :text />
+      <TextScrollReveal :text="text" />
     </div>
   </section>
 </template>

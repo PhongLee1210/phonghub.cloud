@@ -1,7 +1,7 @@
 <script lang="ts" setup>
 import { useConfetti } from "@/composables/confetti";
 
-type sections = "welcome" | "about-me" | "career" | "current-vibes";
+type sections = "welcome" | "about-me" | "career";
 
 interface NavigationItem {
   icon: Component;
@@ -33,13 +33,6 @@ const navigationItems = computed<NavigationItem[]>(() => [
     ),
     label: "Career",
     action: () => scrollToSection("career"),
-  },
-  {
-    icon: defineAsyncComponent(() =>
-      import("lucide-vue-next").then((m) => m.FerrisWheelIcon)
-    ),
-    label: "Current Vibes",
-    action: () => scrollToSection("current-vibes"),
   },
   {
     icon: defineAsyncComponent(() =>

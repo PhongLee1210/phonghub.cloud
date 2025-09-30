@@ -10,7 +10,7 @@ const navigateTo = (url: string) => {
   <Button
     variant="link"
     class="text-xs text-muted-foreground hover:text-foreground transition-colors"
-    @click="() => navigateTo(`${socialLinks.github}/erbilnas-com/releases`)"
+    @click="() => navigateTo(`${socialLinks.github}/phonghub.cloud/releases`)"
   >
     Version {{ version }}
   </Button>

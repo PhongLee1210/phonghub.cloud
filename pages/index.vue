@@ -3,22 +3,21 @@ import { defineAsyncComponent } from "vue";
 
 const AboutMe = defineAsyncComponent(() => import("./about-me"));
 const Career = defineAsyncComponent(() => import("./career"));
-const CurrentVibes = defineAsyncComponent(() => import("./current-vibes"));
 const FooterComponent = defineAsyncComponent(() => import("./footer"));
 const Welcome = defineAsyncComponent(() => import("./welcome"));
 
 useHead({
-  title: "Erbil Nas",
+  title: "Phong Lee - Software Engineer",
   meta: [
     {
       name: "description",
       content:
-        "Welcome to my personal website. I am a Software Engineer passionate about creating innovative solutions and sharing knowledge.",
+        "Welcome to my personal portfolio. I am Phong Lee, a Software Engineer passionate about building scalable web applications, cloud-native solutions, and enterprise software architectures focused on performance and user experience.",
     },
     {
       name: "keywords",
       content:
-        "Erbil Nas, Software Engineer, Web Development, Full Stack Developer, Portfolio, Video Games, Technology, Writing, Frontend Developer, Digital Showcase, Personal Website",
+        "Phong Lee, Software Engineer, Full Stack Developer, Vue.js, Node.js, AWS, Microservices, TypeScript, Web Development, Portfolio",
     },
   ],
 });
@@ -28,6 +27,5 @@ useHead({
   <Welcome />
   <AboutMe />
   <Career />
-  <CurrentVibes />
   <FooterComponent />
 </template>

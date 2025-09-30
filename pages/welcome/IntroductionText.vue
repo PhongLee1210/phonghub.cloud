@@ -5,7 +5,7 @@
       text-end-color="hsl(var(--accent))"
     >
       It's me,
-      <span class="text-primary font-semibold"> Erbil. </span>
+      <span class="text-primary font-semibold"> Phong Lee. </span>
     </TextHighlight>
   </span>
 </template>

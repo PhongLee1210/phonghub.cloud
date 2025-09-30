@@ -1,9 +1,5 @@
 <script setup lang="ts">
-import Copyright from "./Copyright.vue";
-import Providers from "./Providers.vue";
-import UsedTechnologies from "./UsedTechnologies.vue";
-
-import Version from "./Version.vue";
+// Components are auto-imported in Nuxt 3
 </script>
 
 <template>
@@ -16,10 +12,6 @@ import Version from "./Version.vue";
       <div class="text-center space-y-2">
         <div class="flex flex-row items-center gap-2">
           <Version />
-
-          <Separator orientation="vertical" class="h-4" />
-
-          <Providers />
         </div>
 
         <Copyright />

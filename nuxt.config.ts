@@ -1,38 +1,16 @@
 const appConfig = {
   socialLinks: {
     linkedin: process.env.LINKEDIN_PROFILE_URL,
-    spotify: process.env.SPOTIFY_PROFILE_URL,
     github: process.env.GITHUB_PROFILE_URL,
-    howlongtobeat: process.env.HLTB_PROFILE_URL,
-    twitter: process.env.TWITTER_PROFILE_URL,
     instagram: process.env.INSTAGRAM_PROFILE_URL,
-    goodreads: process.env.GOODREADS_PROFILE_URL,
-    steam: process.env.STEAM_PROFILE_URL,
-    twitch: process.env.TWITCH_PROFILE_URL,
     youtube: process.env.YOUTUBE_PROFILE_URL,
-    medium: process.env.MEDIUM_PROFILE_URL,
   },
-  maps: {
-    placesBeen: process.env.PLACES_BEEN_URL,
-  },
-  flippingWords: process.env.FLIPPING_WORDS,
 
+  flippingWords: process.env.FLIPPING_WORDS,
   version: process.env.npm_package_version || "Unknown",
 };
 
 const runtimeConfig = {
-  howlongtobeat: {
-    api: process.env.HOWLONGTOBEAT_API_URL,
-  },
-  rss2json: {
-    api: process.env.RSS2JSON_API_URL,
-  },
-  spotify: {
-    token_api: process.env.SPOTIFY_TOKEN_API_URL,
-    player_api: process.env.SPOTIFY_PLAYER_API_URL,
-    refresh_token: process.env.SPOTIFY_REFRESH_TOKEN,
-    client_token: process.env.SPOTIFY_CLIENT_TOKEN,
-  },
   lifetime_stats: {
     birthday: process.env.MY_BIRTHDAY_DATE,
     first_work_experience: process.env.FIRST_WORK_EXPERIENCE_DATE,
@@ -65,23 +43,24 @@ export default defineNuxtConfig({
           name: "description",
           content:
             process.env.NUXT_APP_DESCRIPTION ||
-            "The digital showcase about me, a passionate software engineer with a love for video games, technology, and insightful writing.",
+            "Portfolio of Phong Lee, a passionate software engineer specializing in Vue.js, Node.js, and cloud technologies with focus on microservices and AI-first workflows.",
         },
         {
           name: "keywords",
           content:
-            "Erbil Nas, Software Engineer, Web Development, Full Stack Developer, Portfolio, Video Games, Technology, Writing, Frontend Developer, Digital Showcase, Personal Website",
+            "Phong Lee, Software Engineer, Full Stack Developer, Vue.js, Node.js, AWS, Microservices, TypeScript, Web Development, Portfolio, AI Workflows",
         },
-        { name: "author", content: "Erbil Nas" },
+        { name: "author", content: "Phong Lee" },
         {
           property: "og:title",
-          content: process.env.NUXT_APP_TITLE || "Erbil Nas",
+          content:
+            process.env.NUXT_APP_TITLE || "Phong Lee - Software Engineer",
         },
         {
           property: "og:description",
           content:
             process.env.NUXT_APP_DESCRIPTION ||
-            "The digital showcase about me, a passionate software engineer with a love for video games, technology, and insightful writing.",
+            "Portfolio of Phong Lee, a passionate software engineer specializing in Vue.js, Node.js, and cloud technologies with focus on microservices and AI-first workflows.",
         },
         { property: "og:type", content: "website" },
         { property: "og:url", content: process.env.NUXT_APP_URL },

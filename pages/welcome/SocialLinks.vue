@@ -7,46 +7,16 @@ interface SocialLink {
   label: string;
 }
 
-const socialLinks: SocialLink[] = [
-  {
-    icon: "ph:github-logo",
-    href: appConfig.socialLinks.github,
-    label: "GitHub ",
-  },
-  {
-    icon: "ph:goodreads-logo",
-    href: appConfig.socialLinks.goodreads,
-    label: "Goodreads ",
-  },
-  {
-    icon: "ph:instagram-logo",
-    href: appConfig.socialLinks.instagram,
-    label: "Instagram ",
-  },
+const allSocialLinks: SocialLink[] = [
   {
     icon: "ph:linkedin-logo",
     href: appConfig.socialLinks.linkedin,
-    label: "LinkedIn ",
+    label: "LinkedIn",
   },
   {
-    icon: "ph:medium-logo",
-    href: appConfig.socialLinks.medium,
-    label: "Medium ",
-  },
-  {
-    icon: "ph:spotify-logo",
-    href: appConfig.socialLinks.spotify,
-    label: "Spotify",
-  },
-  {
-    icon: "ph:steam-logo",
-    href: appConfig.socialLinks.steam,
-    label: "Steam",
-  },
-  {
-    icon: "ph:twitch-logo",
-    href: appConfig.socialLinks.twitch,
-    label: "Twitch",
+    icon: "ph:github-logo",
+    href: appConfig.socialLinks.github,
+    label: "GitHub",
   },
   {
     icon: "ph:twitter-logo",
@@ -54,17 +24,32 @@ const socialLinks: SocialLink[] = [
     label: "Twitter",
   },
   {
+    icon: "ph:medium-logo",
+    href: appConfig.socialLinks.medium,
+    label: "Medium",
+  },
+  {
+    icon: "ph:instagram-logo",
+    href: appConfig.socialLinks.instagram,
+    label: "Instagram",
+  },
+  {
     icon: "ph:youtube-logo",
     href: appConfig.socialLinks.youtube,
     label: "YouTube",
   },
 ];
+
+// Filter out social links without URLs
+const socialLinks = computed(() =>
+  allSocialLinks.filter((link) => link.href && link.href.trim() !== "")
+);
 </script>
 
 <template>
   <div class="mx-auto">
     <TooltipProvider>
-      <div class="grid grid-cols-5 md:grid-cols-10 gap-4">
+      <div class="flex gap-6 justify-center flex-wrap">
         <template v-for="{ icon, href, label } in socialLinks" :key="href">
           <Tooltip>
             <TooltipTrigger asChild>
@@ -73,7 +58,7 @@ const socialLinks: SocialLink[] = [
                 target="_blank"
                 class="flex items-center justify-center text-muted-foreground hover:text-foreground transition-colors"
               >
-                <Icon :name="icon" :size="24" />
+                <Icon :name="icon" :size="28" />
               </a>
             </TooltipTrigger>
 
