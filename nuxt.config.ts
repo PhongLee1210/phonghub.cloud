@@ -6,7 +6,8 @@ const appConfig = {
     youtube: process.env.YOUTUBE_PROFILE_URL,
   },
 
-  flippingWords: process.env.FLIPPING_WORDS,
+  flippingWords:
+    "Software Engineer,Frontend Developer,Backend Developer,AI Engineer,Full-Stack Developer",
   version: process.env.npm_package_version || "Unknown",
 };
 
