@@ -4,11 +4,7 @@ The digital showcase about me, a passionate software engineer with a love for vi
 
 ### Preview Latest Features
 
-- [Visit my playground](https://preview.erbilnas.com/)
-
 ### Did You Miss Old Versions?
-
-- [Version 5](https://v5.erbilnas.com/)
 
 ### Technology Stack
 

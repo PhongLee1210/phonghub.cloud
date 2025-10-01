@@ -8,7 +8,7 @@ export const useObserver = (section: string, ref: Ref<HTMLElement | null>) => {
     entries.forEach((entry) => {
       if (entry.isIntersecting) {
         useHead({
-          titleTemplate: `${section} | Erbil Nas`,
+          titleTemplate: `${section} | Phong Lee`,
         });
       }
     });
