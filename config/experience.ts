@@ -90,7 +90,7 @@ export const experiences: ExperienceInterface[] = [
       "https://www.topcv.vn/cong-ty/ltv-software-company-limited/168588.html",
     logo: "/experience/ltv-logo.webp",
     images: [
-      "/experience/ltv/ltv-workspace.jpg",
+      "/experience/ltv/ltv-team.jpg",
       "/experience/ltv/ltv-achievement.jpg",
       "/experience/ltv/ltv-meeting.JPG",
     ],
