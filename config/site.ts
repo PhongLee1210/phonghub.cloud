@@ -8,7 +8,9 @@ export const siteConfig = {
   links: {
     twitter: "https://x.com/phonglee802q",
     github: "https://github.com/PhongLee1210",
-    resume: "/resume.pdf",
+    resume:
+      process.env.NEXT_PUBLIC_RESUME_LINK ||
+      "https://rxresu.me/phonglee1210/5-yrs-full-stack-engineer",
   },
   ogImage: "/me.JPG",
   iconIco: "/favicon.ico",

@@ -98,10 +98,10 @@ export const metadata = {
 export default function RootLayout({ children }: RootLayoutProps) {
   const GA_ID = process.env.NEXT_PUBLIC_GOOGLE_MEASUREMENT_ID;
 
-  // Only require GA_ID in production
-  //   if (process.env.NODE_ENV === "production" && !GA_ID) {
-  //     throw new Error("Missing Google Analytics ID in production");
-  //   }
+  //   Only require GA_ID in production
+  if (process.env.NODE_ENV === "production" && !GA_ID) {
+    throw new Error("Missing Google Analytics ID in production");
+  }
 
   return (
     <html lang="en" suppressHydrationWarning>
@@ -117,15 +117,7 @@ export default function RootLayout({ children }: RootLayoutProps) {
           attribute="class"
           defaultTheme="system"
           enableSystem
-          themes={[
-            "light",
-            "dark",
-            "retro",
-            "cyberpunk",
-            "paper",
-            "aurora",
-            "synthwave",
-          ]}
+          themes={["light", "dark"]}
         >
           {children}
           <Analytics />

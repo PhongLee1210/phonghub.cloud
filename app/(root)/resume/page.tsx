@@ -49,7 +49,7 @@ export default function ResumePage() {
               href="/resume/Phong-Lee-Resume-main.pdf"
               target="_blank"
               className={cn(buttonVariants({ size: "lg" }))}
-              aria-label="Download Le Thanh Phong&apos;s resume PDF"
+              aria-label="Download Le Thanh Phong's resume PDF"
             >
               <Icons.download className="mr-2 h-4 w-4" />
               Download PDF
@@ -63,7 +63,7 @@ export default function ResumePage() {
                   size: "lg",
                 })
               )}
-              aria-label="View Le Thanh Phong&apos;s resume in browser"
+              aria-label="View Le Thanh Phong's resume in browser"
             >
               <Icons.eye className="mr-2 h-4 w-4" />
               View in Browser
@@ -85,18 +85,18 @@ export default function ResumePage() {
 
           <div className="flex flex-col gap-3 sm:flex-row sm:justify-center">
             <Link
-              href="https://rxresu.me/phonglee1210/5-yrs-full-stack-engineer"
+              href={siteConfig.links.resume}
               target="_blank"
               rel="noopener noreferrer"
               className={cn(buttonVariants({ size: "lg" }))}
-              aria-label="View Le Thanh Phong&apos;s online resume"
+              aria-label="View Le Thanh Phong's online resume"
             >
               <Icons.externalLink className="mr-2 h-4 w-4" />
               View Online Resume
             </Link>
 
             <Link
-              href="https://rxresu.me/phonglee1210/5-yrs-full-stack-engineer"
+              href={siteConfig.links.resume}
               target="_blank"
               rel="noopener noreferrer"
               className={cn(
