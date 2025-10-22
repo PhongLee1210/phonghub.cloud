@@ -8,7 +8,7 @@ import Link from "next/link";
 
 export const metadata: Metadata = {
   title: `${pagesConfig.resume.metadata.title} | ${siteConfig.authorName} - Software Engineer`,
-  description: `${pagesConfig.resume.metadata.description} - Download Le Thanh Phong's resume in PDF format or view online.`,
+  description: `${pagesConfig.resume.metadata.description} - Download Le Thanh Phong&apos;s resume in PDF format or view online.`,
   alternates: {
     canonical: `${siteConfig.url}/resume`,
   },
@@ -49,7 +49,7 @@ export default function ResumePage() {
               href="/resume/Phong-Lee-Resume-main.pdf"
               target="_blank"
               className={cn(buttonVariants({ size: "lg" }))}
-              aria-label="Download Le Thanh Phong's resume PDF"
+              aria-label="Download Le Thanh Phong&apos;s resume PDF"
             >
               <Icons.download className="mr-2 h-4 w-4" />
               Download PDF
@@ -63,7 +63,7 @@ export default function ResumePage() {
                   size: "lg",
                 })
               )}
-              aria-label="View Le Thanh Phong's resume in browser"
+              aria-label="View Le Thanh Phong&apos;s resume in browser"
             >
               <Icons.eye className="mr-2 h-4 w-4" />
               View in Browser
@@ -89,7 +89,7 @@ export default function ResumePage() {
               target="_blank"
               rel="noopener noreferrer"
               className={cn(buttonVariants({ size: "lg" }))}
-              aria-label="View Le Thanh Phong's online resume"
+              aria-label="View Le Thanh Phong&apos;s online resume"
             >
               <Icons.externalLink className="mr-2 h-4 w-4" />
               View Online Resume
@@ -120,7 +120,7 @@ export default function ResumePage() {
           </div>
           <h3 className="mb-2 text-lg font-semibold">Need Help?</h3>
           <p className="text-sm text-muted-foreground mb-4">
-            If you're having trouble accessing the resume, here are some
+            If you&apos;re having trouble accessing the resume, here are some
             alternatives:
           </p>
           <div className="flex flex-col gap-2 text-sm text-muted-foreground">
