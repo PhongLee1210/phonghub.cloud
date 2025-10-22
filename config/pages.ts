@@ -63,4 +63,14 @@ export const pagesConfig: PagesConfig = {
         "Le Thanh Phong's professional journey and experience timeline.",
     },
   },
+  list100: {
+    title: "List 100",
+    description:
+      "Things I want to do before I die. Please let me know if you have any recommendation.",
+    metadata: {
+      title: "List 100 - Bucket List",
+      description:
+        "Le Thanh Phong's bucket list - 100 things I want to do before I die.",
+    },
+  },
 };

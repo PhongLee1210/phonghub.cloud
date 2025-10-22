@@ -23,6 +23,27 @@ const norican = Norican({
 export function MobileNav({ items, children }: MobileNavProps) {
   useLockBody();
   const { theme } = useTheme();
+  const [list100Color, setList100Color] = React.useState<string>(
+    "hsl(var(--primary))"
+  );
+
+  React.useEffect(() => {
+    const colors = [
+      "hsl(var(--primary))", // Primary color
+      "hsl(var(--accent))", // Accent color
+      "hsl(var(--destructive))", // Destructive color
+      "hsl(var(--muted-foreground))", // Muted foreground
+      "#4ecdc4", // Teal (keeping one custom for variety)
+      "#feca57", // Yellow (keeping one custom for variety)
+    ];
+
+    const interval = setInterval(() => {
+      const randomColor = colors[Math.floor(Math.random() * colors.length)];
+      setList100Color(randomColor);
+    }, 3000); // Change color every 3 seconds
+
+    return () => clearInterval(interval);
+  }, []);
 
   return (
     <div
@@ -51,11 +72,30 @@ export function MobileNav({ items, children }: MobileNavProps) {
               key={index}
               href={item.disabled ? "#" : item.href}
               className={cn(
-                "flex w-full items-center rounded-md p-2 text-sm font-medium hover:underline",
-                item.disabled && "cursor-not-allowed opacity-60"
+                "flex w-full items-center rounded-md p-2 text-sm font-medium hover:underline relative",
+                item.disabled && "cursor-not-allowed opacity-60",
+                item.href === "/list100" && "animate-pulse"
               )}
+              style={
+                item.href === "/list100"
+                  ? {
+                      background: `linear-gradient(45deg, hsl(var(--primary)), hsl(var(--accent)), hsl(var(--destructive)), hsl(var(--primary)))`,
+                      backgroundSize: "400% 400%",
+                      animation: "gradientShift 3s ease infinite",
+                      WebkitBackgroundClip: "text",
+                      WebkitTextFillColor: "transparent",
+                      backgroundClip: "text",
+                    }
+                  : undefined
+              }
             >
               {item.title}
+              {item.href === "/list100" && (
+                <div
+                  className="absolute -top-1 -right-1 w-2 h-2 rounded-full animate-ping"
+                  style={{ backgroundColor: list100Color }}
+                />
+              )}
             </Link>
           ))}
         </nav>

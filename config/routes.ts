@@ -17,6 +17,10 @@ export const routesConfig: any = {
       href: "/resume",
     },
     {
+      title: "List 100",
+      href: "/list100",
+    },
+    {
       title: "Contact",
       href: "/contact",
     },

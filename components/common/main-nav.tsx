@@ -42,12 +42,34 @@ const navItemVariants: Variants = {
 export function MainNav({ items, children }: MainNavProps) {
   const segment = useSelectedLayoutSegment();
   const [showMobileMenu, setShowMobileMenu] = React.useState<boolean>(false);
+  const [list100Color, setList100Color] = React.useState<string>(
+    "hsl(var(--primary))"
+  );
   const pathname = usePathname();
   const { theme } = useTheme();
 
   React.useEffect(() => {
     setShowMobileMenu(false);
   }, [pathname]);
+
+  // Generate random colors for List 100 using design system colors
+  React.useEffect(() => {
+    const colors = [
+      "hsl(var(--primary))", // Primary color
+      "hsl(var(--accent))", // Accent color
+      "hsl(var(--destructive))", // Destructive color
+      "hsl(var(--muted-foreground))", // Muted foreground
+      "#4ecdc4", // Teal (keeping one custom for variety)
+      "#feca57", // Yellow (keeping one custom for variety)
+    ];
+
+    const interval = setInterval(() => {
+      const randomColor = colors[Math.floor(Math.random() * colors.length)];
+      setList100Color(randomColor);
+    }, 3000); // Change color every 3 seconds
+
+    return () => clearInterval(interval);
+  }, []);
 
   return (
     <div className="flex gap-6 md:gap-10">
@@ -86,14 +108,47 @@ export function MainNav({ items, children }: MainNavProps) {
               <Link
                 href={item.disabled ? "#" : item.href}
                 className={cn(
-                  "flex items-center text-lg font-medium transition-colors hover:text-foreground/80 sm:text-sm",
+                  "flex items-center text-xl font-medium transition-colors hover:text-foreground/80 sm:text-sm relative",
                   item.href.startsWith(`/${segment}`)
                     ? "text-foreground"
                     : "text-foreground/60",
-                  item.disabled && "cursor-not-allowed opacity-80"
+                  item.disabled && "cursor-not-allowed opacity-80",
+                  item.href === "/list100" && [
+                    "animate-pulse",
+                    "bg-gradient-to-r from-primary via-accent to-destructive bg-clip-text text-transparent",
+                    "hover:from-accent hover:via-destructive hover:to-primary",
+                  ]
                 )}
+                style={
+                  item.href === "/list100" &&
+                  item.href.startsWith(`/${segment}`)
+                    ? {
+                        backgroundImage: `linear-gradient(45deg, hsl(var(--primary)), hsl(var(--accent)), hsl(var(--destructive)), hsl(var(--primary)))`,
+                        backgroundSize: "400% 400%",
+                        animation: "gradientShift 3s ease infinite",
+                        WebkitBackgroundClip: "text",
+                        WebkitTextFillColor: "transparent",
+                        backgroundClip: "text",
+                      }
+                    : item.href === "/list100"
+                      ? {
+                          backgroundImage: `linear-gradient(45deg, hsl(var(--primary)), hsl(var(--accent)), hsl(var(--destructive)), hsl(var(--primary)))`,
+                          backgroundSize: "400% 400%",
+                          animation: "gradientShift 3s ease infinite",
+                          WebkitBackgroundClip: "text",
+                          WebkitTextFillColor: "transparent",
+                          backgroundClip: "text",
+                        }
+                      : undefined
+                }
               >
                 {item.title}
+                {item.href === "/list100" && (
+                  <div
+                    className="absolute -top-1 -right-1 w-2 h-2 rounded-full animate-ping"
+                    style={{ backgroundColor: list100Color }}
+                  />
+                )}
               </Link>
             </motion.div>
           ))}
