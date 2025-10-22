@@ -178,8 +178,8 @@ Visit my portfolio: [https://phonghub-cloud.vercel.app](https://phonghub-cloud.v
 
 ## 📞 Contact
 
-- **Email**: [phonglee1210@gmail.com]
-- **LinkedIn**: [https://www.linkedin.com/in/lee-thanh-phong-7013051b7/]
+- **Email**: phonglee1210@gmail.com
+- **LinkedIn**: https://www.linkedin.com/in/lee-thanh-phong-7013051b7/
 - **GitHub**: [https://github.com/PhongLee1210](https://github.com/PhongLee1210)
 - **Twitter**: [https://x.com/phonglee802q](https://x.com/phonglee802q)
 
