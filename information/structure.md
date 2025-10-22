@@ -21,8 +21,6 @@ This is the folder structure of the whole application
 │ │ └── skills
 │ │ └── page.tsx
 │ ├── api
-│ │ └── contact
-│ │ └── route.ts
 │ ├── favicon.ico
 │ ├── globals.css
 │ ├── layout.tsx
@@ -54,8 +52,6 @@ This is the folder structure of the whole application
 │ ├── projects
 │ │ ├── exp-description.tsx
 │ │ └── project-card.tsx
-│ ├── forms
-│ │ └── contact-form.tsx
 │ ├── modals
 │ │ └── custom-modal.tsx
 │ ├── skills
