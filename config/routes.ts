@@ -12,7 +12,10 @@ export const routesConfig: any = {
       title: "Experience",
       href: "/experience",
     },
-
+    {
+      title: "Resume",
+      href: "/resume",
+    },
     {
       title: "Contact",
       href: "/contact",

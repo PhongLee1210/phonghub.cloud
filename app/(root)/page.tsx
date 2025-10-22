@@ -115,6 +115,15 @@ export default function IndexPage() {
             </AnimatedText>
             <AnimatedText delay={0.8}>
               <Link
+                href="/resume"
+                className={cn(buttonVariants({ size: "lg" }))}
+                aria-label="View Le Thanh Phong's resume"
+              >
+                <Icons.post className="w-4 h-4 mr-2" /> Resume
+              </Link>
+            </AnimatedText>
+            <AnimatedText delay={1.0}>
+              <Link
                 href={"/contact"}
                 rel="noreferrer"
                 className={cn(

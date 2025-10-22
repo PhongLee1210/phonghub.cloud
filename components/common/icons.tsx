@@ -8,6 +8,8 @@ import {
   ChevronLeft,
   ChevronRight,
   CreditCard,
+  Download,
+  Eye,
   File,
   FileText,
   HelpCircle,
@@ -213,4 +215,7 @@ export const Icons = {
   paper: Scroll,
   aurora: Sparkles,
   synthwave: Music,
+  fileText: FileText,
+  download: Download,
+  eye: Eye,
 };
