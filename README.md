@@ -2,7 +2,7 @@
 
 A modern, responsive portfolio website showcasing my work as a Senior Software Engineer with 5+ years of experience in building scalable web applications and AI-powered solutions.
 
-![Portfolio Preview](https://phonghub-cloud.vercel.app)
+![Portfolio Preview](https://phonghub.cloud)
 
 ## 👋 About Me
 
@@ -174,7 +174,7 @@ npm run build
 
 ## 🌐 Live Demo
 
-Visit my portfolio: [https://phonghub-cloud.vercel.app](https://phonghub-cloud.vercel.app)
+Visit my portfolio: [https://phonghub.cloud](https://phonghub.cloud)
 
 ## 📞 Contact
 

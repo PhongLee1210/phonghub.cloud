@@ -4,7 +4,7 @@ export const siteConfig = {
   username: "PhongLee1210",
   description:
     "I'm a senior software engineer with 5+ years of experience in the industry, specializing in building scalable and efficient web applications. I'm a quick learner and always looking for new challenges and opportunities to grow.",
-  url: "https://phonghub-cloud.vercel.app",
+  url: "https://phonghub.cloud",
   links: {
     twitter: "https://x.com/phonglee802q",
     github: "https://github.com/PhongLee1210",
