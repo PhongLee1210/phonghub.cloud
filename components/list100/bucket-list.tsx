@@ -245,9 +245,8 @@ export default function BucketList() {
       >
         <Card className="mb-6 border-primary/20 bg-gradient-to-br from-primary/5 to-accent/5 relative overflow-hidden">
           <motion.div
-            className="absolute inset-0 opacity-0"
+            className="absolute inset-0 opacity-0 bg-gradient-to-br from-primary to-accent pointer-events-none"
             whileHover={!reducedMotion ? { opacity: 0.1 } : {}}
-            className="bg-gradient-to-br from-primary to-accent pointer-events-none"
           />
           <CardHeader>
             <motion.div
