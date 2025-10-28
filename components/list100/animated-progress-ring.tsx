@@ -1,8 +1,7 @@
 "use client";
 
 import { motion } from "framer-motion";
-import { useMotionValueEvent, useScroll, useTransform } from "framer-motion";
-import { useRef, useState } from "react";
+import { useRef, useState, useEffect } from "react";
 
 interface AnimatedProgressRingProps {
   percentage: number;
@@ -24,16 +23,22 @@ export function AnimatedProgressRing({
   const containerRef = useRef<HTMLDivElement>(null);
   const [isInView, setIsInView] = useState(false);
 
-  const { scrollYProgress } = useScroll({
-    target: containerRef,
-    offset: ["end 80%", "end 20%"],
-  });
+  useEffect(() => {
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting) {
+          setIsInView(true);
+        }
+      },
+      { threshold: 0.3 }
+    );
 
-  useMotionValueEvent(scrollYProgress, "change", (latest) => {
-    if (latest > 0.1) {
-      setIsInView(true);
+    if (containerRef.current) {
+      observer.observe(containerRef.current);
     }
-  });
+
+    return () => observer.disconnect();
+  }, []);
 
   const radius = (size - strokeWidth) / 2;
   const circumference = 2 * Math.PI * radius;
