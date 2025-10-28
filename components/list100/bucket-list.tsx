@@ -266,7 +266,23 @@ export default function BucketList() {
           </CardHeader>
           <CardContent>
             <div className="space-y-6">
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div className="grid grid-cols-1 lg:grid-cols-4 gap-4">
+                <motion.div
+                  initial={!reducedMotion ? { opacity: 0, scale: 0.8 } : { opacity: 1, scale: 1 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  transition={{ delay: 0.3 }}
+                  className="lg:col-span-1 flex items-center justify-center p-4"
+                >
+                  <AnimatedProgressRing
+                    percentage={completedPercentage}
+                    size={140}
+                    strokeWidth={6}
+                    completed={data.completed.length}
+                    total={total}
+                    reducedMotion={reducedMotion}
+                  />
+                </motion.div>
+
                 <motion.div
                   initial={!reducedMotion ? { opacity: 0, y: 20 } : { opacity: 1, y: 0 }}
                   animate={{ opacity: 1, y: 0 }}
