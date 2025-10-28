@@ -76,9 +76,19 @@ export function AnimatedProgressRing({
           strokeDasharray={circumference}
           strokeLinecap="round"
           className="text-primary"
-          initial={motionVariants.initial}
-          animate={isInView ? motionVariants.animate : motionVariants.initial}
-          variants={motionVariants}
+          initial={reducedMotion ? { strokeDashoffset: offset, opacity: 1 } : { strokeDashoffset: circumference, opacity: 0 }}
+          animate={isInView ? { strokeDashoffset: offset, opacity: 1 } : { strokeDashoffset: circumference, opacity: 0 }}
+          transition={
+            reducedMotion
+              ? {}
+              : {
+                  strokeDashoffset: {
+                    duration: 2,
+                    delay: 0.3,
+                  },
+                  opacity: { duration: 0.5 },
+                }
+          }
         />
       </svg>
 
