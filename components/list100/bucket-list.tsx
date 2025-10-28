@@ -40,6 +40,7 @@ export default function BucketList() {
   const [showConfetti, setShowConfetti] = useState(false);
   const [achievements, setAchievements] = useState<Achievement[]>([]);
   const [reducedMotion, setReducedMotion] = useState(false);
+  const [prevUnlockedCount, setPrevUnlockedCount] = useState(0);
 
   useEffect(() => {
     const mediaQuery = window.matchMedia("(prefers-reduced-motion: reduce)");
