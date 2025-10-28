@@ -44,27 +44,6 @@ export function AnimatedProgressRing({
   const circumference = 2 * Math.PI * radius;
   const offset = circumference - (percentage / 100) * circumference;
 
-  const motionVariants = reducedMotion
-    ? {
-        initial: { strokeDashoffset: offset },
-        animate: { strokeDashoffset: offset },
-      }
-    : {
-        initial: { strokeDashoffset: circumference, opacity: 0 },
-        animate: { 
-          strokeDashoffset: offset,
-          opacity: 1,
-          transition: {
-            strokeDashoffset: {
-              duration: 2,
-              delay: 0.3,
-              ease: "easeOut",
-            },
-            opacity: { duration: 0.5 },
-          },
-        },
-      };
-
   return (
     <div
       ref={containerRef}
