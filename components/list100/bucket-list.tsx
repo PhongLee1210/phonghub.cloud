@@ -129,12 +129,14 @@ export default function BucketList() {
   }, []);
 
   useEffect(() => {
-    if (data && data.completed.length > 0 && data.completed.length % 5 === 0) {
+    const currentUnlockedCount = achievements.filter((a) => a.unlocked).length;
+    if (currentUnlockedCount > prevUnlockedCount && prevUnlockedCount > 0) {
       setShowConfetti(true);
-      const timer = setTimeout(() => setShowConfetti(false), 3000);
+      const timer = setTimeout(() => setShowConfetti(false), 4000);
       return () => clearTimeout(timer);
     }
-  }, [data?.completed.length]);
+    setPrevUnlockedCount(currentUnlockedCount);
+  }, [achievements, prevUnlockedCount]);
 
   function parseMarkdown(markdown: string): BucketListData {
     const lines = markdown.split("\n");
