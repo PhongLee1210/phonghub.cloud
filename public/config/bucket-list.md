@@ -7,7 +7,7 @@ Started: October 22, 2025
 **Scubadive** - In Nha Trang
 **Body Transformation** - Gain a 6 packs lean
 
-## 🚧 In Progress (3/100)
+## 🚧 In Progress (10/100)
 
 **Handstand** - At least more than 30s handstand
 **Learn French** - Attendance a course (Get B1)
