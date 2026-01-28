@@ -5,20 +5,25 @@ Started: October 22, 2025
 ## ✅ Completed (1/100)
 
 **Scubadive** - In Nha Trang
+**Body Transformation** - Gain a 6 packs lean
 
 ## 🚧 In Progress (3/100)
 
-**Body Transformation** - Gain a 6 packs lean
 **Handstand** - At least more than 30s handstand
-**Learn French** - Only known Bonjour
+**Learn French** - Attendance a course (Get B1)
+**Learn to Say "Hello" in 10 Languages** - This is just beginning
+**Learn JJB and Wrestle** - Get a certified professional
+**Free dive** - Get a certified free diver
+**Do Back-Flip**
+**Donate blood**
+**Tell Dad I Love Him**
+**Be awesome**
+**Be a good person**
 
 ## 📋 Pending (98/100)
 
 **Complete the a Marathon** - Run the full 26.2 miles under 5 hours
-**Do Back-Flip**
-**Learn JJB and Wrestle** - Gett a certified professional
 **Learn to ski** - Get a certified
-**Free dive** - Get a certified free diver
 **Play a Game of Paintball**
 **Jump Off a Cliff** - It better make me scare
 **Drive a Race Car**
@@ -28,7 +33,6 @@ Started: October 22, 2025
 **Learn to drive a boat**
 **Climb a volcano**
 **Ride in a hot air balloon**
-**Learn to Say "Hello" in 10 Languages** - This is just beginning
 **Teach a Class**
 **Learn sign language**
 **Give a TED Talk** - Speak at a TED conference on a topic I'm passionate about
@@ -37,7 +41,7 @@ Started: October 22, 2025
 **Learn Sumo Wrestling**
 **Perform a Magic Trick** - This is easy
 **Do stand-up** - More than 50 peoples hear me talks
-**Write a Thank you Letter to a Company** - This awesome
+**Write a Thank you Letter to a old Company** - This awesome
 **Get an interview in a big tech corporation** - Google, Facebook, X,...
 **Build a tech startup** - Founder and CEO of a tech startup
 **Google Search My Name & Have at Least 1 Page of Stuff**
@@ -49,7 +53,6 @@ Started: October 22, 2025
 **Read the Book Before the Movie**
 **Read more than 100 books** - Complete the more than 100 books
 **Write a letter to my 80-year-old self** - Seal it and read it in 50 years
-**Tell Dad I Love Him**
 **Live in another country** - Finland, Swiss,... ???
 **Go Deep Sea Fishing**
 **Fly in a Helicopter**
@@ -81,7 +84,6 @@ Started: October 22, 2025
 **Milk a Cow**
 **Make a Snowman**
 **See auroras**
-**Donate blood**
 **Eat raw japan raw fish capture by myself** - This one...
 **Watch a Documentary**
 **See the Tour de France**
@@ -110,8 +112,6 @@ Started: October 22, 2025
 **Swim with Dolphins**
 **Get Hypnotized** - Cool
 **Publish a bestselling novel** - Get on the New York Times bestseller list
-**Be awesome**
-**Be a good person**
 
 ---
 
