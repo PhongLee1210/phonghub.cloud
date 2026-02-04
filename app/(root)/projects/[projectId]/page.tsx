@@ -8,8 +8,9 @@ import AdaptiveImage from "@/components/ui/adaptive-image";
 import { buttonVariants } from "@/components/ui/button";
 import ChipContainer from "@/components/ui/chip-container";
 import CustomTooltip from "@/components/ui/custom-tooltip";
-import { Projects } from "@/config/projects";
+import { PROJECTS } from "@/config/projects";
 import { siteConfig } from "@/config/site";
+import { getApiBaseUrl } from "@/lib/api";
 import { cn, formatDateFromObj } from "@/lib/utils";
 
 interface ProjectPageProps {
@@ -18,23 +19,31 @@ interface ProjectPageProps {
   }>;
 }
 
-const githubUsername = "PhongLee1210";
+export async function generateStaticParams() {
+  const { projects } = await fetch(`${getApiBaseUrl()}/api/projects`, {
+    method: "GET",
+    headers: {
+      "Content-Type": "application/json",
+    },
+  })
+    .then((res) => res.json())
+    .catch(() => ({ projects: PROJECTS }));
 
-export default async function Project({ params }: ProjectPageProps) {
+  return projects.map((project: { id: string }) => ({
+    projectId: project.id,
+  }));
+}
+
+export default async function ProjectPage({ params }: ProjectPageProps) {
   const { projectId } = await params;
-  let project = Projects.find((val) => val.id === projectId);
-  if (!project) {
-    redirect("/projects");
-  }
+  const project = PROJECTS.find((val) => val.id === projectId);
+  if (!project) redirect("/projects");
 
   return (
-    <article className="container relative max-w-3xl py-6 lg:py-10">
+    <article className="container relative max-w-3xl mx-auto px-4 py-6 lg:py-10">
       <Link
         href="/projects"
-        className={cn(
-          buttonVariants({ variant: "ghost" }),
-          "absolute left-[-200px] top-14 hidden xl:inline-flex"
-        )}
+        className={cn(buttonVariants({ variant: "ghost", size: "sm" }), "mb-4")}
       >
         <Icons.chevronLeft className="mr-2 h-4 w-4" />
         All Projects
@@ -93,8 +102,7 @@ export default async function Project({ params }: ProjectPageProps) {
       <AdaptiveImage
         src={project.companyLogoImg}
         alt={project.companyName}
-        className="my-8"
-        priority
+        containerClassName="mx-auto my-4"
       />
 
       <div className="mb-7 ">
@@ -127,18 +135,13 @@ export default async function Project({ params }: ProjectPageProps) {
             <div>
               <p>{page.description}</p>
               {page.imgArr.map((img, ind) => (
-                <div
+                <AdaptiveImage
                   key={ind}
-                  className="relative my-4 aspect-video w-full max-w-3xl"
-                >
-                  <Image
-                    src={img}
-                    alt={img}
-                    fill
-                    className="rounded-md border bg-muted transition-colors object-cover"
-                    priority
-                  />
-                </div>
+                  src={img}
+                  alt={img}
+                  containerClassName="mx-auto my-4"
+                  priority
+                />
               ))}
             </div>
           </div>

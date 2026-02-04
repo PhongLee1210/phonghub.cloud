@@ -4,46 +4,63 @@ import PageContainer from "@/components/common/page-container";
 import ProjectCard from "@/components/projects/project-card";
 import { ResponsiveTabs } from "@/components/ui/responsive-tabs";
 import { pagesConfig } from "@/config/pages";
-import { Projects } from "@/config/projects";
+import { PROJECTS, type ProjectInterface } from "@/config/projects";
+import { getApiBaseUrl } from "@/lib/api";
 
 export const metadata: Metadata = {
   title: pagesConfig.projects.metadata.title,
   description: pagesConfig.projects.metadata.description,
 };
 
-const renderContent = (tabVal: string) => {
-  let projectArr = Projects;
-  if (tabVal === "personal") {
-    projectArr = projectArr.filter((val) => val.type === "Personal");
-  } else if (tabVal === "professional") {
-    projectArr = projectArr.filter((val) => val.type === "Professional");
-  }
+export default async function ProjectsPage() {
+  const { projects } = await fetch(`${getApiBaseUrl()}/api/projects`, {
+    method: "GET",
+    headers: {
+      "Content-Type": "application/json",
+    },
+  })
+    .then((res) => res.json())
+    .catch(() => ({ projects: PROJECTS }));
 
-  return (
-    <div className="mx-auto my-4 grid justify-center gap-4 sm:grid-cols-2 lg:grid-cols-3 static">
-      {projectArr.map((project) => (
-        <ProjectCard project={project} key={project.id} />
-      ))}
-    </div>
-  );
-};
-
-export default function ProjectsPage() {
   const tabItems = [
     {
       value: "all",
       label: "All",
-      content: renderContent("all"),
+      content: (
+        <div className="mx-auto my-4 grid justify-center gap-4 sm:grid-cols-2 lg:grid-cols-3 static">
+          {projects.map((project: ProjectInterface) => (
+            <ProjectCard project={project} key={project.id} />
+          ))}
+        </div>
+      ),
     },
     {
       value: "personal",
       label: "Personal",
-      content: renderContent("personal"),
+      content: (
+        <div className="mx-auto my-4 grid justify-center gap-4 sm:grid-cols-2 lg:grid-cols-3 static">
+          {projects
+            .filter((project: ProjectInterface) => project.type === "Personal")
+            .map((project: ProjectInterface) => (
+              <ProjectCard project={project} key={project.id} />
+            ))}
+        </div>
+      ),
     },
     {
       value: "professional",
       label: "Professional",
-      content: renderContent("professional"),
+      content: (
+        <div className="mx-auto my-4 grid justify-center gap-4 sm:grid-cols-2 lg:grid-cols-3 static">
+          {projects
+            .filter(
+              (project: ProjectInterface) => project.type === "Professional"
+            )
+            .map((project: ProjectInterface) => (
+              <ProjectCard project={project} key={project.id} />
+            ))}
+        </div>
+      ),
     },
   ];
 

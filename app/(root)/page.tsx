@@ -11,7 +11,7 @@ import ExperienceCard from "@/components/experience/experience-card";
 import ProjectCard from "@/components/projects/project-card";
 import SkillsCard from "@/components/skills/skills-card";
 import { Button, buttonVariants } from "@/components/ui/button";
-import { experiences } from "@/config/experience";
+import { EXPERIENCES } from "@/config/experience";
 import { pagesConfig } from "@/config/pages";
 import { featuredProjects } from "@/config/projects";
 import { siteConfig } from "@/config/site";
@@ -236,7 +236,7 @@ export default function IndexPage() {
           </AnimatedText>
         </div>
         <div className="mx-auto grid justify-center gap-4 md:w-full lg:grid-cols-3">
-          {experiences.slice(0, 3).map((experience, index) => (
+          {EXPERIENCES.slice(0, 3).map((experience, index) => (
             <AnimatedSection
               key={experience.id}
               delay={0.1 * (index + 1)}

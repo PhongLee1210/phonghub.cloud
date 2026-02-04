@@ -4,11 +4,27 @@ import { cn } from "@/lib/utils";
 import Image, { ImageProps } from "next/image";
 import { useEffect, useState } from "react";
 
+/** Map of maxWidth class to approximate pixel width for `sizes` (helps Next.js pick optimal resolution). */
+const MAX_WIDTH_TO_SIZES: Record<string, string> = {
+  "max-w-sm": "(max-width: 384px) 100vw, 384px",
+  "max-w-md": "(max-width: 448px) 100vw, 448px",
+  "max-w-lg": "(max-width: 512px) 100vw, 512px",
+  "max-w-xl": "(max-width: 576px) 100vw, 576px",
+  "max-w-2xl": "(max-width: 672px) 100vw, 672px",
+  "max-w-3xl": "(max-width: 768px) 100vw, 768px",
+  "max-w-4xl": "(max-width: 896px) 100vw, 896px",
+  "max-w-5xl": "(max-width: 1024px) 100vw, 1024px",
+  "max-w-6xl": "(max-width: 1152px) 100vw, 1152px",
+  "max-w-7xl": "(max-width: 1280px) 100vw, 1280px",
+};
+
 interface AdaptiveImageProps extends Omit<ImageProps, "width" | "height"> {
   className?: string;
   containerClassName?: string;
   loadingClassName?: string;
   maxWidth?: string;
+  /** Hint for Next.js Image optimization; derived from maxWidth if not set. */
+  sizes?: string;
 }
 
 export default function AdaptiveImage({
@@ -16,8 +32,11 @@ export default function AdaptiveImage({
   containerClassName,
   loadingClassName,
   maxWidth = "max-w-3xl",
+  sizes,
   ...imageProps
 }: AdaptiveImageProps) {
+  const resolvedSizes =
+    sizes ?? MAX_WIDTH_TO_SIZES[maxWidth] ?? "(max-width: 768px) 100vw, 768px";
   const [imageLoaded, setImageLoaded] = useState(false);
   const [imageDimensions, setImageDimensions] = useState({
     width: 0,
@@ -67,6 +86,7 @@ export default function AdaptiveImage({
       <Image
         {...imageProps}
         fill
+        sizes={resolvedSizes}
         className={cn(
           "transition-all duration-500 ease-in-out",
           imageLoaded ? "opacity-100 scale-100" : "opacity-0 scale-105",

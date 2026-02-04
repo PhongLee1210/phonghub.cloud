@@ -27,7 +27,7 @@ export interface ProjectInterface {
   pagesInfoArr: PagesInfoInterface[];
 }
 
-export const Projects: ProjectInterface[] = [
+export const PROJECTS: ProjectInterface[] = [
   {
     id: "hiliosai-landing-sales-agent",
     companyName: "AI Sales & Landing Page Platform",
@@ -588,4 +588,4 @@ export const Projects: ProjectInterface[] = [
   },
 ];
 
-export const featuredProjects = Projects.slice(0, 3);
+export const featuredProjects = PROJECTS.slice(0, 3);

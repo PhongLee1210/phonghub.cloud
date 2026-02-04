@@ -2,7 +2,7 @@ import { Metadata } from "next";
 
 import PageContainer from "@/components/common/page-container";
 import Timeline from "@/components/experience/timeline";
-import { experiences } from "@/config/experience";
+import { EXPERIENCES } from "@/config/experience";
 import { pagesConfig } from "@/config/pages";
 import { siteConfig } from "@/config/site";
 
@@ -27,7 +27,7 @@ export default function ExperiencePage() {
       title={pagesConfig.experience.title}
       description={pagesConfig.experience.description}
     >
-      <Timeline experiences={experiences} />
+      <Timeline experiences={EXPERIENCES} />
     </PageContainer>
   );
 }

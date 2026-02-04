@@ -11,12 +11,13 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import ChipContainer from "@/components/ui/chip-container";
 import { ResponsiveTabs } from "@/components/ui/responsive-tabs";
-import { experiences } from "@/config/experience";
+import { EXPERIENCES } from "@/config/experience";
 import { siteConfig } from "@/config/site";
+import { getApiBaseUrl } from "@/lib/api";
 
 interface ExperienceDetailPageProps {
   params: Promise<{
-    expId: string;
+    experienceId: string;
   }>;
 }
 
@@ -25,7 +26,6 @@ const getYearFromDate = (date: Date): string => {
   return new Date(date).getFullYear().toString();
 };
 
-// Helper function to get duration text
 const getDurationText = (
   startDate: Date,
   endDate: Date | "Present"
@@ -39,8 +39,8 @@ const getDurationText = (
 export async function generateMetadata({
   params,
 }: ExperienceDetailPageProps): Promise<Metadata> {
-  const { expId } = await params;
-  const experience = experiences.find((c) => c.id === expId);
+  const { experienceId } = await params;
+  const experience = EXPERIENCES.find((c) => c.id === experienceId);
 
   if (!experience) {
     return {
@@ -52,20 +52,32 @@ export async function generateMetadata({
     title: `${experience.position} at ${experience.company} | Experience`,
     description: `Detailed information about my role as ${experience.position} at ${experience.company}.`,
     alternates: {
-      canonical: `${siteConfig.url}/experience/${expId}`,
+      canonical: `${siteConfig.url}/experience/${experienceId}`,
     },
   };
+}
+export async function generateStaticParams() {
+  const { experiences } = await fetch(`${getApiBaseUrl()}/api/experiences`, {
+    method: "GET",
+    headers: {
+      "Content-Type": "application/json",
+    },
+  })
+    .then((res) => res.json())
+    .catch(() => ({ experiences: EXPERIENCES }));
+
+  return experiences.map((experience: { id: string }) => ({
+    experienceId: experience.id,
+  }));
 }
 
 export default async function ExperienceDetailPage({
   params,
 }: ExperienceDetailPageProps) {
-  const { expId } = await params;
-  const experience = experiences.find((c) => c.id === expId);
+  const { experienceId } = await params;
+  const experience = EXPERIENCES.find((c) => c.id === experienceId);
 
-  if (!experience) {
-    redirect("/experience");
-  }
+  if (!experience) redirect("/experience");
 
   const tabItems = [
     {

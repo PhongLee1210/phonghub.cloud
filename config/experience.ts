@@ -15,7 +15,7 @@ export interface ExperienceInterface {
   images?: string[];
 }
 
-export const experiences: ExperienceInterface[] = [
+export const EXPERIENCES: ExperienceInterface[] = [
   {
     id: "hiliosai",
     position: "Software Engineer",

@@ -56,6 +56,36 @@ export function BentoGrid({ images, className = "" }: BentoGridProps) {
     return "col-span-1 md:col-span-2 row-span-1";
   };
 
+  /** Resolution hint per cell so Next.js serves the right image size (matches grid layout). */
+  const getImageSizes = (index: number, total: number): string => {
+    if (total === 1) return "100vw";
+    if (total === 2)
+      return "(max-width: 768px) 100vw, (max-width: 1024px) 50vw, 50vw";
+    // 3: index 0 spans 2 cols on md/lg
+    if (total === 3) {
+      if (index === 0)
+        return "(max-width: 768px) 100vw, (max-width: 1024px) 100vw, 66vw";
+      return "(max-width: 768px) 100vw, (max-width: 1024px) 50vw, 33vw";
+    }
+    // 4: 2 cols at md/lg; index 0 and 3 span 2 cols (= 100vw)
+    if (total === 4) {
+      if (index === 0 || index === 3) return "(max-width: 768px) 100vw, 100vw";
+      return "(max-width: 768px) 100vw, (max-width: 1024px) 50vw, 50vw";
+    }
+    // 5: index 0 spans 2 cols + 2 rows, index 2 spans 2 cols
+    if (total === 5) {
+      if (index === 0 || index === 2)
+        return "(max-width: 768px) 100vw, (max-width: 1024px) 100vw, 66vw";
+      return "(max-width: 768px) 100vw, (max-width: 1024px) 50vw, 33vw";
+    }
+    // 6+: index 0 is 2-col 2-row, index 1,2 are 1-col, rest 2-col
+    if (index === 0)
+      return "(max-width: 768px) 100vw, (max-width: 1024px) 100vw, 66vw";
+    if (index === 1 || index === 2)
+      return "(max-width: 768px) 100vw, (max-width: 1024px) 50vw, 33vw";
+    return "(max-width: 768px) 100vw, (max-width: 1024px) 100vw, 66vw";
+  };
+
   return (
     <div className={`grid gap-4 ${getGridLayout(images.length)} ${className}`}>
       {images.map((image, index) => (
@@ -72,7 +102,7 @@ export function BentoGrid({ images, className = "" }: BentoGridProps) {
               alt={`Experience image ${index + 1}`}
               fill
               className="object-cover transition-transform duration-300 group-hover:scale-105"
-              sizes="(max-width: 768px) 100vw, (max-width: 1024px) 50vw, 33vw"
+              sizes={getImageSizes(index, images.length)}
             />
             <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
           </div>
