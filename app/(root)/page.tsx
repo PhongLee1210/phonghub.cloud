@@ -77,7 +77,6 @@ export default function IndexPage() {
             height={100}
             width={100}
             sizes="100vw"
-            objectFit="cover"
             className="bg-primary rounded-full mb-0 md:mb-2 size-60 md:size-80 border-8 border-primary aspect-square object-cover"
             alt={siteConfig.name}
             priority

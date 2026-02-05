@@ -4,7 +4,7 @@ import PageHeader from "./page-header";
 
 interface PageContainerProps {
   title: string;
-  description: string;
+  description?: string;
   children: React.ReactNode;
 }
 
@@ -15,10 +15,19 @@ export default function PageContainer({
 }: PageContainerProps) {
   return (
     <ClientPageWrapper>
-      <div>
-        <PageHeader title={title} description={description} />
-        <div className="mx-6">{children}</div>
-      </div>
+      <main className="container mx-auto p-4">
+        {description ? (
+          <>
+            <PageHeader title={title} description={description} />
+            <div className="mx-6">{children}</div>
+          </>
+        ) : (
+          <>
+            <h1 className="text-3xl font-bold mb-6 capitalize">{title}</h1>
+            {children}
+          </>
+        )}
+      </main>
     </ClientPageWrapper>
   );
 }

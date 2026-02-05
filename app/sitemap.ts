@@ -1,12 +1,16 @@
 import { MetadataRoute } from "next";
 
 import { siteConfig } from "@/config/site";
+import {
+  listCategories,
+  listPublishedPosts,
+  listTags,
+} from "@/lib/blog/service";
 
-export default function sitemap(): MetadataRoute.Sitemap {
+export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const baseUrl = siteConfig.url;
 
-  // Main pages
-  const routes = [
+  const staticRoutes = [
     {
       url: `${baseUrl}`,
       lastModified: new Date(),
@@ -43,7 +47,43 @@ export default function sitemap(): MetadataRoute.Sitemap {
       changeFrequency: "monthly" as const,
       priority: 0.7,
     },
+    {
+      url: `${baseUrl}/blogs`,
+      lastModified: new Date(),
+      changeFrequency: "weekly" as const,
+      priority: 0.9,
+    },
   ];
 
-  return routes;
+  try {
+    const contentDir = "./content/blog";
+
+    const blogPosts = await listPublishedPosts(contentDir);
+    const blogRoutes = blogPosts.map((post) => ({
+      url: `${baseUrl}/blogs/${post.slug}`,
+      lastModified: new Date(post.date),
+      changeFrequency: "monthly" as const,
+      priority: 0.8,
+    }));
+
+    const categories = await listCategories(contentDir);
+    const categoryRoutes = categories.map((category) => ({
+      url: `${baseUrl}/blogs/category/${category.toLowerCase()}`,
+      lastModified: new Date(),
+      changeFrequency: "weekly" as const,
+      priority: 0.7,
+    }));
+
+    const tags = await listTags(contentDir);
+    const tagRoutes = tags.map((tag) => ({
+      url: `${baseUrl}/blogs/tag/${tag.toLowerCase()}`,
+      lastModified: new Date(),
+      changeFrequency: "weekly" as const,
+      priority: 0.6,
+    }));
+
+    return [...staticRoutes, ...blogRoutes, ...categoryRoutes, ...tagRoutes];
+  } catch (error) {
+    return staticRoutes;
+  }
 }

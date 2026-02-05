@@ -1,7 +1,9 @@
-const { fontFamily } = require("tailwindcss/defaultTheme");
+import typography from "@tailwindcss/typography";
+import type { Config } from "tailwindcss";
+import tailwindAnimate from "tailwindcss-animate";
+import { fontFamily } from "tailwindcss/defaultTheme";
 
-/** @type {import('tailwindcss').Config} */
-module.exports = {
+const config = {
   darkMode: ["class"],
   content: [
     "./pages/**/*.{ts,tsx}",
@@ -64,12 +66,12 @@ module.exports = {
       },
       keyframes: {
         "accordion-down": {
-          from: { height: 0 },
+          from: { height: "0" },
           to: { height: "var(--radix-accordion-content-height)" },
         },
         "accordion-up": {
           from: { height: "var(--radix-accordion-content-height)" },
-          to: { height: 0 },
+          to: { height: "0" },
         },
       },
       animation: {
@@ -78,17 +80,8 @@ module.exports = {
       },
     },
   },
-  plugins: [require("tailwindcss-animate")],
-  safelist: [
-    "dark",
-    "retro",
-    "cyberpunk",
-    "paper",
-    "aurora",
-    "synthwave",
-    {
-      pattern:
-        /^(.*?)(dark|retro|cyberpunk|paper|aurora|synthwave)([:.])(.*?)$/,
-    },
-  ],
-};
+  plugins: [tailwindAnimate, typography],
+  safelist: ["dark", "retro", "cyberpunk", "paper", "aurora", "synthwave"],
+} satisfies Config;
+
+export default config;

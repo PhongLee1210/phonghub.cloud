@@ -224,7 +224,7 @@ export default function BucketList() {
                     <CheckCircle className="w-5 h-5 text-primary mt-0.5" />
                   </div>
                   <div
-                    className="prose prose-sm max-w-none"
+                    className="prose prose-sm max-w-none text-primary [&_strong]:text-primary"
                     dangerouslySetInnerHTML={{
                       __html: marked.parseInline(item.text),
                     }}
@@ -262,7 +262,7 @@ export default function BucketList() {
                     <Clock className="w-5 h-5 text-accent mt-0.5" />
                   </div>
                   <div
-                    className="prose prose-sm max-w-none"
+                    className="prose prose-sm max-w-none text-primary [&_strong]:text-primary"
                     dangerouslySetInnerHTML={{
                       __html: marked.parseInline(item.text),
                     }}
@@ -299,7 +299,7 @@ export default function BucketList() {
                   <Target className="w-5 h-5 text-muted-foreground mt-0.5" />
                 </div>
                 <div
-                  className="prose prose-sm max-w-none"
+                  className="prose prose-sm max-w-none text-primary [&_strong]:text-primary"
                   dangerouslySetInnerHTML={{
                     __html: marked.parseInline(item.text),
                   }}

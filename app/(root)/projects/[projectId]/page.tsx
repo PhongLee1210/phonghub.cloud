@@ -85,7 +85,6 @@ export default async function ProjectPage({ params }: ProjectPageProps) {
               alt={"Phong Lee"}
               width={42}
               height={42}
-              objectFit="cover"
               className="rounded-full size-[42px] object-cover bg-background"
             />
 
@@ -149,7 +148,7 @@ export default async function ProjectPage({ params }: ProjectPageProps) {
       </div>
 
       <hr className="mt-12" />
-      <div className="flex justify-center py-6 lg:py-10">
+      <div className="flex justify-center py-6">
         <Link
           href="/projects"
           className={cn(buttonVariants({ variant: "ghost" }))}

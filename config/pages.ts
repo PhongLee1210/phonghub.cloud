@@ -8,7 +8,6 @@ type PagesConfig = {
       title: string;
       description: string;
     };
-    // featuredDescription: string;
   };
 };
 
@@ -71,6 +70,16 @@ export const pagesConfig: PagesConfig = {
       title: "List 100 - Bucket List",
       description:
         "Le Thanh Phong's bucket list - 100 things I want to do before I die.",
+    },
+  },
+  blogs: {
+    title: "Blog",
+    description:
+      "Insights, tutorials, and updates from Le Thanh Phong. Explore posts about web development, technology, and personal growth.",
+    metadata: {
+      title: "Le Thanh Phong's Blog",
+      description:
+        "Read the latest blog posts from Phong Lee on software engineering, technology trends, productivity, and thoughts on personal and career development.",
     },
   },
 };
