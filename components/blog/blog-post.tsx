@@ -11,7 +11,7 @@ import ChipContainer from "@/components/ui/chip-container";
 import { Select, SelectOption } from "@/components/ui/select";
 import { siteConfig } from "@/config/site";
 import { ParsedBlogPost } from "@/lib/blog/parser";
-import { cn } from "@/lib/utils";
+import { cn, formatDate } from "@/lib/utils";
 import { marked } from "marked";
 
 interface BlogPostProps {
@@ -56,11 +56,7 @@ export default function BlogPost({ post }: BlogPostProps) {
           dateTime={new Date(frontmatter.date).toISOString()}
           className="block text-sm text-muted-foreground"
         >
-          {new Date(frontmatter.date).toLocaleDateString("en-US", {
-            year: "numeric",
-            month: "long",
-            day: "numeric",
-          })}
+          {formatDate(frontmatter.date)}
         </time>
 
         <h1 className="flex items-center justify-between mt-2 font-heading text-4xl leading-tight lg:text-5xl">
