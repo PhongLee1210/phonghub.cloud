@@ -1,22 +1,28 @@
 import { Metadata } from "next";
+import dynamic from "next/dynamic";
 import Image from "next/image";
 import Link from "next/link";
 import Script from "next/script";
 
-import { AnimatedSection } from "@/components/common/animated-section";
-import { AnimatedText } from "@/components/common/animated-text";
-import { ClientPageWrapper } from "@/components/common/client-page-wrapper";
-import { Icons } from "@/components/common/icons";
-import ExperienceCard from "@/components/experience/experience-card";
-import ProjectCard from "@/components/projects/project-card";
-import SkillsCard from "@/components/skills/skills-card";
-import { Button, buttonVariants } from "@/components/ui/button";
 import { EXPERIENCES } from "@/config/experience";
 import { pagesConfig } from "@/config/pages";
 import { featuredProjects } from "@/config/projects";
 import { siteConfig } from "@/config/site";
 import { featuredSkills } from "@/config/skills";
+
 import { cn } from "@/lib/utils";
+
+import { AnimatedSection } from "@/components/common/animated-section";
+import { AnimatedText } from "@/components/common/animated-text";
+import { ClientPageWrapper } from "@/components/common/client-page-wrapper";
+import { Icons } from "@/components/common/icons";
+import { Button, buttonVariants } from "@/components/ui/button";
+
+const ExperienceCard = dynamic(
+  () => import("@/components/experience/experience-card")
+);
+const ProjectCard = dynamic(() => import("@/components/projects/project-card"));
+const SkillsCard = dynamic(() => import("@/components/skills/skills-card"));
 
 export const metadata: Metadata = {
   title: `${pagesConfig.home.metadata.title} | Le Thanh Phong - Software Engineer`,
@@ -106,6 +112,7 @@ export default function IndexPage() {
             <AnimatedText delay={0.6}>
               <Link
                 href={"https://github.com/PhongLee1210"}
+                prefetch={false}
                 target="_blank"
                 className={cn(buttonVariants({ size: "lg" }))}
                 aria-label="View Le Thanh Phong's GitHub profile"
@@ -116,6 +123,7 @@ export default function IndexPage() {
             <AnimatedText delay={0.8}>
               <Link
                 href="/resume"
+                prefetch={false}
                 className={cn(buttonVariants({ size: "lg" }))}
                 aria-label="View Le Thanh Phong's resume"
               >
@@ -126,6 +134,7 @@ export default function IndexPage() {
               <Link
                 href={"/contact"}
                 rel="noreferrer"
+                prefetch={false}
                 className={cn(
                   buttonVariants({
                     variant: "outline",
@@ -164,7 +173,7 @@ export default function IndexPage() {
         </div>
         <SkillsCard skills={featuredSkills} />
         <AnimatedText delay={0.4} className="flex justify-center">
-          <Link href="/skills">
+          <Link href="/skills" prefetch={false}>
             <Button variant={"outline"} className="rounded-xl">
               <Icons.chevronDown className="mr-2 h-4 w-4" /> View All
             </Button>
@@ -203,7 +212,7 @@ export default function IndexPage() {
           ))}
         </div>
         <AnimatedText delay={0.4} className="flex justify-center">
-          <Link href="/projects">
+          <Link href="/projects" prefetch={false}>
             <Button variant={"outline"} className="rounded-xl">
               <Icons.chevronDown className="mr-2 h-4 w-4" /> View All
             </Button>
@@ -242,7 +251,7 @@ export default function IndexPage() {
           ))}
         </div>
         <AnimatedText delay={0.4} className="flex justify-center">
-          <Link href="/experience">
+          <Link href="/experience" prefetch={false}>
             <Button variant={"outline"} className="rounded-xl">
               <Icons.chevronDown className="mr-2 h-4 w-4" /> View All
             </Button>

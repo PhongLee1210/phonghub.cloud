@@ -1,4 +1,5 @@
 import { BlogPostSummary } from "@/lib/blog/service";
+import { formatDate } from "@/lib/utils";
 import Image from "next/image";
 import Link from "next/link";
 
@@ -34,7 +35,7 @@ export default function BlogCard({ post }: BlogCardProps) {
           {post.summary}
         </p>
         <div className="flex items-center gap-2 text-xs text-zinc-500 dark:text-zinc-400">
-          <span>{new Date(post.date).toLocaleDateString()}</span>
+          <span>{formatDate(post.date)}</span>
           <span>•</span>
           <span>{post.author}</span>
         </div>

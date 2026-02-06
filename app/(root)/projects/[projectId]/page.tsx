@@ -11,7 +11,7 @@ import CustomTooltip from "@/components/ui/custom-tooltip";
 import { PROJECTS } from "@/config/projects";
 import { siteConfig } from "@/config/site";
 import { getApiBaseUrl } from "@/lib/api";
-import { cn, formatDateFromObj } from "@/lib/utils";
+import { cn, formatDate } from "@/lib/utils";
 
 interface ProjectPageProps {
   params: Promise<{
@@ -53,7 +53,7 @@ export default async function ProjectPage({ params }: ProjectPageProps) {
           dateTime={Date.now().toString()}
           className="block text-sm text-muted-foreground"
         >
-          {formatDateFromObj(project.startDate)}
+          {formatDate(project.startDate)}
         </time>
         <h1 className="flex items-center justify-between mt-2 font-heading text-4xl leading-tight lg:text-5xl">
           {project.companyName}

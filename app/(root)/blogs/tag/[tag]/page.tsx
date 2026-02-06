@@ -22,6 +22,5 @@ export default async function TagPage({
   );
 }
 
-// SSG: Force static generation and revalidate every hour (ISR)
 export const dynamic = "force-static";
 export const revalidate = 3600;
