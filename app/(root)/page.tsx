@@ -80,6 +80,7 @@ export default function IndexPage() {
             className="bg-primary rounded-full mb-0 md:mb-2 size-60 md:size-80 border-8 border-primary aspect-square object-cover"
             alt={siteConfig.name}
             priority
+            fetchPriority="high"
           />
           <AnimatedText
             as="h1"
@@ -208,11 +209,6 @@ export default function IndexPage() {
             </Button>
           </Link>
         </AnimatedText>
-        {/* <div className="mx-auto text-center md:max-w-[58rem]">
-                    <p className="leading-normal text-muted-foreground sm:text-lg sm:leading-7">
-                        See all the relevant experiences.
-                    </p>
-                </div> */}
       </AnimatedSection>
       <AnimatedSection
         direction="left"

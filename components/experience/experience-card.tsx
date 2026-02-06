@@ -40,6 +40,7 @@ const ExperienceCard: React.FC<ExperienceCardProps> = ({ experience }) => {
               width={48}
               height={48}
               className="w-full h-full object-contain p-2"
+              loading="lazy"
             />
           </div>
         )}
