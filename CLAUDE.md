@@ -1,37 +1,53 @@
 # CLAUDE.md
 
-This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
+This file provides guidance to Claude Code (claude.ai/code) and other AI coding agents working in this repository.
 
-## Project Overview
+## Project Summary
 
-Personal portfolio and blog site for Le Thanh Phong (phonghub.cloud) — a single Next.js App Router application, statically rendered where possible, with a Markdown-based blog. There is no database and no separate backend service.
+phonghub.cloud is a personal portfolio and blog site built with Next.js (App Router), React, and TypeScript. Content is data-driven rather than database-backed: projects, experience, and skills live in `config/*.ts` and are served through `app/api/*` route handlers; blog posts are Markdown files in `content/blog/`, parsed and served via `lib/blog/`. Styling uses Tailwind CSS and Radix UI primitives. There is no dedicated `docs/ARCHITECTURE.md` yet — the architecture summary above and in `README.md#project-structure` is the current source of truth.
 
-## Commands
+## Documentation
+
+Read these before making changes:
+
+- [README.md](README.md) — project overview, tech stack, and project structure
+- [docs/GIT_WORKFLOW.md](docs/GIT_WORKFLOW.md) — branch naming, commit message, and PR rules
+
+## Verification
+
+This repo uses Bun scripts, not `make`. Run before considering any change done:
 
 ```bash
-bun install        # install dependencies
-cp .env.example .env.local
-bun dev             # start dev server (http://localhost:3000)
-bun run build       # production build
-bun run start       # run production build
-bun run lint        # ESLint (next/core-web-vitals)
+bun run lint        # ESLint (eslint-config-next)
 bunx tsc --noEmit   # type check
 ```
 
-There is no automated test suite configured. Before considering any change done: run `bun run lint` and `bunx tsc --noEmit`, and manually verify the affected pages/components in the browser — there is no substitute for a visual check on this project.
+There is no automated test suite configured yet. Manually verify affected pages/components in the browser — lint and type-check alone are not sufficient confirmation on this project.
 
-## Architecture
+## Development Workflow
 
-- **Routing**: `app/(root)/` holds the public pages (home, experience, projects, skills, resume, contact, blogs, list100); `app/api/` holds route handlers (`projects`, `experiences`, `skills`, `blog/search`).
-- **Content-driven pages**: `projects`, `experience`, and `skills` are backed by static data in `config/*.ts`, exposed through their respective `app/api/*/route.ts` handlers, and fetched via `lib/api.ts#getApiBaseUrl()`. That function matters at build time: `next build` prerenders pages with no local server running, so a relative/localhost fetch would fail — `NEXT_PUBLIC_APP_URL` must be set in the build environment (falls back to `siteConfig.url`).
-- **Blog**: Markdown files live in `content/blog/`. `lib/blog/parser.ts` parses a single file's frontmatter + content (via `gray-matter`/`remark`); `lib/blog/service.ts` walks `content/blog/` recursively and exposes list/filter/lookup operations (by slug, category, tag, published status). Blog pages and the `blog/search` API route consume `lib/blog/service.ts` — they must not read or parse Markdown directly.
-- **Config layer**: `config/` centralizes structured content and metadata — `site.ts` (site metadata), `routes.ts` / `pages.ts` (route + page metadata), `projects.ts`, `experience.ts`, `skills.ts`, `socials.ts`, `constants.ts`. Changing displayed content (projects, skills, experience entries, nav) usually means editing these files, not components.
-- **Components**: organized by feature to mirror `app/` sections (`blog`, `contact`, `experience`, `projects`, `skills`, `list100`, `modals`, `common`), plus `components/ui/` for base primitives (Radix UI + `class-variance-authority` + Tailwind). Reuse `components/ui/` primitives instead of building new base elements.
-- **State/data rule**: business logic (content loading, formatting, filtering) belongs in `lib/`; UI components consume `lib/` and `config/`, never `fs`/Markdown parsing directly.
+1. Read `README.md` and the relevant existing code in `app/`, `components/`, `lib/`, or `config/` before changing it.
+2. Plan the smallest possible change.
+3. Implement it, following existing patterns in the touched directory.
+4. Run verification (lint + type check) and fix any failures.
+5. Update `README.md` or add/update a `docs/` file if behavior, setup, or routes changed.
 
-## Conventions
+## Coding Conventions
 
-- Formatting is enforced by Prettier (`.prettierrc`, with `prettier-plugin-organize-imports`) and the `eslint-config-next` ESLint config.
-- Prefer explicit types over `any`; avoid adding dependencies to this otherwise static site unless clearly justified.
+- Follow existing patterns in `app/`, `components/`, `lib/`, and `config/`.
+- Business logic (content loading, formatting, filtering) belongs in `lib/`; components must not read the filesystem or parse Markdown directly — go through `lib/blog` and `lib/api.ts`.
+- Reuse existing primitives in `components/ui/` instead of creating new base elements.
+- Prefer explicit types over `any`.
+- Keep components and functions small and focused; avoid duplication.
+- Do not introduce unnecessary dependencies — this is a static portfolio site.
+- Formatting is enforced by Prettier (`.prettierrc`) — do not hand-format around it.
+- Minimize the scope of each change; do not refactor unrelated code in the same commit.
+
+## Hard Constraints
+
+- Never skip verification (lint + type check) before declaring work done.
 - Never modify generated files (`.next/`, `next-env.d.ts`).
-- Branch naming, commit message, and PR rules are defined in [docs/GIT_WORKFLOW.md](docs/GIT_WORKFLOW.md) (Conventional Commits, `feature/...`/`fix/...`/`refactor/...`/`docs/...` prefixes, small PRs).
+- Never change public routes or API contracts (`app/api/*`) without updating `README.md`.
+- Preserve the existing architecture (config-driven content, Markdown-based blog, no database) unless the user explicitly requests a change to it.
+- Update documentation when behavior, setup, or environment variables change.
+- Ask before destructive operations (force-push, deleting content, resetting env files).

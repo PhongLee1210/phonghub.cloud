@@ -1,194 +1,123 @@
-# Le Thanh Phong - Software Engineer Portfolio
+# phonghub.cloud
 
-A modern, responsive portfolio website showcasing my work as a Senior Software Engineer with 5+ years of experience in building scalable web applications and AI-powered solutions.
+## Overview
 
-![Portfolio Preview](https://phonghub.cloud)
+- **What**: The personal portfolio and blog website of Le Thanh Phong (Phong Lee), a software engineer. It presents professional experience, projects, skills, a résumé, and a Markdown-driven blog.
+- **Why**: To showcase Phong's work and career history publicly and to publish long-form blog content, all served from a single statically-optimized Next.js site with no separate backend or database.
+- **Primary users**: Recruiters and site visitors browsing the portfolio, and the site owner, who authors content via Markdown files and config data.
 
-## 👋 About Me
+## Features
 
-I'm **Le Thanh Phong** (Phong Lee), a passionate Software Engineer specializing in full-stack development and AI integration. Currently working at HiliosAI, I focus on building innovative AI-first products that drive business growth and improve user experiences.
+- Project showcase with detail pages (`/projects`, `/projects/[projectId]`)
+- Experience timeline with detail pages (`/experience`, `/experience/[experienceId]`)
+- Skills page with proficiency indicators (`/skills`)
+- Résumé page (`/resume`)
+- Contact page (`/contact`)
+- Markdown-based blog with category, tag, and search support (`/blogs`, `/blogs/[slug]`, `/blogs/category/[category]`, `/blogs/tag/[tag]`)
+- Dark/light theme switching (`next-themes`)
+- Framer Motion animations
+- SEO metadata, sitemap (`app/sitemap.ts`), and web manifest (`app/manifest.ts`)
 
-**Key Achievements:**
+## Tech Stack
 
-- Built AI sales and enrollment agents that increased qualified lead capture by 60-90%
-- Architected scalable microservices and event-driven systems with 99%+ reliability
-- Improved SEO performance and reduced bounce rates through SSR/SSG optimization
-- Led CI/CD pipeline implementation reducing release lead time significantly
+- **Framework**: Next.js 16 (App Router), React 19, TypeScript
+- **Styling**: Tailwind CSS, Radix UI primitives, `class-variance-authority`, Framer Motion
+- **Content**: Markdown blog posts (`content/blog`), parsed with `gray-matter` and `remark`
+- **Forms/validation**: `react-hook-form`, `zod`
+- **State**: `zustand` (client state, e.g. modals)
+- **Runtime & package manager**: Bun (`bun.lock`)
+- **Linting/formatting**: ESLint (`eslint-config-next`), Prettier
+- **Deployment**: Vercel (see `vercel.json`)
 
-## 🚀 Tech Stack
+There is no database — all content comes from Markdown files (`content/blog`) and static config modules (`config/*.ts`).
 
-### Frontend
-
-- **Next.js 15** - React framework with SSR/SSG
-- **React 19** - UI library with modern hooks
-- **TypeScript** - Type-safe JavaScript
-- **Tailwind CSS** - Utility-first CSS framework
-- **Framer Motion** - Animation library
-- **Radix UI** - Accessible component primitives
-
-### Backend & Database
-
-- **Node.js** - JavaScript runtime
-- **FastAPI** - Modern Python web framework
-- **GraphQL** - Query language for APIs
-- **MongoDB** - NoSQL database
-- **PostgreSQL** - Relational database
-- **Redis** - In-memory data store
-
-### DevOps & Tools
-
-- **Docker** - Containerization
-- **AWS** - Cloud infrastructure
-- **Vercel** - Deployment platform
-- **GitHub Actions** - CI/CD pipelines
-- **Bun.js** - Fast JavaScript runtime
-
-## ✨ Features
-
-- **Responsive Design** - Optimized for all devices
-- **Dark/Light Mode** - Theme switching with system preference
-- **Smooth Animations** - Framer Motion powered transitions
-- **SEO Optimized** - Server-side rendering and meta tags
-- **Contact Integration** - Functional contact form with validation
-- **Project Showcase** - Interactive project cards with details
-- **Experience Timeline** - Visual career progression
-- **Skills Rating** - Visual skill proficiency indicators
-- **Performance Optimized** - Fast loading and Core Web Vitals
-
-## 📁 Project Structure
-
-```
-├── app/                    # Next.js App Router
-│   ├── (root)/            # Main pages
-│   │   ├── contact/       # Contact page
-│   │   ├── experience/    # Experience section
-│   │   ├── projects/      # Projects showcase
-│   │   ├── skills/        # Skills page
-│   │   └── resume/        # Resume page
-│   ├── api/               # API routes
-│   └── globals.css        # Global styles
-├── components/            # Reusable components
-│   ├── common/           # Shared components
-│   ├── contact/          # Contact-specific components
-│   ├── experience/       # Experience components
-│   ├── projects/         # Project components
-│   ├── skills/           # Skills components
-│   └── ui/               # Base UI components
-├── config/               # Configuration files
-│   ├── site.ts           # Site metadata
-│   ├── experience.ts     # Experience data
-│   ├── projects.ts       # Projects data
-│   └── skills.ts         # Skills data
-├── public/               # Static assets
-└── providers/            # Context providers
-```
-
-## 🏃‍♂️ Getting Started
+## Quick Start
 
 ### Prerequisites
 
-- **Node.js** >= 22.0.0
-- **Bun** >= 1.0.0 (recommended) or npm/yarn
+- Node.js 22+
+- Bun 1.0+ (recommended) — npm/yarn also work since dependencies are standard, but the repo is tracked with `bun.lock`
 
 ### Installation
 
-1. **Clone the repository**
-
-   ```bash
-   git clone https://github.com/PhongLee1210/phonghub.cloud.git
-   cd phonghub.cloud
-   ```
-
-2. **Install dependencies**
-
-   ```bash
-   bun install
-   # or
-   npm install
-   ```
-
-3. **Run development server**
-
-   ```bash
-   bun dev
-   # or
-   npm run dev
-   ```
-
-4. **Open your browser**
-   Navigate to [http://localhost:3000](http://localhost:3000)
-
-### Build for Production
-
 ```bash
-bun build
-# or
-npm run build
+git clone git@github.com:PhongLee1210/phonghub.cloud.git
+cd phonghub.cloud
+bun install
 ```
 
-## 🎯 Key Projects
+### Environment Variables
 
-### AI Sales & Landing Page Platform
+Copy the example file and fill in the values you need:
 
-- **Tech**: Next.js, FastAPI, GraphQL, Docker, AWS
-- **Impact**: 60-90% increase in qualified lead capture
-- **Features**: AI-powered chat, real-time lead routing, SEO optimization
+```bash
+cp .env.example .env.local
+```
 
-### AI Assistant & Enrollment Platform
+| Variable | Purpose |
+|---|---|
+| `NEXT_PUBLIC_APP_URL` | Base URL used to call this app's own API routes (`/api/projects`, `/api/skills`, etc.) during build-time prerendering. Must be a reachable URL (e.g. your deployed URL) since no local server runs during `next build`. |
+| `NEXT_PUBLIC_GOOGLE_MEASUREMENT_ID` | Google Analytics measurement ID. |
+| `NEXT_PUBLIC_GOOGLE_VERIFICATION` | Google Search Console site verification token. |
+| `NEXT_PUBLIC_RESUME_LINK` | Link used by the résumé page/download action. |
 
-- **Tech**: Vue.js, Node.js, GraphQL, PostgreSQL, Redis
-- **Features**: Content management, AI enrollment agents, automated workflows
+### Run Development Server
 
-### Content Management System
+```bash
+bun dev
+```
 
-- **Tech**: Next.js, React, TypeScript, MongoDB
-- **Features**: SEO-optimized, server-side rendering, CMS integration
+Open [http://localhost:3000](http://localhost:3000).
 
-## 💼 Experience
+## Project Structure
 
-### Current: Software Engineer at HiliosAI
+```
+app/                  # Next.js App Router
+├── (root)/           # Public pages: home, experience, projects, skills, resume, contact, blogs, list100
+├── api/               # Route handlers: projects, experiences, skills, blog/search
+├── sitemap.ts, manifest.ts, layout.tsx, globals.css
+components/           # UI, grouped by feature (blog, contact, experience, projects, skills, list100, modals, common, ui)
+config/               # Static site content and metadata (site, routes, pages, projects, experience, skills, socials, constants)
+content/blog/         # Markdown blog posts
+lib/                  # Business logic: lib/blog (Markdown parsing/service), api.ts, utils.ts
+hooks/, providers/    # Shared React hooks and context providers
+public/, assets/      # Static assets and fonts
+docs/                 # Repository documentation (see below)
+```
 
-- Building AI-first product development
-- Full-stack engineering with React, Next.js, FastAPI
-- Leading microservice architecture and CI/CD pipelines
+## Development
 
-### Previous: Full-stack Developer at LTV
+```bash
+bun dev             # start dev server
+bun run build       # production build
+bun run start       # run production build locally
+bun run lint        # ESLint
+bunx tsc --noEmit   # type check
+```
 
-- Vue.js and Node.js development
-- AWS cloud infrastructure
-- Agile development and automated testing
+Business logic (content loading, formatting, filtering) lives in `lib/`; UI components should consume `lib/` and `config/` rather than reading Markdown or the filesystem directly. See `docs/GIT_WORKFLOW.md` for commit/branch conventions.
 
-## 🛠️ Skills & Expertise
+## Testing
 
-**Expert Level (5/5):**
+No automated test suite is configured in this repository yet. Verify changes by running lint and type-checking, then manually checking the affected pages in the browser.
 
-- React, Next.js, Node.js, TypeScript, JavaScript, Git, GitHub
+## Deployment
 
-**Advanced Level (4/5):**
+The project is configured for [Vercel](https://vercel.com) (`vercel.json`), using `bun install` / `bun run build` as the install/build commands and `.next` as the output directory. Set the environment variables listed above in your Vercel project settings before deploying.
 
-- MongoDB, GraphQL, AWS, Redux, Tailwind CSS, Vue.js, FastAPI, Docker
+## Documentation
 
-**Intermediate Level (3/5):**
+- [docs/GIT_WORKFLOW.md](docs/GIT_WORKFLOW.md) — branch naming, commit message, and pull request rules
+- [CLAUDE.md](CLAUDE.md) — guidance for AI coding agents working in this repository
 
-- CI/CD, LangChain, Google Cloud, SQL, Artificial Intelligence
+## Contributing
 
-## 🌐 Live Demo
+This is a personal portfolio project. If you're contributing changes:
 
-Visit my portfolio: [https://phonghub.cloud](https://phonghub.cloud)
+1. Create a branch following the naming convention in [docs/GIT_WORKFLOW.md](docs/GIT_WORKFLOW.md) (`feature/...`, `fix/...`, `refactor/...`, `docs/...`).
+2. Run `bun run lint` and `bunx tsc --noEmit` before committing.
+3. Keep pull requests small and explain *why* the change is needed.
 
-## 📞 Contact
+## License
 
-- **Email**: phonglee1210@gmail.com
-- **LinkedIn**: https://www.linkedin.com/in/lee-thanh-phong-7013051b7/
-- **GitHub**: [https://github.com/PhongLee1210](https://github.com/PhongLee1210)
-- **Twitter**: [https://x.com/phonglee802q](https://x.com/phonglee802q)
-
-## 📄 License
-
-This project is open source and available under the [MIT License](LICENSE).
-
----
-
-⭐ **Star this repo** if you find it interesting!
-
-Built with ❤️ by Le Thanh Phong
+No license file is currently published in this repository. Contact the repository owner ([phonglee1210@gmail.com](mailto:phonglee1210@gmail.com)) regarding usage rights.
