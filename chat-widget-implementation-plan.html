@@ -1,0 +1,621 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Implementation plan v2 — AI chat widget + LLM gateway for phonghub.cloud</title>
+<style>
+  :root {
+    --bg: #ffffff; --fg: #16213a; --muted: #5b6577; --line: #e5e9f0;
+    --card: #f7f9fc; --accent: #1d4ed8; --warn-bg: #fef3c7; --warn-fg: #92400e;
+    --ok-bg: #dcfce7; --ok-fg: #166534; --rev-bg: #dbeafe; --rev-fg: #1e40af;
+    --new-bg: #f3e8ff; --new-fg: #6b21a8;
+    --mono: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #0b1020; --fg: #dde3ee; --muted: #93a0b4; --line: #232c42;
+      --card: #131a2e; --accent: #7ba3f7; --warn-bg: #3a2e10; --warn-fg: #fbbf24;
+      --ok-bg: #10301c; --ok-fg: #4ade80; --rev-bg: #17233f; --rev-fg: #93c5fd;
+      --new-bg: #2a1a3f; --new-fg: #d8b4fe;
+    }
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; background: var(--bg); color: var(--fg);
+    font: 15px/1.65 ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+  }
+  .wrap { max-width: 880px; margin: 0 auto; padding: 3rem 1.5rem 6rem; }
+  h1 { font-size: 1.7rem; letter-spacing: -0.02em; margin: 0 0 0.25rem; }
+  .subtitle { color: var(--muted); margin: 0 0 2rem; }
+  h2 {
+    font-size: 1.2rem; margin: 3rem 0 1rem; padding-top: 1.5rem;
+    border-top: 1px solid var(--line);
+  }
+  h2 .num { color: var(--accent); font-variant-numeric: tabular-nums; margin-right: 0.5rem; }
+  h3 { font-size: 0.95rem; margin: 1.5rem 0 0.5rem; }
+  p, li { color: var(--fg); }
+  li { margin: 0.3rem 0; }
+  .muted { color: var(--muted); }
+  code {
+    font-family: var(--mono); font-size: 0.85em;
+    background: var(--card); border: 1px solid var(--line);
+    border-radius: 4px; padding: 0.1em 0.35em;
+  }
+  pre {
+    background: var(--card); border: 1px solid var(--line); border-radius: 8px;
+    padding: 1rem 1.25rem; overflow-x: auto; font-family: var(--mono);
+    font-size: 0.8rem; line-height: 1.6;
+  }
+  pre code { background: none; border: none; padding: 0; }
+  table { border-collapse: collapse; width: 100%; margin: 0.75rem 0; font-size: 0.875rem; }
+  th, td { text-align: left; padding: 0.5rem 0.75rem; border: 1px solid var(--line); vertical-align: top; }
+  th { background: var(--card); font-weight: 600; }
+  .badge {
+    display: inline-block; font-size: 0.68rem; font-weight: 700; letter-spacing: 0.05em;
+    border-radius: 999px; padding: 0.15rem 0.6rem; vertical-align: 1px;
+  }
+  .review { background: var(--rev-bg); color: var(--rev-fg); }
+  .decided { background: var(--ok-bg); color: var(--ok-fg); }
+  .risk { background: var(--warn-bg); color: var(--warn-fg); }
+  .new { background: var(--new-bg); color: var(--new-fg); }
+  .decision {
+    border: 1px solid var(--line); border-left: 3px solid var(--accent);
+    border-radius: 8px; padding: 0.9rem 1.1rem; margin: 0.9rem 0; background: var(--card);
+  }
+  .decision strong { display: block; margin-bottom: 0.25rem; }
+  .toc { background: var(--card); border: 1px solid var(--line); border-radius: 8px; padding: 1rem 1.5rem; }
+  .toc ol { margin: 0.25rem 0 0.25rem 1.1rem; padding: 0; columns: 2; }
+  .toc li { margin: 0.2rem 0; break-inside: avoid; }
+  .toc a { color: var(--accent); text-decoration: none; }
+  .toc a:hover { text-decoration: underline; }
+  .tree { font-family: var(--mono); font-size: 0.8rem; }
+  .checklist { list-style: none; padding-left: 0; }
+  .checklist li { padding-left: 1.7rem; position: relative; }
+  .checklist li::before {
+    content: ""; position: absolute; left: 0; top: 0.35em;
+    width: 0.85em; height: 0.85em; border: 1.5px solid var(--muted); border-radius: 3px;
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<h1>AI chat widget + internal LLM gateway — implementation plan <span class="badge new">V2</span></h1>
+<p class="subtitle">phonghub.cloud · persistent chat widget, SSE-streamed responses, provider-agnostic LLM gateway
+(Anthropic / OpenAI / Google Gemini / Groq) · builds on the approved mockup (<code>chat-widget-mockup.html</code>)<br>
+<span class="badge new">NEW IN V2</span> sections marked throughout — the LLM gateway (§5A) replaces the single-provider Anthropic wiring from v1.</p>
+
+<nav class="toc">
+  <ol>
+    <li><a href="#s1">Key decisions to review</a></li>
+    <li><a href="#s2">Proposed data model changes</a></li>
+    <li><a href="#s3">New / updated type interfaces</a></li>
+    <li><a href="#s4">User-facing changes</a></li>
+    <li><a href="#s5">API / backend changes (incl. §5A gateway)</a></li>
+    <li><a href="#s6">Implementation steps</a></li>
+    <li><a href="#s7">Risks and tradeoffs</a></li>
+    <li><a href="#s8">Verification checklist</a></li>
+    <li><a href="#s9">Mechanical refactoring / cleanup</a></li>
+  </ol>
+</nav>
+
+<!-- ══════════════════════════════════════════════════════════════ -->
+<h2 id="s1"><span class="num">1</span>Key decisions to review</h2>
+<p>Everything else follows from these calls. Marked
+<span class="badge decided">DECIDED</span> (established earlier),
+<span class="badge review">REVIEW</span> (yours to make), or
+<span class="badge new">NEW IN V2</span>.</p>
+
+<div class="decision">
+  <strong>D1 — Transport to the browser: SSE over a POST fetch stream <span class="badge decided">DECIDED</span></strong>
+  Unchanged from v1. The gateway abstraction is entirely server-side; the browser always speaks the
+  same NDJSON protocol to <code>/api/chat</code> regardless of which provider served the answer.
+  Provider switching is invisible to the client.
+</div>
+
+<div class="decision">
+  <strong>D2 — Model routing via aliases, not hardcoded ids <span class="badge new">NEW IN V2</span> <span class="badge review">REVIEW</span></strong>
+  Application code never names a concrete model. It requests a <em>role alias</em> —
+  <code>"chat"</code> (main assistant) or <code>"cheap"</code> (phase-2 utility calls like suggestion
+  generation). Aliases resolve through <code>lib/llm/config.ts</code>, overridable per environment:
+  <code>LLM_CHAT_MODEL=anthropic:claude-haiku-4-5</code> → switch to
+  <code>groq:llama-3.3-70b</code> or <code>openai:gpt-4o-mini</code> by changing one env var, zero deploys
+  of code. <em>Review: proposed defaults — <code>chat = anthropic:claude-haiku-4-5</code>,
+  <code>cheap = groq:llama-3.1-8b-instant</code>. Agree?</em>
+</div>
+
+<div class="decision">
+  <strong>D3 — Grounding: curated context stuffing, no RAG <span class="badge review">REVIEW</span></strong>
+  Unchanged from v1: system prompt from <code>config/*.ts</code> + blog frontmatter only (~8–15k tokens).
+  Note the multi-provider consequence: context must fit the <em>smallest</em> context window in your
+  provider pool (Groq-hosted open models can be 8–32k). The curated approach keeps every provider viable;
+  full-corpus stuffing (~50k tokens) would silently rule some out.
+  <em>Review: still fine?</em>
+</div>
+
+<div class="decision">
+  <strong>D4 — Persistence: localStorage only, no database <span class="badge decided">DECIDED</span></strong>
+  Unchanged from v1.
+</div>
+
+<div class="decision">
+  <strong>D5 — Rate limiting: Upstash Redis, fixed per-IP budget <span class="badge review">REVIEW</span></strong>
+  Unchanged from v1 (10 msgs / 5 min, 40 / day per IP, hard input/output caps). Now enforced
+  <em>before</em> the gateway is invoked, so limits are provider-independent and one budget covers all keys.
+  <em>Review: envelope numbers.</em>
+</div>
+
+<div class="decision">
+  <strong>D6 — Adapter strategy: internal gateway interface, adapters backed by the Vercel AI SDK <span class="badge new">NEW IN V2</span> <span class="badge review">REVIEW</span></strong>
+  Honest reversal from v1: with one provider, hand-rolling the Anthropic stream was the simple option.
+  With four+, hand-rolling means reimplementing streaming, error taxonomy, and (phase 2) tool-calling
+  semantics per provider — that's the AI SDK's whole job, and its <code>@ai-sdk/*</code> provider packages
+  are maintained adapters for exactly your list.
+  <br><br>
+  <strong>Proposed shape:</strong> we still define our <em>own</em> narrow interface
+  (<code>LLMProvider</code>, §3) and our own folder-per-provider structure (§5A). Each provider module is a
+  thin (~30-line) adapter that maps our interface onto <code>@ai-sdk/anthropic</code>,
+  <code>@ai-sdk/openai</code>, <code>@ai-sdk/google</code>, <code>@ai-sdk/groq</code>. App code imports only
+  our interface — if we ever drop the AI SDK, we rewrite adapters, not the app.
+  <br><br>
+  <em>Review — alternative B: adapters on native SDKs (<code>@anthropic-ai/sdk</code>,
+  <code>openai</code>, …). Maximum control, no AI SDK dependency, but ~4× the adapter code and we own
+  tool-calling normalization across providers in phase 2. I recommend A.</em>
+</div>
+
+<div class="decision">
+  <strong>D7 — Rich actions ship in phase 2 <span class="badge decided">DECIDED</span></strong>
+  Unchanged from v1. Note: phase-2 tool use goes through the gateway's normalized tool interface, so
+  agent behaviors work identically on any provider that supports tool calling (all four do).
+</div>
+
+<div class="decision">
+  <strong>D8 — Failover: automatic fallback chain, off by default <span class="badge new">NEW IN V2</span> <span class="badge review">REVIEW</span></strong>
+  The gateway supports an ordered fallback list (<code>LLM_CHAT_FALLBACKS=groq:llama-3.3-70b,openai:gpt-4o-mini</code>):
+  if the primary returns 429/5xx <em>before the first token</em>, retry the next provider once.
+  Never mid-stream (a half-answer from model A finished by model B reads as nonsense).
+  Recommend shipping the mechanism but leaving the env var unset initially — a portfolio can tolerate a
+  rare "try again" bubble, and silent failover hides provider problems you'd want to notice.
+  <em>Review: enable from day one, or keep dark until needed?</em>
+</div>
+
+<!-- ══════════════════════════════════════════════════════════════ -->
+<h2 id="s2"><span class="num">2</span>Proposed data model changes</h2>
+<p>No database. Client-side stores unchanged from v1; one config module gains gateway settings.</p>
+
+<h3>localStorage (new, versioned)</h3>
+<table>
+  <tr><th>Key</th><th>Value</th><th>Notes</th></tr>
+  <tr>
+    <td><code>phonghub.chat.v1</code></td>
+    <td><code>PersistedChat</code> JSON (schema §3)</td>
+    <td>Version suffix in the key: breaking schema change moves to <code>.v2</code>, stale data ignored,
+        never migrated. Trimmed to most recent 50 messages on write. Provider/model info is deliberately
+        <em>not</em> persisted per message — it's an ops detail, not conversation state.</td>
+  </tr>
+  <tr>
+    <td><code>phonghub.chat.open</code></td>
+    <td><code>"1"</code> / absent</td>
+    <td>Panel open/closed state across page navigations.</td>
+  </tr>
+</table>
+
+<h3>Zustand store (new: <code>hooks/use-chat-store.ts</code>)</h3>
+<p>Unchanged from v1 — mirrors the existing <code>use-modal-store.ts</code> pattern. Holds
+<code>messages</code>, <code>status</code>, <code>isOpen</code>, actions
+(<code>sendMessage</code>, <code>stopStreaming</code>, <code>reset</code>, <code>setOpen</code>).
+Hydrates from localStorage in a mount effect only.</p>
+
+<h3>Config modules</h3>
+<ul>
+  <li><code>config/chat.ts</code> — greeting, suggestion chips, input/history limits, rate-limit envelope.
+      References models <em>only by alias</em> (<code>"chat"</code>, <code>"cheap"</code>).</li>
+  <li><span class="badge new">NEW</span> <code>lib/llm/config.ts</code> — alias → <code>provider:model</code>
+      resolution, env-key discovery, fallback chain parsing. Server-only (imports nothing client-safe;
+      enforced with the <code>server-only</code> package).</li>
+</ul>
+
+<!-- ══════════════════════════════════════════════════════════════ -->
+<h2 id="s3"><span class="num">3</span>New / updated type interfaces</h2>
+
+<h3>Gateway contract — <code>lib/llm/types.ts</code> <span class="badge new">NEW IN V2</span></h3>
+<p>The heart of the provider-agnostic design. App code (the chat route, future features) imports
+<em>only these types</em> — never a provider SDK.</p>
+
+<pre><code>// ── Provider identity ───────────────────────────────────────────
+type ProviderId = "anthropic" | "openai" | "google" | "groq";
+// extending = add a literal here + one adapter file + one env key (§5A)
+
+type ModelRef = `${ProviderId}:${string}`;      // "anthropic:claude-haiku-4-5"
+type ModelAlias = "chat" | "cheap";             // what app code asks for
+
+// ── Provider-agnostic request ───────────────────────────────────
+interface LLMMessage { role: "system" | "user" | "assistant"; content: string; }
+
+interface LLMRequest {
+  messages: LLMMessage[];
+  maxTokens: number;
+  temperature?: number;
+  tools?: LLMToolDef[];                          // phase 2; normalized JSON-schema defs
+  signal?: AbortSignal;                          // propagated: client abort → provider abort
+}
+
+// ── Normalized stream output ────────────────────────────────────
+type LLMStreamChunk =
+  | { type: "text";      text: string }
+  | { type: "tool_call"; name: string; args: unknown; id: string }   // phase 2
+  | { type: "done";      usage: { inputTokens: number; outputTokens: number };
+                         stopReason: "end" | "max_tokens" | "tool_call" | "aborted" };
+
+// ── Normalized error taxonomy (thrown, not streamed) ────────────
+class LLMError extends Error {
+  code: "auth" | "rate_limited" | "overloaded" | "context_too_long" | "bad_request" | "unknown";
+  provider: ProviderId;
+  retryable: boolean;          // drives the D8 fallback decision
+}
+
+// ── The one interface every provider implements ────────────────
+interface LLMProvider {
+  id: ProviderId;
+  isConfigured(): boolean;                       // its env key is present
+  stream(model: string, req: LLMRequest): AsyncIterable&lt;LLMStreamChunk&gt;;
+}
+
+// ── Public gateway API (the ONLY import app code uses) ─────────
+// lib/llm/index.ts
+function streamLLM(alias: ModelAlias, req: LLMRequest): AsyncIterable&lt;LLMStreamChunk&gt;;
+//   resolves alias → ModelRef → provider, applies fallback chain (D8),
+//   normalizes errors, logs usage per provider</code></pre>
+
+<h3>Chat wire protocol — <code>types/chat.ts</code> (client-safe, unchanged from v1)</h3>
+<pre><code>type ChatRole = "user" | "assistant";
+
+interface ChatMessage {
+  id: string; role: ChatRole; content: string;
+  card?: ProjectCardPayload;                     // phase 2
+  createdAt: number; error?: boolean;
+}
+
+interface PersistedChat { version: 1; messages: ChatMessage[]; updatedAt: number; }
+
+interface ChatRequestBody {
+  messages: Array&lt;{ role: ChatRole; content: string }&gt;;   // last ≤20
+}
+
+type ChatStreamEvent =
+  | { type: "token";    text: string }
+  | { type: "card";     card: ProjectCardPayload }
+  | { type: "navigate"; href: InternalRoute }
+  | { type: "done";     suggestions?: string[] }
+  | { type: "error";    code: ChatErrorCode; message: string };
+
+type ChatErrorCode = "rate_limited" | "input_too_long" | "upstream_error" | "aborted";
+
+interface ProjectCardPayload {
+  projectId: string;              // validated against config/projects.ts server-side
+  title: string; description: string; tags: string[];
+  href: `/projects/${string}`;
+}
+
+type InternalRoute = "/skills" | "/projects" | "/experience"
+                   | "/resume" | "/contact" | "/blogs"
+                   | `/projects/${string}` | `/blogs/${string}`;
+</code></pre>
+<p class="muted">Layering rule: <code>types/chat.ts</code> is client-safe and never imports from
+<code>lib/llm/</code>. The chat route is the only place both meet — it translates
+<code>LLMStreamChunk</code> → <code>ChatStreamEvent</code>. The browser cannot tell which provider answered.</p>
+
+<!-- ══════════════════════════════════════════════════════════════ -->
+<h2 id="s4"><span class="num">4</span>User-facing changes</h2>
+<p>Unchanged from v1 — the gateway is invisible to visitors. Summary (full detail in the mockup):</p>
+<ul>
+  <li><strong>Launcher</strong> — 56px floating button, bottom-right, every page (root layout), presence dot, icon morph.</li>
+  <li><strong>Panel</strong> — 380×560px; conversation + open state persist across navigation and reloads;
+      Escape closes; focus managed in/out.</li>
+  <li><strong>Mobile &lt;480px</strong> — full-screen sheet (<code>100dvh</code>), body scroll locked via existing
+      <code>use-lock-body.ts</code>, launcher hidden while open.</li>
+  <li><strong>Streaming</strong> — token-by-token with cursor; typing indicator pre-first-token; stop button
+      (AbortController) keeps partial text.</li>
+  <li><strong>Suggestion chips</strong> — 3 seeds on first open; refresh from <code>done.suggestions</code>.</li>
+  <li><strong>Errors</strong> — rate-limit bubble with countdown; retry button on failures. If D8 fallback is
+      enabled, a pre-token provider failure is invisible (one silent retry) rather than an error bubble.</li>
+  <li><strong>Reset</strong> — clears store + localStorage, replays greeting.</li>
+  <li><strong>Theming</strong> — existing HSL tokens; verified against all 7 palettes in the mockup.</li>
+  <li><strong>Disclosure</strong> — permanent "AI assistant — may make mistakes" footnote. No provider or model
+      name is shown in the UI.</li>
+  <li><strong>Phase 2</strong> — inline project cards + allowlisted internal navigation, per the mockup.</li>
+</ul>
+
+<!-- ══════════════════════════════════════════════════════════════ -->
+<h2 id="s5"><span class="num">5</span>API / backend changes</h2>
+
+<h3 id="s5a">§5A — The internal LLM gateway <span class="badge new">NEW IN V2</span></h3>
+<p>A server-only module tree under <code>lib/llm/</code>. The folder structure <em>is</em> the architecture —
+one folder per provider, one shared contract, one public entry point:</p>
+
+<pre class="tree">lib/llm/
+  index.ts               # PUBLIC API — streamLLM(alias, req); the only file app code imports
+  types.ts               # LLMProvider contract, LLMRequest/Chunk/Error (§3)
+  config.ts              # alias→ModelRef resolution, fallback chains, env discovery
+  registry.ts            # builds Map&lt;ProviderId, LLMProvider&gt; of *configured* providers at startup
+  errors.ts              # LLMError + per-provider error mapping helpers
+  providers/
+    anthropic.ts         # ~30-line adapter over @ai-sdk/anthropic
+    openai.ts            # ~30-line adapter over @ai-sdk/openai
+    google.ts            # ~30-line adapter over @ai-sdk/google
+    groq.ts              # ~30-line adapter over @ai-sdk/groq</pre>
+
+<table>
+  <tr><th>Design rule</th><th>Meaning</th></tr>
+  <tr><td>One import surface</td>
+      <td>App code only ever imports <code>lib/llm</code> (the index). ESLint <code>no-restricted-imports</code>
+          rule blocks importing <code>lib/llm/providers/*</code> or any provider SDK from outside the gateway.</td></tr>
+  <tr><td>Config-discovered providers</td>
+      <td><code>registry.ts</code> registers a provider iff its env key exists. Missing key = provider absent,
+          not broken. Selecting an unconfigured provider in an alias fails fast at first request with a clear
+          server-log message.</td></tr>
+  <tr><td>Adding provider #5 is a 3-step recipe</td>
+      <td>(1) add literal to <code>ProviderId</code>, (2) drop <code>providers/&lt;name&gt;.ts</code> implementing
+          <code>LLMProvider</code>, (3) document its env key. No other file changes — registry picks it up.
+          Recipe documented in <code>lib/llm/README.md</code>.</td></tr>
+  <tr><td>Normalized errors drive policy</td>
+      <td>Adapters map provider-specific failures into the <code>LLMError</code> taxonomy;
+          <code>index.ts</code> makes fallback/retry decisions on <code>code</code> + <code>retryable</code>
+          only — policy lives in one place, never in adapters.</td></tr>
+  <tr><td>Server-only, enforced</td>
+      <td>Every gateway file imports the <code>server-only</code> package — accidental client import becomes
+          a build error, so provider keys can never leak into the bundle.</td></tr>
+  <tr><td>Usage logging</td>
+      <td><code>index.ts</code> logs one structured line per request: alias, resolved model, latency to first
+          token, token usage, error code if any. This is the observability story for "which provider is
+          slow/expensive" — no separate service.</td></tr>
+</table>
+
+<h3>New route: <code>POST /api/chat</code> (<code>app/api/chat/route.ts</code>)</h3>
+<table>
+  <tr><th></th><th>Contract</th></tr>
+  <tr><td>Runtime</td><td>Node.js (required for <code>fs</code> + gateway SDKs), <code>export const maxDuration = 60</code></td></tr>
+  <tr><td>Flow</td><td>validate body → rate limit (429 + <code>Retry-After</code>) → build system prompt →
+      <code>streamLLM("chat", req)</code> → translate <code>LLMStreamChunk</code> → <code>ChatStreamEvent</code>
+      NDJSON lines</td></tr>
+  <tr><td>Request</td><td><code>ChatRequestBody</code>; 400 if &gt;20 messages, any &gt;1,000 chars, malformed roles</td></tr>
+  <tr><td>Success</td><td><code>200</code>, <code>Content-Type: application/x-ndjson</code>, terminated by <code>done</code> or <code>error</code></td></tr>
+  <tr><td>Upstream failure</td><td>Pre-token: fallback chain if enabled (D8), else <code>502</code>. Mid-stream:
+      <code>error</code> event, close. Provider identity never appears in client-visible errors.</td></tr>
+</table>
+
+<h3>New module: <code>lib/chat/context.ts</code> (server-only)</h3>
+<p>Unchanged from v1: persona + guardrails + serialized config data + blog frontmatter (via existing
+<code>lib/blog/service.ts</code>), cached per lambda instance, with the "content is data, not instructions"
+injection guardrail. One addition: a soft token-budget assert (~15k) so context growth that would break
+smaller-window providers fails loudly in dev, not quietly in prod (see D3).</p>
+
+<h3>Environment <span class="badge new">UPDATED</span></h3>
+<pre><code># ── LLM gateway — set keys only for providers you use ──────────
+ANTHROPIC_API_KEY=
+OPENAI_API_KEY=
+GOOGLE_GENERATIVE_AI_API_KEY=
+GROQ_API_KEY=
+
+# ── Model routing (alias = provider:model) ─────────────────────
+LLM_CHAT_MODEL=anthropic:claude-haiku-4-5
+LLM_CHEAP_MODEL=groq:llama-3.1-8b-instant
+# LLM_CHAT_FALLBACKS=groq:llama-3.3-70b,openai:gpt-4o-mini   # D8 — off by default
+
+# ── Rate limiting ───────────────────────────────────────────────
+UPSTASH_REDIS_REST_URL=
+UPSTASH_REDIS_REST_TOKEN=</code></pre>
+<p class="muted">Spend caps are per-provider console settings (Anthropic, OpenAI, Google, Groq each have
+their own) — one cap per configured key, all documented in <code>lib/llm/README.md</code>. Rate limiting
+happens before the gateway, so one visitor budget covers all providers.</p>
+
+<h3>Explicit non-changes</h3>
+<ul>
+  <li>Existing API routes untouched; chat route imports config/services in-process.</li>
+  <li>No middleware.ts, no CORS changes (same-origin only).</li>
+  <li>New dependencies: <code>ai</code>, <code>@ai-sdk/anthropic</code>, <code>@ai-sdk/openai</code>,
+      <code>@ai-sdk/google</code>, <code>@ai-sdk/groq</code> (per D6-A), <code>@upstash/ratelimit</code>,
+      <code>@upstash/redis</code>, <code>server-only</code>. If D6-B (native SDKs) is chosen instead:
+      the four native SDK packages replace the five AI SDK ones.</li>
+</ul>
+
+<!-- ══════════════════════════════════════════════════════════════ -->
+<h2 id="s6"><span class="num">6</span>Implementation steps</h2>
+
+<h3>Phase 0 — scaffolding (½ day)</h3>
+<ol>
+  <li>Add <code>types/chat.ts</code>, <code>config/chat.ts</code>; extend <code>.env.example</code> (§5 env block).</li>
+  <li>Component skeleton under <code>components/chat/</code> + <code>hooks/use-chat-store.ts</code>.</li>
+</ol>
+
+<h3>Phase 1a — widget shell with scripted responses (1–1½ days)</h3>
+<ol start="3">
+  <li>Port mockup UI to React (<code>chat-widget.tsx</code>, launcher, panel, message list, input, chips) —
+      Tailwind + existing HSL tokens, Framer Motion open/close.</li>
+  <li>Mount <code>&lt;ChatWidget /&gt;</code> in <code>app/layout.tsx</code> (true root, not the route group),
+      mount-gated like <code>ModalProvider</code>.</li>
+  <li>Zustand + localStorage persistence + scripted responses.
+      <em>Shippable checkpoint: widget works with zero backend.</em></li>
+</ol>
+
+<h3>Phase 1b — LLM gateway <span class="badge new">NEW IN V2</span> (1–1½ days)</h3>
+<ol start="6">
+  <li>Build <code>lib/llm/</code>: <code>types.ts</code> → <code>errors.ts</code> → <code>config.ts</code> →
+      <code>registry.ts</code> → <code>index.ts</code>, with unit tests against a <code>FakeProvider</code>
+      (scripted chunks/errors) — fallback logic, alias resolution, and abort propagation are all testable
+      with zero API keys.</li>
+  <li>Implement <code>providers/anthropic.ts</code> first; verify streaming end-to-end via a scratch route.</li>
+  <li>Add <code>openai.ts</code>, <code>google.ts</code>, <code>groq.ts</code> — each is a copy-adapt of the
+      first (~30 lines); smoke-test each with its real key. Write <code>lib/llm/README.md</code>
+      (add-a-provider recipe, spend-cap checklist).</li>
+</ol>
+
+<h3>Phase 1c — chat endpoint wiring (1 day)</h3>
+<ol start="9">
+  <li><code>lib/chat/context.ts</code> (system-prompt builder, token-budget assert).</li>
+  <li><code>app/api/chat/route.ts</code>: validation → rate limit → <code>streamLLM("chat", …)</code> →
+      chunk-to-event translation.</li>
+  <li>Client stream reader (<code>lib/chat/client.ts</code>): POST, incremental NDJSON parse, store dispatch,
+      abort wiring. Swap scripted responses for the live endpoint.</li>
+</ol>
+
+<h3>Phase 1d — hardening (½–1 day)</h3>
+<ol start="12">
+  <li>Upstash limits, input caps, per-provider console spend caps.</li>
+  <li>Accessibility pass (focus trap, <code>role="dialog"</code>, <code>aria-live</code>).</li>
+  <li>Verification checklist (§8); soft launch; watch usage logs + spend across providers for a few days.</li>
+</ol>
+
+<h3>Phase 2 — agent behaviors (separate PR, 2–3 days, after soak)</h3>
+<ol start="15">
+  <li>Normalized tool defs through the gateway (<code>LLMToolDef</code> → AI SDK tool format);
+      <code>get_project_details</code>, <code>search_blog</code>, <code>navigate</code> calling existing
+      functions in-process; verify tool loop on ≥2 providers before shipping.</li>
+  <li><code>card</code>/<code>navigate</code> events, inline project card, allowlisted router navigation.</li>
+  <li>Model-proposed suggestion chips via the <code>"cheap"</code> alias.</li>
+</ol>
+
+<h3>Resulting file layout</h3>
+<pre class="tree">app/api/chat/route.ts            # SSE endpoint (new)
+components/chat/                 # widget UI (new)
+  chat-widget.tsx  chat-launcher.tsx  chat-panel.tsx
+  chat-message-list.tsx  chat-input.tsx  suggestion-chips.tsx
+  project-card-message.tsx       # phase 2
+config/chat.ts                   # greeting, chips, limits — aliases only (new)
+hooks/use-chat-store.ts          # zustand store (new)
+lib/llm/                         # ★ internal LLM gateway, server-only (new — §5A)
+  index.ts  types.ts  config.ts  registry.ts  errors.ts  README.md
+  providers/anthropic.ts  providers/openai.ts  providers/google.ts  providers/groq.ts
+lib/chat/context.ts              # system-prompt builder, server-only (new)
+lib/chat/client.ts               # browser stream reader (new)
+types/chat.ts                    # client-safe wire protocol (new)</pre>
+
+<!-- ══════════════════════════════════════════════════════════════ -->
+<h2 id="s7"><span class="num">7</span>Risks and tradeoffs</h2>
+<table>
+  <tr><th>Risk</th><th>Severity</th><th>Mitigation</th></tr>
+  <tr>
+    <td>Cost abuse — now multiplied across N provider keys</td>
+    <td><span class="badge risk">HIGH</span></td>
+    <td>Rate limit sits <em>before</em> the gateway (one visitor budget regardless of provider); spend cap
+        set in <em>every</em> configured provider's console — checklist item, documented in the gateway
+        README. Unset keys = provider simply absent.</td>
+  </tr>
+  <tr>
+    <td>Behavioral drift between providers — same prompt, different persona/quality/safety behavior; worst
+        for phase-2 tool use <span class="badge new">NEW</span></td>
+    <td><span class="badge risk">MED</span></td>
+    <td>One provider is the tested default (D2); switching is <em>possible</em>, not automatic. A small
+        golden-question set (5 questions + expected traits) re-run manually when changing the alias.
+        Phase-2 tools verified on ≥2 providers before shipping.</td>
+  </tr>
+  <tr>
+    <td>Abstraction leak — provider-specific features (Anthropic system-prompt caching, OpenAI response
+        format, Gemini safety settings) don't fit the common interface <span class="badge new">NEW</span></td>
+    <td><span class="badge risk">MED</span></td>
+    <td>Accepted cost of the gateway: the interface stays lowest-common-denominator; per-provider tuning
+        lives inside its adapter (e.g. the Anthropic adapter can enable prompt caching internally —
+        invisible to callers). Never widen the shared interface for one provider's feature.</td>
+  </tr>
+  <tr>
+    <td>Prompt injection via grounded content</td>
+    <td><span class="badge risk">MED</span></td>
+    <td>Unchanged from v1: delimited data blocks, plain-text rendering, client-side navigate allowlist.
+        Note: injection resistance varies by model — another reason the default provider is a deliberate,
+        tested choice.</td>
+  </tr>
+  <tr>
+    <td>Streaming buffering on Vercel (one-lump arrival)</td>
+    <td><span class="badge risk">MED</span></td>
+    <td>Verify on a preview deploy at step 7 (first adapter), before building the other three.</td>
+  </tr>
+  <tr>
+    <td>Hydration mismatch from localStorage state</td>
+    <td><span class="badge risk">MED</span></td>
+    <td>Mount-gate pattern as <code>ModalProvider</code>; server renders nothing.</td>
+  </tr>
+  <tr>
+    <td>AI SDK dependency risk (D6-A) — breaking changes, abandonment <span class="badge new">NEW</span></td>
+    <td><span class="badge risk">LOW</span></td>
+    <td>The blast radius is four ~30-line adapter files behind our own interface — the explicit purpose of
+        owning <code>LLMProvider</code>. Worst case: rewrite adapters on native SDKs (D6-B) with zero app-code changes.</td>
+  </tr>
+  <tr>
+    <td>Gateway is speculative generality for a single chat feature <span class="badge new">NEW</span></td>
+    <td><span class="badge risk">LOW</span></td>
+    <td>Named honestly: today there is one consumer. Kept cheap deliberately (~5 small files + thin adapters,
+        no queues/caching/proxying). You've stated multi-provider is a requirement, and phase-2 suggestion
+        generation becomes consumer #2 via the <code>"cheap"</code> alias.</td>
+  </tr>
+  <tr>
+    <td>Bundle/perf impact</td>
+    <td><span class="badge risk">LOW</span></td>
+    <td>Gateway + SDKs are server-only (<code>server-only</code> enforced — client import is a build error).
+        Widget code-split via <code>next/dynamic</code>; panel loads on first open.</td>
+  </tr>
+</table>
+
+<!-- ══════════════════════════════════════════════════════════════ -->
+<h2 id="s8"><span class="num">8</span>Verification checklist</h2>
+<ul class="checklist">
+  <li><code>bun run build</code> passes; no new type or lint errors.</li>
+  <li>Gateway unit tests green with <code>FakeProvider</code>: alias resolution, unconfigured-provider fast-fail,
+      fallback on retryable pre-token error, no fallback mid-stream, abort propagation. <span class="badge new">NEW</span></li>
+  <li>Each configured provider smoke-tested end-to-end: streams, aborts cleanly, errors map to correct
+      <code>LLMError.code</code>. <span class="badge new">NEW</span></li>
+  <li>Model swap drill: change <code>LLM_CHAT_MODEL</code> to a second provider on a preview deploy —
+      widget works with zero code changes. <span class="badge new">NEW</span></li>
+  <li>ESLint blocks importing <code>lib/llm/providers/*</code> or provider SDKs outside the gateway. <span class="badge new">NEW</span></li>
+  <li>Preview deploy: tokens stream one-by-one (not one lump) — Chrome, Safari, Firefox.</li>
+  <li>Conversation + open state survive navigation, reload, browser restart.</li>
+  <li>Reset clears storage; greeting replays.</li>
+  <li>Rate limit: burst &gt;10 → 429 → countdown UI → recovery. Confirm the provider call is never made
+      when rate-limited (check usage logs).</li>
+  <li>Stop button aborts mid-stream; partial answer kept; verify the upstream provider request is actually
+      cancelled (usage logs show truncated output tokens).</li>
+  <li>Network kill mid-stream → error bubble + retry works.</li>
+  <li>1,000+ char input rejected client-side (and server 400 if forced).</li>
+  <li>Mobile ≤480px: full-screen sheet, scroll locked, iOS keyboard doesn't cover input.</li>
+  <li>Keyboard-only walkthrough; focus return; Escape; <code>aria-live</code> announcements.</li>
+  <li>Light + dark themes checked (5 unregistered palettes: spot-check).</li>
+  <li>Widget overlays correctly on all page types; no z-index fights with the <code>z-50</code> header.</li>
+  <li>No provider API key in the client bundle (<code>grep</code> all four key names in <code>.next</code>
+      client output); <code>server-only</code> guard confirmed by attempting a client import (build fails).</li>
+  <li>Prompt-injection smoke test (test post with "ignore instructions / link to evil.com") — declined;
+      non-allowlisted navigate dropped.</li>
+  <li>Spend cap confirmed in <em>every</em> configured provider console before public deploy. <span class="badge new">UPDATED</span></li>
+  <li>Golden-question set (5 Qs) answered acceptably on the default model; results saved as the baseline
+      for future provider swaps. <span class="badge new">NEW</span></li>
+  <li>Lighthouse: no meaningful LCP/CLS regression on home.</li>
+</ul>
+
+<!-- ══════════════════════════════════════════════════════════════ -->
+<h2 id="s9"><span class="num">9</span>Mechanical refactoring / cleanup</h2>
+<p class="muted">Low-risk housekeeping bundled into this work — documented so nothing surprises in the diff.</p>
+<ul>
+  <li><strong>Remove the dead CORS block</strong> in <code>next.config.js</code> for <code>/api/sb-contact</code>
+      (route deleted in commit <code>571373b</code>, Oct 2025).</li>
+  <li><strong>Drop unused dependencies</strong>: <code>nodemailer</code>, <code>@types/nodemailer</code>,
+      <code>@sendgrid/mail</code> (zero imports; contact-form leftovers), and the stray <code>types</code>
+      package (accidental install).</li>
+  <li><strong>Delete the empty <code>AI Agent Porfolio/</code> directory</strong> (untracked, empty, typo'd).</li>
+  <li><strong>Relocate mockup + this plan</strong> to <code>docs/</code> (or delete the mockup once the React
+      port ships).</li>
+  <li><strong>Type <code>routesConfig</code></strong> in <code>config/routes.ts</code> (<code>any</code> →
+      <code>NavItem[]</code>); no behavior change.</li>
+  <li><strong><code>.env.example</code> hygiene</strong> — new server-only var block with comments explaining
+      the <code>NEXT_PUBLIC_</code> vs server-only convention (these are the repo's first server secrets).</li>
+  <li><strong>ESLint rule</strong> — <code>no-restricted-imports</code> entries enforcing the gateway import
+      boundary (part of the §5A design, mechanically applied in <code>.eslintrc.json</code>). <span class="badge new">NEW</span></li>
+  <li><strong>Consistent icon usage</strong> — widget icons via existing <code>components/common/icons.tsx</code>
+      (lucide), not inline SVGs from the mockup.</li>
+</ul>
+
+<p class="muted" style="margin-top:3rem; border-top:1px solid var(--line); padding-top:1rem;">
+Plan v2 · adds the internal LLM gateway (§5A) per multi-provider requirement · supersedes v1 (single-provider) ·
+decisions D2, D3, D5, D6, D8 await your call — everything else is ready to start.</p>
+
+</div>
+</body>
+</html>

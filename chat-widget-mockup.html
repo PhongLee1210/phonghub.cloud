@@ -1,0 +1,548 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Chat widget mockup — phonghub.cloud</title>
+<style>
+  /* ── Design tokens copied from app/globals.css ─────────────────── */
+  :root {
+    --background: 0 0% 100%;
+    --foreground: 222.2 47.4% 11.2%;
+    --muted: 210 40% 96.1%;
+    --muted-foreground: 215.4 16.3% 46.9%;
+    --border: 214.3 31.8% 91.4%;
+    --card: 0 0% 100%;
+    --card-foreground: 222.2 47.4% 11.2%;
+    --primary: 222.2 47.4% 11.2%;
+    --primary-foreground: 210 40% 98%;
+    --secondary: 210 40% 96.1%;
+    --secondary-foreground: 222.2 47.4% 11.2%;
+    --radius: 0.5rem;
+  }
+  .dark {
+    --background: 224 71% 4%;
+    --foreground: 213 31% 91%;
+    --muted: 223 47% 11%;
+    --muted-foreground: 215.4 16.3% 56.9%;
+    --border: 216 34% 17%;
+    --card: 224 71% 4%;
+    --card-foreground: 213 31% 91%;
+    --primary: 210 40% 98%;
+    --primary-foreground: 222.2 47.4% 1.2%;
+    --secondary: 222.2 47.4% 11.2%;
+    --secondary-foreground: 210 40% 98%;
+  }
+  .retro {
+    --background: 39 70% 90%; --foreground: 20 80% 20%;
+    --muted: 30 40% 85%; --muted-foreground: 20 40% 30%;
+    --border: 20 40% 70%; --card: 39 60% 85%; --card-foreground: 20 80% 20%;
+    --primary: 20 80% 50%; --primary-foreground: 39 100% 97%;
+    --secondary: 30 60% 80%; --secondary-foreground: 20 80% 20%;
+    --radius: 0.125rem;
+  }
+  .cyberpunk {
+    --background: 235 85% 8%; --foreground: 180 100% 75%;
+    --muted: 235 70% 15%; --muted-foreground: 180 70% 55%;
+    --border: 326 100% 60%; --card: 235 80% 12%; --card-foreground: 180 100% 75%;
+    --primary: 326 100% 60%; --primary-foreground: 235 100% 98%;
+    --secondary: 196 100% 60%; --secondary-foreground: 235 85% 8%;
+    --radius: 0.125rem;
+  }
+  .aurora {
+    --background: 220 40% 10%; --foreground: 160 100% 90%;
+    --muted: 220 30% 20%; --muted-foreground: 160 70% 70%;
+    --border: 280 80% 60%; --card: 220 35% 15%; --card-foreground: 160 100% 90%;
+    --primary: 160 100% 50%; --primary-foreground: 220 40% 10%;
+    --secondary: 280 80% 60%; --secondary-foreground: 220 40% 10%;
+    --radius: 1rem;
+  }
+  .synthwave {
+    --background: 260 15% 10%; --foreground: 330 100% 90%;
+    --muted: 260 20% 20%; --muted-foreground: 330 70% 70%;
+    --border: 300 100% 60%; --card: 260 15% 15%; --card-foreground: 330 100% 90%;
+    --primary: 300 100% 60%; --primary-foreground: 260 15% 10%;
+    --secondary: 190 100% 60%; --secondary-foreground: 260 15% 10%;
+    --radius: 0.5rem;
+  }
+  .paper {
+    --background: 40 30% 95%; --foreground: 25 50% 20%;
+    --muted: 30 20% 90%; --muted-foreground: 25 30% 40%;
+    --border: 25 30% 80%; --card: 35 25% 92%; --card-foreground: 25 50% 20%;
+    --primary: 25 95% 40%; --primary-foreground: 40 30% 98%;
+    --secondary: 15 60% 85%; --secondary-foreground: 25 50% 20%;
+    --radius: 0.25rem;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { height: 100%; }
+  body {
+    font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    background: hsl(var(--background));
+    color: hsl(var(--foreground));
+    transition: background 0.3s, color 0.3s;
+  }
+
+  /* ── Fake portfolio page behind the widget ─────────────────────── */
+  .fake-header {
+    display: flex; align-items: center; justify-content: space-between;
+    max-width: 1100px; margin: 0 auto; padding: 1.5rem 2rem;
+  }
+  .fake-nav { display: flex; gap: 1.25rem; font-size: 0.875rem; color: hsl(var(--muted-foreground)); }
+  .fake-nav span:hover { color: hsl(var(--foreground)); cursor: pointer; }
+  .theme-picker {
+    background: hsl(var(--card)); color: hsl(var(--card-foreground));
+    border: 1px solid hsl(var(--border)); border-radius: var(--radius);
+    padding: 0.4rem 0.6rem; font-size: 0.8rem; cursor: pointer;
+  }
+  .fake-hero { max-width: 1100px; margin: 0 auto; padding: 5rem 2rem; text-align: center; }
+  .fake-avatar {
+    width: 110px; height: 110px; border-radius: 50%;
+    background: hsl(var(--primary)); color: hsl(var(--primary-foreground));
+    display: inline-flex; align-items: center; justify-content: center;
+    font-size: 2.4rem; font-weight: 700; margin-bottom: 1.25rem;
+  }
+  .fake-hero h1 { font-size: 2.75rem; letter-spacing: -0.02em; }
+  .fake-hero h3 { font-weight: 500; margin-top: 0.5rem; }
+  .fake-hero p { color: hsl(var(--muted-foreground)); max-width: 42rem; margin: 1.25rem auto 0; line-height: 1.6; }
+  .fake-cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 1rem; max-width: 1100px; margin: 1rem auto 6rem; padding: 0 2rem; }
+  .fake-card {
+    border: 1px solid hsl(var(--border)); border-radius: calc(var(--radius) + 4px);
+    background: hsl(var(--card)); color: hsl(var(--card-foreground));
+    padding: 1.25rem; text-align: left;
+  }
+  .fake-card h4 { font-size: 0.95rem; margin-bottom: 0.4rem; }
+  .fake-card p { font-size: 0.8rem; color: hsl(var(--muted-foreground)); line-height: 1.5; }
+
+  /* ── Launcher button ───────────────────────────────────────────── */
+  .chat-launcher {
+    position: fixed; right: 1.5rem; bottom: 1.5rem; z-index: 60;
+    width: 56px; height: 56px; border-radius: 50%;
+    background: hsl(var(--primary)); color: hsl(var(--primary-foreground));
+    border: none; cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+    box-shadow: 0 8px 24px hsl(var(--foreground) / 0.18);
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+  }
+  .chat-launcher:hover { transform: scale(1.06); }
+  .chat-launcher svg { width: 24px; height: 24px; transition: opacity 0.15s, transform 0.25s; position: absolute; }
+  .chat-launcher .icon-close { opacity: 0; transform: rotate(-90deg) scale(0.5); }
+  body.chat-open .chat-launcher .icon-chat  { opacity: 0; transform: rotate(90deg) scale(0.5); }
+  body.chat-open .chat-launcher .icon-close { opacity: 1; transform: rotate(0) scale(1); }
+  .chat-badge {
+    position: absolute; top: -2px; right: -2px; width: 14px; height: 14px;
+    border-radius: 50%; background: #22c55e; border: 2.5px solid hsl(var(--background));
+  }
+  body.chat-open .chat-badge { display: none; }
+
+  /* ── Chat panel ────────────────────────────────────────────────── */
+  .chat-panel {
+    position: fixed; right: 1.5rem; bottom: 5.75rem; z-index: 59;
+    width: 380px; max-width: calc(100vw - 3rem);
+    height: 560px; max-height: calc(100vh - 8rem);
+    display: flex; flex-direction: column; overflow: hidden;
+    background: hsl(var(--card)); color: hsl(var(--card-foreground));
+    border: 1px solid hsl(var(--border)); border-radius: calc(var(--radius) + 8px);
+    box-shadow: 0 24px 64px hsl(var(--foreground) / 0.22);
+    opacity: 0; pointer-events: none;
+    transform: translateY(12px) scale(0.98); transform-origin: bottom right;
+    transition: opacity 0.22s ease, transform 0.22s ease;
+  }
+  body.chat-open .chat-panel { opacity: 1; pointer-events: auto; transform: translateY(0) scale(1); }
+
+  .chat-header {
+    display: flex; align-items: center; gap: 0.75rem;
+    padding: 0.9rem 1rem; border-bottom: 1px solid hsl(var(--border));
+    flex-shrink: 0;
+  }
+  .chat-header .avatar {
+    width: 38px; height: 38px; border-radius: 50%;
+    background: hsl(var(--primary)); color: hsl(var(--primary-foreground));
+    display: flex; align-items: center; justify-content: center;
+    font-weight: 700; font-size: 0.95rem; position: relative; flex-shrink: 0;
+  }
+  .chat-header .avatar::after {
+    content: ""; position: absolute; bottom: 0; right: 0; width: 10px; height: 10px;
+    border-radius: 50%; background: #22c55e; border: 2px solid hsl(var(--card));
+  }
+  .chat-header .who { flex: 1; min-width: 0; }
+  .chat-header .who strong { display: block; font-size: 0.9rem; }
+  .chat-header .who span { font-size: 0.75rem; color: hsl(var(--muted-foreground)); }
+  .chat-header .header-btn {
+    background: none; border: none; cursor: pointer; color: hsl(var(--muted-foreground));
+    width: 30px; height: 30px; border-radius: var(--radius);
+    display: flex; align-items: center; justify-content: center;
+  }
+  .chat-header .header-btn:hover { background: hsl(var(--muted)); color: hsl(var(--foreground)); }
+
+  .chat-messages {
+    flex: 1; overflow-y: auto; padding: 1rem;
+    display: flex; flex-direction: column; gap: 0.75rem;
+    scroll-behavior: smooth;
+  }
+  .msg { max-width: 85%; font-size: 0.875rem; line-height: 1.55; animation: msg-in 0.25s ease; }
+  @keyframes msg-in { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
+  .msg.bot {
+    align-self: flex-start;
+    background: hsl(var(--muted)); color: hsl(var(--foreground));
+    border-radius: 4px calc(var(--radius) + 8px) calc(var(--radius) + 8px) calc(var(--radius) + 8px);
+    padding: 0.65rem 0.9rem;
+  }
+  .msg.user {
+    align-self: flex-end;
+    background: hsl(var(--primary)); color: hsl(var(--primary-foreground));
+    border-radius: calc(var(--radius) + 8px) 4px calc(var(--radius) + 8px) calc(var(--radius) + 8px);
+    padding: 0.65rem 0.9rem;
+  }
+  .msg.bot .cursor {
+    display: inline-block; width: 7px; height: 14px; vertical-align: -2px;
+    background: hsl(var(--foreground) / 0.65); animation: blink 0.9s steps(1) infinite;
+  }
+  @keyframes blink { 50% { opacity: 0; } }
+
+  /* Rich project card inside a bot reply */
+  .msg-card {
+    align-self: flex-start; width: 85%;
+    border: 1px solid hsl(var(--border)); border-radius: calc(var(--radius) + 6px);
+    overflow: hidden; animation: msg-in 0.25s ease; background: hsl(var(--card));
+  }
+  .msg-card .thumb {
+    height: 90px; background: linear-gradient(135deg, hsl(var(--primary) / 0.85), hsl(var(--secondary)));
+    display: flex; align-items: center; justify-content: center;
+    color: hsl(var(--primary-foreground)); font-weight: 700; letter-spacing: 0.04em; font-size: 0.8rem;
+  }
+  .msg-card .body { padding: 0.75rem 0.9rem; }
+  .msg-card .body h5 { font-size: 0.85rem; margin-bottom: 0.25rem; }
+  .msg-card .body p { font-size: 0.75rem; color: hsl(var(--muted-foreground)); line-height: 1.5; }
+  .msg-card .tags { display: flex; flex-wrap: wrap; gap: 0.3rem; margin-top: 0.5rem; }
+  .msg-card .tag {
+    font-size: 0.65rem; padding: 0.15rem 0.5rem; border-radius: 999px;
+    background: hsl(var(--secondary)); color: hsl(var(--secondary-foreground));
+  }
+  .msg-card .cta {
+    display: block; width: 100%; text-align: center; padding: 0.55rem;
+    border: none; border-top: 1px solid hsl(var(--border)); background: none;
+    color: hsl(var(--foreground)); font-size: 0.78rem; font-weight: 600; cursor: pointer;
+  }
+  .msg-card .cta:hover { background: hsl(var(--muted)); }
+
+  .typing { align-self: flex-start; display: flex; gap: 4px; padding: 0.75rem 0.9rem; background: hsl(var(--muted)); border-radius: 4px calc(var(--radius) + 8px) calc(var(--radius) + 8px) calc(var(--radius) + 8px); }
+  .typing i {
+    width: 6px; height: 6px; border-radius: 50%; background: hsl(var(--muted-foreground));
+    animation: bounce 1.2s infinite;
+  }
+  .typing i:nth-child(2) { animation-delay: 0.15s; }
+  .typing i:nth-child(3) { animation-delay: 0.3s; }
+  @keyframes bounce { 0%, 60%, 100% { transform: none; } 30% { transform: translateY(-4px); } }
+
+  .chat-suggestions {
+    display: flex; flex-wrap: wrap; gap: 0.4rem;
+    padding: 0 1rem 0.75rem; flex-shrink: 0;
+  }
+  .chip {
+    font-size: 0.75rem; padding: 0.35rem 0.75rem; cursor: pointer;
+    border: 1px solid hsl(var(--border)); border-radius: 999px;
+    background: hsl(var(--card)); color: hsl(var(--muted-foreground));
+    transition: all 0.15s;
+  }
+  .chip:hover { border-color: hsl(var(--primary)); color: hsl(var(--foreground)); }
+
+  .chat-input-row {
+    display: flex; align-items: flex-end; gap: 0.5rem;
+    padding: 0.75rem 1rem; border-top: 1px solid hsl(var(--border)); flex-shrink: 0;
+  }
+  .chat-input {
+    flex: 1; resize: none; border: 1px solid hsl(var(--border));
+    background: hsl(var(--background)); color: hsl(var(--foreground));
+    border-radius: var(--radius); padding: 0.6rem 0.75rem;
+    font: inherit; font-size: 0.875rem; line-height: 1.4; max-height: 96px; outline: none;
+  }
+  .chat-input:focus { border-color: hsl(var(--primary) / 0.6); }
+  .send-btn {
+    width: 38px; height: 38px; border-radius: var(--radius); border: none; cursor: pointer;
+    background: hsl(var(--primary)); color: hsl(var(--primary-foreground));
+    display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+    transition: opacity 0.15s;
+  }
+  .send-btn:disabled { opacity: 0.4; cursor: default; }
+  .chat-footnote {
+    text-align: center; font-size: 0.65rem; color: hsl(var(--muted-foreground));
+    padding: 0 0 0.6rem; flex-shrink: 0;
+  }
+
+  /* Mobile: full-screen sheet */
+  @media (max-width: 480px) {
+    .chat-panel {
+      right: 0; bottom: 0; left: 0;
+      width: 100%; max-width: 100%; height: 100dvh; max-height: 100dvh;
+      border-radius: 0; border: none;
+    }
+    body.chat-open .chat-launcher { display: none; }
+  }
+</style>
+</head>
+<body>
+
+  <!-- Fake portfolio page for context -->
+  <header class="fake-header">
+    <strong>phonghub.cloud</strong>
+    <nav class="fake-nav">
+      <span>Skills</span><span>Projects</span><span>Experience</span><span>Blogs</span><span>Contact</span>
+    </nav>
+    <select class="theme-picker" id="themePicker" aria-label="Theme">
+      <option value="">light</option>
+      <option value="dark" selected>dark</option>
+      <option value="retro">retro</option>
+      <option value="cyberpunk">cyberpunk</option>
+      <option value="aurora">aurora</option>
+      <option value="synthwave">synthwave</option>
+      <option value="paper">paper</option>
+    </select>
+  </header>
+
+  <section class="fake-hero">
+    <div class="fake-avatar">P</div>
+    <h1>Le Thanh Phong</h1>
+    <h3>Software Engineer</h3>
+    <p>This is a stand-in for the real homepage — it exists only so you can judge the widget in context: how it floats over content, how it feels in each theme, and how it behaves on mobile widths.</p>
+  </section>
+
+  <div class="fake-cards">
+    <div class="fake-card"><h4>AI Sales &amp; Landing Page Platform</h4><p>Next.js SSR/SSG landing page with an AI-powered sales assistant capturing and routing leads.</p></div>
+    <div class="fake-card"><h4>AI Assistant &amp; Enrollment Platform</h4><p>Vue.js and Node.js platform with AI enrollment agents and automated workflows.</p></div>
+    <div class="fake-card"><h4>Content Management System</h4><p>SEO-optimized CMS built with Next.js, React, TypeScript and MongoDB.</p></div>
+  </div>
+
+  <!-- ── Chat widget ─────────────────────────────────────────────── -->
+  <button class="chat-launcher" id="launcher" aria-label="Open chat">
+    <span class="chat-badge"></span>
+    <svg class="icon-chat" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+    <svg class="icon-close" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18M6 6l12 12"/></svg>
+  </button>
+
+  <div class="chat-panel" id="panel" role="dialog" aria-label="Chat with Phong's AI assistant">
+    <div class="chat-header">
+      <div class="avatar">P</div>
+      <div class="who">
+        <strong>Phong&rsquo;s AI assistant</strong>
+        <span>Ask me anything about his work</span>
+      </div>
+      <button class="header-btn" id="resetBtn" title="Reset conversation" aria-label="Reset conversation">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/></svg>
+      </button>
+      <button class="header-btn" id="closeBtn" title="Close" aria-label="Close chat">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18M6 6l12 12"/></svg>
+      </button>
+    </div>
+
+    <div class="chat-messages" id="messages"></div>
+
+    <div class="chat-suggestions" id="suggestions"></div>
+
+    <div class="chat-input-row">
+      <textarea class="chat-input" id="input" rows="1" placeholder="Ask about Phong&rsquo;s projects, skills&hellip;"></textarea>
+      <button class="send-btn" id="sendBtn" aria-label="Send" disabled>
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m22 2-7 20-4-9-9-4z"/><path d="M22 2 11 13"/></svg>
+      </button>
+    </div>
+    <div class="chat-footnote">Mockup &mdash; responses are fake &amp; scripted</div>
+  </div>
+
+<script>
+  // ── Fake data ─────────────────────────────────────────────────────
+  const GREETING = "Hi there 👋 I'm Phong's AI assistant. I can tell you about his projects, skills, and experience — or point you to the right page. What would you like to know?";
+
+  const SUGGESTIONS = [
+    "What has Phong built with AI?",
+    "What's his tech stack?",
+    "Is he open to new opportunities?",
+  ];
+
+  const SCRIPTS = {
+    "What has Phong built with AI?": {
+      text: "Phong's most recent AI work is at HiliosAI, where he built an AI sales assistant that increased qualified lead capture by 60–90%. Here's the project:",
+      card: {
+        title: "AI Sales & Landing Page Platform",
+        desc: "Fully-automated landing page and AI-powered sales assistant — Next.js SSR/SSG frontend with a FastAPI/GraphQL backend that captures, qualifies and routes leads.",
+        tags: ["Next.js", "FastAPI", "GraphQL", "AWS"],
+        cta: "View project →",
+      },
+      followups: ["What's his tech stack?", "Tell me about his experience"],
+    },
+    "What's his tech stack?": {
+      text: "His core stack is React, Next.js, Node.js and TypeScript (expert level), with advanced experience in MongoDB, GraphQL, AWS, Vue.js, FastAPI and Docker. Lately he's been working with LangChain and AI integration. Want the full breakdown on the skills page?",
+      followups: ["Take me to the skills page", "What has Phong built with AI?"],
+    },
+    "Is he open to new opportunities?": {
+      text: "Phong is currently a Software Engineer at HiliosAI, but he's always happy to hear about interesting projects and collaborations. The best way to reach him is through the contact page — want me to take you there?",
+      followups: ["Take me to the contact page", "What's his tech stack?"],
+    },
+    "Tell me about his experience": {
+      text: "He has 5+ years of experience: currently at HiliosAI building AI-first products, previously a full-stack developer at LTV working with Vue.js, Node.js and AWS. His career timeline is on the experience page.",
+      followups: ["What has Phong built with AI?", "Is he open to new opportunities?"],
+    },
+    "Take me to the skills page": {
+      text: "In the real app I'd navigate you to /skills right now. (This is a mockup, so imagine a smooth page transition here ✨)",
+      followups: SUGGESTIONS,
+    },
+    "Take me to the contact page": {
+      text: "In the real app I'd navigate you to /contact right now. (This is a mockup, so imagine a smooth page transition here ✨)",
+      followups: SUGGESTIONS,
+    },
+  };
+
+  const FALLBACK = {
+    text: "Good question! In the real version I'll answer from Phong's actual blog posts, projects and experience. In this mockup, try one of the suggested questions below.",
+    followups: SUGGESTIONS,
+  };
+
+  // ── Elements ─────────────────────────────────────────────────────
+  const $ = (id) => document.getElementById(id);
+  const messagesEl = $("messages"), suggestionsEl = $("suggestions"),
+        inputEl = $("input"), sendBtn = $("sendBtn");
+
+  // ── Theme picker ─────────────────────────────────────────────────
+  $("themePicker").addEventListener("change", (e) => {
+    document.documentElement.className = e.target.value;
+  });
+  document.documentElement.className = "dark";
+
+  // ── Open / close ─────────────────────────────────────────────────
+  const toggle = (open) => {
+    document.body.classList.toggle("chat-open", open);
+    if (open) inputEl.focus();
+  };
+  $("launcher").addEventListener("click", () => toggle(!document.body.classList.contains("chat-open")));
+  $("closeBtn").addEventListener("click", () => toggle(false));
+  document.addEventListener("keydown", (e) => { if (e.key === "Escape") toggle(false); });
+
+  // ── Rendering ────────────────────────────────────────────────────
+  const scroll = () => { messagesEl.scrollTop = messagesEl.scrollHeight; };
+
+  function addMsg(role, text) {
+    const el = document.createElement("div");
+    el.className = "msg " + role;
+    el.textContent = text;
+    messagesEl.appendChild(el);
+    scroll();
+    return el;
+  }
+
+  function addCard(card) {
+    const el = document.createElement("div");
+    el.className = "msg-card";
+    el.innerHTML = `
+      <div class="thumb">PROJECT</div>
+      <div class="body">
+        <h5></h5><p></p>
+        <div class="tags"></div>
+      </div>
+      <button class="cta"></button>`;
+    el.querySelector("h5").textContent = card.title;
+    el.querySelector("p").textContent = card.desc;
+    el.querySelector(".cta").textContent = card.cta;
+    const tags = el.querySelector(".tags");
+    card.tags.forEach((t) => {
+      const s = document.createElement("span");
+      s.className = "tag"; s.textContent = t;
+      tags.appendChild(s);
+    });
+    el.querySelector(".cta").addEventListener("click", () => {
+      ask("Take me to the skills page");
+    });
+    messagesEl.appendChild(el);
+    scroll();
+  }
+
+  function showTyping() {
+    const el = document.createElement("div");
+    el.className = "typing";
+    el.innerHTML = "<i></i><i></i><i></i>";
+    messagesEl.appendChild(el);
+    scroll();
+    return el;
+  }
+
+  // Fake token-by-token streaming
+  function streamText(el, text, done) {
+    const tokens = text.split(/(?<=\s)/);
+    let i = 0;
+    el.textContent = "";
+    const cursor = document.createElement("span");
+    cursor.className = "cursor";
+    el.appendChild(cursor);
+    const tick = () => {
+      if (i < tokens.length) {
+        cursor.before(document.createTextNode(tokens[i++]));
+        scroll();
+        setTimeout(tick, 24 + Math.random() * 46);
+      } else {
+        cursor.remove();
+        done && done();
+      }
+    };
+    tick();
+  }
+
+  function setSuggestions(list) {
+    suggestionsEl.innerHTML = "";
+    (list || []).forEach((q) => {
+      const b = document.createElement("button");
+      b.className = "chip"; b.textContent = q;
+      b.addEventListener("click", () => ask(q));
+      suggestionsEl.appendChild(b);
+    });
+  }
+
+  let busy = false;
+  function ask(question) {
+    if (busy) return;
+    busy = true;
+    setSuggestions([]);
+    addMsg("user", question);
+    const script = SCRIPTS[question] || FALLBACK;
+    const typing = showTyping();
+    setTimeout(() => {
+      typing.remove();
+      const botEl = addMsg("bot", "");
+      streamText(botEl, script.text, () => {
+        if (script.card) addCard(script.card);
+        setSuggestions(script.followups);
+        busy = false;
+      });
+    }, 700 + Math.random() * 500);
+  }
+
+  // ── Input handling ───────────────────────────────────────────────
+  inputEl.addEventListener("input", () => {
+    sendBtn.disabled = !inputEl.value.trim();
+    inputEl.style.height = "auto";
+    inputEl.style.height = Math.min(inputEl.scrollHeight, 96) + "px";
+  });
+  const submit = () => {
+    const v = inputEl.value.trim();
+    if (!v || busy) return;
+    inputEl.value = ""; inputEl.style.height = "auto"; sendBtn.disabled = true;
+    ask(v);
+  };
+  sendBtn.addEventListener("click", submit);
+  inputEl.addEventListener("keydown", (e) => {
+    if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); submit(); }
+  });
+
+  // ── Reset / boot ─────────────────────────────────────────────────
+  function boot() {
+    messagesEl.innerHTML = "";
+    setSuggestions([]);
+    const typing = showTyping();
+    setTimeout(() => {
+      typing.remove();
+      const el = addMsg("bot", "");
+      streamText(el, GREETING, () => setSuggestions(SUGGESTIONS));
+    }, 600);
+  }
+  $("resetBtn").addEventListener("click", boot);
+  boot();
+</script>
+</body>
+</html>
