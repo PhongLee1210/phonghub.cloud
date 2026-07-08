@@ -1,4 +1,13 @@
-export const routesConfig: any = {
+export interface NavItem {
+  title: string;
+  href: string;
+}
+
+export interface RoutesConfig {
+  mainNav: NavItem[];
+}
+
+export const routesConfig: RoutesConfig = {
   mainNav: [
     {
       title: "Skills",
