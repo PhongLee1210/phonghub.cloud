@@ -14,6 +14,7 @@
 - Résumé page (`/resume`)
 - Contact page (`/contact`)
 - Markdown-based blog with category, tag, and search support (`/blogs`, `/blogs/[slug]`, `/blogs/category/[category]`, `/blogs/tag/[tag]`)
+- AI chat widget (floating launcher on every page) answering questions about Phong's projects, skills, and experience, streamed from a provider-agnostic LLM gateway (`POST /api/chat`, `lib/llm/`) — see `docs/chat-widget-implementation-plan.html` and `implementation-notes.md`
 - Dark/light theme switching (`next-themes`)
 - Framer Motion animations
 - SEO metadata, sitemap (`app/sitemap.ts`), and web manifest (`app/manifest.ts`)
@@ -24,7 +25,8 @@
 - **Styling**: Tailwind CSS, Radix UI primitives, `class-variance-authority`, Framer Motion
 - **Content**: Markdown blog posts (`content/blog`), parsed with `gray-matter` and `remark`
 - **Forms/validation**: `react-hook-form`, `zod`
-- **State**: `zustand` (client state, e.g. modals)
+- **State**: `zustand` (client state, e.g. modals, chat widget)
+- **LLM gateway**: internal provider-agnostic layer (`lib/llm/`) over the Vercel AI SDK (`ai`, `@ai-sdk/anthropic`, `@ai-sdk/openai`, `@ai-sdk/google`, `@ai-sdk/groq`); rate limiting via `@upstash/ratelimit` + `@upstash/redis`
 - **Runtime & package manager**: Bun (`bun.lock`)
 - **Linting/formatting**: ESLint (`eslint-config-next`), Prettier
 - **Deployment**: Vercel (see `vercel.json`)
@@ -60,6 +62,12 @@ cp .env.example .env.local
 | `NEXT_PUBLIC_GOOGLE_MEASUREMENT_ID` | Google Analytics measurement ID. |
 | `NEXT_PUBLIC_GOOGLE_VERIFICATION` | Google Search Console site verification token. |
 | `NEXT_PUBLIC_RESUME_LINK` | Link used by the résumé page/download action. |
+| `ANTHROPIC_API_KEY` / `OPENAI_API_KEY` / `GOOGLE_GENERATIVE_AI_API_KEY` / `GROQ_API_KEY` | LLM gateway provider keys — server-only, set only for providers you use. See `lib/llm/README.md`. |
+| `LLM_CHAT_MODEL` / `LLM_CHEAP_MODEL` | Override the `chat`/`cheap` model alias (`provider:model`, e.g. `groq:llama-3.3-70b`). Optional — sane defaults are baked in. |
+| `LLM_CHAT_FALLBACKS` | Optional comma-separated fallback chain for the `chat` alias (pre-token failover only). Off by default. |
+| `UPSTASH_REDIS_REST_URL` / `UPSTASH_REDIS_REST_TOKEN` | Rate limiting store for `/api/chat`. If unset, requests are rejected in production and allowed through in development — see `implementation-notes.md`. |
+
+`.env.example` documents the full list, including which variables are server-only (never sent to the browser).
 
 ### Run Development Server
 
@@ -74,13 +82,14 @@ Open [http://localhost:3000](http://localhost:3000).
 ```
 app/                  # Next.js App Router
 ├── (root)/           # Public pages: home, experience, projects, skills, resume, contact, blogs, list100
-├── api/               # Route handlers: projects, experiences, skills, blog/search
+├── api/               # Route handlers: projects, experiences, skills, blog/search, chat (NDJSON stream)
 ├── sitemap.ts, manifest.ts, layout.tsx, globals.css
-components/           # UI, grouped by feature (blog, contact, experience, projects, skills, list100, modals, common, ui)
-config/               # Static site content and metadata (site, routes, pages, projects, experience, skills, socials, constants)
+components/           # UI, grouped by feature (blog, contact, experience, projects, skills, list100, modals, chat, common, ui)
+config/               # Static site content and metadata (site, routes, pages, projects, experience, skills, socials, constants, chat)
 content/blog/         # Markdown blog posts
-lib/                  # Business logic: lib/blog (Markdown parsing/service), api.ts, utils.ts
-hooks/, providers/    # Shared React hooks and context providers
+lib/                  # Business logic: lib/blog (Markdown parsing/service), lib/llm (LLM gateway), lib/chat (system prompt, rate limit, client stream reader), api.ts, utils.ts
+hooks/, providers/    # Shared React hooks and context providers (incl. chat store)
+types/                # Shared client-safe types (chat wire protocol)
 public/, assets/      # Static assets and fonts
 docs/                 # Repository documentation (see below)
 ```
@@ -93,13 +102,14 @@ bun run build       # production build
 bun run start       # run production build locally
 bun run lint        # ESLint
 bunx tsc --noEmit   # type check
+bun run test        # unit tests (bun:test)
 ```
 
 Business logic (content loading, formatting, filtering) lives in `lib/`; UI components should consume `lib/` and `config/` rather than reading Markdown or the filesystem directly. See `docs/GIT_WORKFLOW.md` for commit/branch conventions.
 
 ## Testing
 
-No automated test suite is configured in this repository yet. Verify changes by running lint and type-checking, then manually checking the affected pages in the browser.
+Unit tests run via Bun's built-in test runner (`bun run test`; see `lib/llm/*.test.ts` and `lib/chat/*.test.ts` for coverage of the chat gateway's pure logic and Redis-backed guards). There's no component/integration/e2e test suite — verify UI changes by running lint and type-checking, then manually checking the affected pages in the browser.
 
 ## Deployment
 
@@ -109,6 +119,9 @@ The project is configured for [Vercel](https://vercel.com) (`vercel.json`), usin
 
 - [docs/GIT_WORKFLOW.md](docs/GIT_WORKFLOW.md) — branch naming, commit message, and pull request rules
 - [CLAUDE.md](CLAUDE.md) — guidance for AI coding agents working in this repository
+- [docs/chat-widget-implementation-plan.html](docs/chat-widget-implementation-plan.html) / [docs/chat-widget-mockup.html](docs/chat-widget-mockup.html) — design/plan for the AI chat widget and LLM gateway
+- [implementation-notes.md](implementation-notes.md) — build log and documented deviations for the chat widget feature
+- [lib/llm/README.md](lib/llm/README.md) — LLM gateway internals, adding a provider, env keys
 
 ## Contributing
 
