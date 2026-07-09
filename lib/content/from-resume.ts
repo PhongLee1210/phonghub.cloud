@@ -3,7 +3,7 @@ import "server-only";
 import fs from "fs";
 import path from "path";
 
-import { ResumeSource, ResumeSourceContentItem } from "@/types/content";
+import { ContentSourceType, ResumeSource, ResumeSourceContentItem } from "@/types/content";
 import { resumeSourceSchema } from "./schema";
 
 const DEFAULT_RESUME_PATH = "content/resume/resume.json";
@@ -32,7 +32,7 @@ export function normalizeResumeSource(
     const confidence = GROUNDED_SECTIONS.has(section.section) ? 1.0 : 0.5;
     const base = {
       id: `resume_source:${resume.id}:${section.section}`,
-      sourceType: "resume_source" as const,
+      sourceType: ContentSourceType.RESUME_SOURCE as const,
       sourceUrl: `/resume#${section.section}`,
       skillTags: [] as string[],
       visibility: "public" as const,

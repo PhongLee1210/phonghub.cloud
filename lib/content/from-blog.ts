@@ -2,7 +2,7 @@ import "server-only";
 
 import { ISkill, SKILLS } from "@/config/skills";
 import { BlogPostSummary, listPublishedPosts } from "@/lib/blog/service";
-import { BlogContentItem } from "@/types/content";
+import { BlogContentItem, ContentSourceType } from "@/types/content";
 import { findSkillByName } from "./from-project";
 
 /**
@@ -23,7 +23,7 @@ export function normalizeBlogPost(
   return {
     id: `blog:${post.slug}`,
     title: post.title,
-    sourceType: "blog",
+    sourceType: ContentSourceType.BLOG,
     sourceUrl: `/blogs/${post.slug}`,
     skillTags,
     visibility: post.status === "published" ? "public" : "private",

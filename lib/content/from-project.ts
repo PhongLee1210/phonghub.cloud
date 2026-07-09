@@ -1,6 +1,6 @@
 import { ISkill } from "@/config/skills";
 import { ProjectInterface } from "@/config/projects";
-import { ProjectContentItem, SkillTag } from "@/types/content";
+import { ContentSourceType, ProjectContentItem, SkillTag } from "@/types/content";
 
 /** Case-insensitive lookup by ISkill.name, shared by every adapter that needs to resolve a display name back to a cataloged skill. */
 export function findSkillByName(rawName: string, skills: ISkill[]): ISkill | undefined {
@@ -43,7 +43,7 @@ export function normalizeProject(
   return {
     id: `project:${project.id}`,
     title: project.companyName,
-    sourceType: "project",
+    sourceType: ContentSourceType.PROJECT,
     sourceUrl: `/projects/${project.id}`,
     projectId: project.id,
     skillTags,

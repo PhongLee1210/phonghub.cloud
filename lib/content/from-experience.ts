@@ -1,6 +1,6 @@
 import { ISkill } from "@/config/skills";
 import { ExperienceInterface } from "@/config/experience";
-import { ExperienceContentItem } from "@/types/content";
+import { ContentSourceType, ExperienceContentItem } from "@/types/content";
 import { resolveSkillTag } from "./from-project";
 
 export function normalizeExperience(
@@ -14,7 +14,7 @@ export function normalizeExperience(
   return {
     id: `experience:${exp.id}`,
     title: `${exp.position} at ${exp.company}`,
-    sourceType: "experience",
+    sourceType: ContentSourceType.EXPERIENCE,
     sourceUrl: `/experience#${exp.id}`,
     skillTags,
     visibility: "public",

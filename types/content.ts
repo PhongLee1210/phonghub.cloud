@@ -12,15 +12,16 @@ export type ContentItemId = string;
 /** `${ContentSourceType}:${ContentItemId}`, used to trace an agent citation back to its source item. */
 export type CitationId = string;
 
-export type ContentSourceType =
-  | "project"
-  | "skill"
-  | "experience"
-  | "resume_source"
-  | "blog"
+export enum ContentSourceType {
+  PROJECT = "PROJECT",
+  SKILL = "SKILL",
+  EXPERIENCE = "EXPERIENCE",
+  RESUME_SOURCE = "RESUME_SOURCE",
+  BLOG = "BLOG",
   // Reserved for future sources — not implemented yet.
-  | "github_activity"
-  | "manual";
+  GITHUB_ACTIVITY = "GITHUB_ACTIVITY",
+  MANUAL = "MANUAL",
+}
 
 export type ContentVisibility = "public" | "unlisted" | "private";
 
@@ -43,7 +44,7 @@ export interface ContentItemBase {
 }
 
 export interface ProjectContentItem extends ContentItemBase {
-  sourceType: "project";
+  sourceType: ContentSourceType.PROJECT;
   projectId: ProjectId;
   companyName: string;
   category: ValidCategory[];
@@ -56,14 +57,14 @@ export interface ProjectContentItem extends ContentItemBase {
 }
 
 export interface SkillContentItem extends ContentItemBase {
-  sourceType: "skill";
+  sourceType: ContentSourceType.SKILL;
   skillKey: string;
   category: SkillCategoryEnum;
   rating: number;
 }
 
 export interface ExperienceContentItem extends ContentItemBase {
-  sourceType: "experience";
+  sourceType: ContentSourceType.EXPERIENCE;
   experienceId: ExperienceId;
   position: string;
   company: string;
@@ -153,7 +154,7 @@ export interface ResumeSource {
 }
 
 export interface ResumeSourceContentItem extends ContentItemBase {
-  sourceType: "resume_source";
+  sourceType: ContentSourceType.RESUME_SOURCE;
   resumeSourceId: ResumeSourceId;
   section: ResumeSectionType;
   relatedExperienceIds: ExperienceId[];
@@ -161,7 +162,7 @@ export interface ResumeSourceContentItem extends ContentItemBase {
 }
 
 export interface BlogContentItem extends ContentItemBase {
-  sourceType: "blog";
+  sourceType: ContentSourceType.BLOG;
   blogPostId: BlogPostId;
   category: string;
   tags: string[];
