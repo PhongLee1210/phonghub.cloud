@@ -38,7 +38,7 @@ import {
   X,
   Zap,
 } from "lucide-react";
-import { AiFillStar } from "react-icons/ai";
+import { AiFillStar, AiOutlineStar } from "react-icons/ai";
 import { BiLaugh, BiSolidUser } from "react-icons/bi";
 import { BsInfoCircle, BsQuestionCircle } from "react-icons/bs";
 import { FaAws, FaFacebook, FaJava, FaXTwitter } from "react-icons/fa6";
@@ -125,6 +125,7 @@ export const Icons = {
   link: HiOutlineLink,
   externalLink: HiOutlineExternalLink,
   star: AiFillStar,
+  starOutline: AiOutlineStar,
   amazonaws: FaAws,
   angular: SiAngular,
   apollo: SiApollographql,

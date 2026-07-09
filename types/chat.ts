@@ -18,11 +18,14 @@ export interface ProjectCardPayload {
   href: `/projects/${string}`;
 }
 
+export type ChatMessageAction = "star_repo";
+
 export interface ChatMessage {
   id: string;
   role: ChatRole;
   content: string;
   card?: ProjectCardPayload;
+  action?: ChatMessageAction;
   createdAt: number;
   error?: boolean;
 }
@@ -48,5 +51,6 @@ export type ChatStreamEvent =
   | { type: "token"; text: string }
   | { type: "card"; card: ProjectCardPayload }
   | { type: "navigate"; href: InternalRoute }
+  | { type: "action"; action: ChatMessageAction }
   | { type: "done"; suggestions?: string[] }
   | { type: "error"; code: ChatErrorCode; message: string };

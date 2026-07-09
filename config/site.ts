@@ -12,6 +12,11 @@ export const siteConfig = {
       process.env.NEXT_PUBLIC_RESUME_LINK ||
       "https://rxresu.me/phonglee1210/5-yrs-full-stack-engineer",
   },
+  /** This portfolio's own repo — target of the chat widget's "Star on GitHub" action. */
+  repository: {
+    owner: "PhongLee1210",
+    name: "phonghub.cloud",
+  },
   ogImage: "/me.JPG",
   iconIco: "/favicon.ico",
   logoIcon: "/logo.png",

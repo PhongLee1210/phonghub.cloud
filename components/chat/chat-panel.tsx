@@ -10,6 +10,7 @@ import {
 
 import { ChatInput } from "@/components/chat/chat-input";
 import { ChatMessageList } from "@/components/chat/chat-message-list";
+import { StarButton } from "@/components/chat/star-button";
 import { SuggestionChips } from "@/components/chat/suggestion-chips";
 import { Icons } from "@/components/common/icons";
 import { chatConfig } from "@/config/chat";
@@ -123,6 +124,7 @@ export const ChatPanel = ({ isOpen, onClose, launcherRef }: ChatPanelProps) => {
                 Ask me anything about his work
               </span>
             </div>
+            <StarButton variant="icon" />
             <button
               type="button"
               title="Reset conversation"
