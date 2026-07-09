@@ -15,6 +15,7 @@
 - Contact page (`/contact`)
 - Markdown-based blog with category, tag, and search support (`/blogs`, `/blogs/[slug]`, `/blogs/category/[category]`, `/blogs/tag/[tag]`)
 - AI chat widget (floating launcher on every page) answering questions about Phong's projects, skills, and experience, streamed from a provider-agnostic LLM gateway (`POST /api/chat`, `lib/llm/`) — see `docs/chat-widget-implementation-plan.html` and `implementation-notes.md`
+- "Star on GitHub" action in the chat widget — visitors can star the portfolio repo with one click, or by asking the assistant to support the project (`GET`/`POST /api/github/star`, `lib/github/`)
 - Dark/light theme switching (`next-themes`)
 - Framer Motion animations
 - SEO metadata, sitemap (`app/sitemap.ts`), and web manifest (`app/manifest.ts`)
@@ -65,7 +66,8 @@ cp .env.example .env.local
 | `ANTHROPIC_API_KEY` / `OPENAI_API_KEY` / `GOOGLE_GENERATIVE_AI_API_KEY` / `GROQ_API_KEY` | LLM gateway provider keys — server-only, set only for providers you use. See `lib/llm/README.md`. |
 | `LLM_CHAT_MODEL` / `LLM_CHEAP_MODEL` | Override the `chat`/`cheap` model alias (`provider:model`, e.g. `groq:llama-3.3-70b`). Optional — sane defaults are baked in. |
 | `LLM_CHAT_FALLBACKS` | Optional comma-separated fallback chain for the `chat` alias (pre-token failover only). Off by default. |
-| `UPSTASH_REDIS_REST_URL` / `UPSTASH_REDIS_REST_TOKEN` | Rate limiting store for `/api/chat`. If unset, requests are rejected in production and allowed through in development — see `implementation-notes.md`. |
+| `UPSTASH_REDIS_REST_URL` / `UPSTASH_REDIS_REST_TOKEN` | Rate limiting store for `/api/chat` and `/api/github/star`. If unset, requests are rejected in production and allowed through in development — see `implementation-notes.md`. |
+| `GITHUB_TOKEN` | Server-only Personal Access Token (fine-grained `starring:write`, or classic `public_repo` scope) used by `/api/github/star` to star the repo on behalf of the configured GitHub account when a visitor triggers the chat widget's "Star on GitHub" action. Never sent to the browser. |
 
 `.env.example` documents the full list, including which variables are server-only (never sent to the browser).
 
