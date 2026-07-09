@@ -10,6 +10,7 @@ describe("registry startup log", () => {
     getProvider("anthropic");
     getProvider("openai");
     getProvider("groq");
+    getProvider("mistral");
 
     const startupLogs = logSpy.mock.calls.filter(
       (call) =>

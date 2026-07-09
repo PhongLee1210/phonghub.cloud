@@ -17,7 +17,7 @@ boundary is enforced by the `no-restricted-imports` rule in `.eslintrc.json`.
 - `errors.ts` — maps `@ai-sdk/*` errors into the `LLMError` taxonomy.
 - `providers/*.ts` — one ~30-line adapter per provider over `@ai-sdk/*`.
 
-## Adding provider #5
+## Adding a new provider
 
 1. Add the literal to `ProviderId` in `types.ts`.
 2. Drop `providers/<name>.ts` implementing `LLMProvider` (copy an existing
@@ -42,6 +42,7 @@ only bounds request volume, not $ spend per request.
 | OpenAI    | `OPENAI_API_KEY`                  | platform.openai.com → Limits   |
 | Google    | `GOOGLE_GENERATIVE_AI_API_KEY`     | aistudio.google.com / GCP billing budget |
 | Groq      | `GROQ_API_KEY`                    | console.groq.com → Limits      |
+| Mistral   | `MISTRAL_API_KEY`                 | console.mistral.ai → Limits    |
 
 `registry.ts` logs a one-line reminder (`scope: "llm.gateway.startup"`)
 listing configured providers once per lambda cold start — a soft nudge, not

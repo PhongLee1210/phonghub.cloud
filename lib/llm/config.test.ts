@@ -72,6 +72,7 @@ describe("envKeyForProvider", () => {
     expect(envKeyForProvider("openai")).toBe("OPENAI_API_KEY");
     expect(envKeyForProvider("google")).toBe("GOOGLE_GENERATIVE_AI_API_KEY");
     expect(envKeyForProvider("groq")).toBe("GROQ_API_KEY");
+    expect(envKeyForProvider("mistral")).toBe("MISTRAL_API_KEY");
   });
 });
 
