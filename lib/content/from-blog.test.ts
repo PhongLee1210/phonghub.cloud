@@ -2,6 +2,7 @@ import { describe, expect, test } from "bun:test";
 
 import { ISkill, SkillCategoryEnum } from "@/config/skills";
 import { BlogPostSummary } from "@/lib/blog/service";
+import { ContentVisibility } from "@/types/content";
 import { normalizeBlogPost } from "./from-blog";
 
 const skills: ISkill[] = [
@@ -36,10 +37,12 @@ describe("normalizeBlogPost", () => {
   });
 
   test("derives visibility from status", () => {
-    expect(normalizeBlogPost(basePost, skills).visibility).toBe("public");
+    expect(normalizeBlogPost(basePost, skills).visibility).toBe(
+      ContentVisibility.PUBLIC
+    );
     expect(
       normalizeBlogPost({ ...basePost, status: "draft" }, skills).visibility
-    ).toBe("private");
+    ).toBe(ContentVisibility.PRIVATE);
   });
 
   test("intersects tags with known skills, dropping unmatched tags from skillTags", () => {

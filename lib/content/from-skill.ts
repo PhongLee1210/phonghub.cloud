@@ -1,5 +1,5 @@
 import { ISkill } from "@/config/skills";
-import { ContentSourceType, SkillContentItem } from "@/types/content";
+import { ContentSourceType, ContentVisibility, SkillContentItem } from "@/types/content";
 
 // ISkill has no timestamp field; updatedAt is a synthetic build-time
 // constant, not a real "last changed" signal. Acceptable for MVP — a
@@ -13,7 +13,7 @@ export function normalizeSkill(skill: ISkill): SkillContentItem {
     sourceType: ContentSourceType.SKILL,
     sourceUrl: `/skills#${skill.key}`,
     skillTags: [skill.key],
-    visibility: "public",
+    visibility: ContentVisibility.PUBLIC,
     confidence: 1.0,
     updatedAt: SYNTHETIC_UPDATED_AT,
     summary: skill.description,

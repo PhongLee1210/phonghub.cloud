@@ -23,7 +23,11 @@ export enum ContentSourceType {
   MANUAL = "MANUAL",
 }
 
-export type ContentVisibility = "public" | "unlisted" | "private";
+export enum ContentVisibility {
+  PUBLIC = "PUBLIC",
+  UNLISTED = "UNLISTED",
+  PRIVATE = "PRIVATE",
+}
 
 /** Confidence in this item's derivation: 1.0 for data taken verbatim from an authoritative config source, lower for anything synthesized/inferred. */
 export type ContentConfidence = number;

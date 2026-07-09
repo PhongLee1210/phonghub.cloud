@@ -2,7 +2,7 @@ import { describe, expect, test } from "bun:test";
 
 import { PROJECTS } from "@/config/projects";
 import { SKILLS } from "@/config/skills";
-import { ContentSourceType } from "@/types/content";
+import { ContentSourceType, ContentVisibility } from "@/types/content";
 import { loadAllContent } from "./loader";
 
 describe("loadAllContent", () => {
@@ -36,6 +36,8 @@ describe("loadAllContent", () => {
 
   test("filters out non-public items by default", async () => {
     const items = await loadAllContent();
-    expect(items.every((item) => item.visibility === "public")).toBe(true);
+    expect(
+      items.every((item) => item.visibility === ContentVisibility.PUBLIC)
+    ).toBe(true);
   });
 });

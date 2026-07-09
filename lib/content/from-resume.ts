@@ -3,7 +3,13 @@ import "server-only";
 import fs from "fs";
 import path from "path";
 
-import { ContentSourceType, ResumeSource, ResumeSourceContentItem } from "@/types/content";
+import {
+  ContentSourceType,
+  ContentVisibility,
+  ResumeSectionType,
+  ResumeSource,
+  ResumeSourceContentItem,
+} from "@/types/content";
 import { resumeSourceSchema } from "./schema";
 
 const DEFAULT_RESUME_PATH = "content/resume/resume.json";
@@ -11,7 +17,10 @@ const DEFAULT_RESUME_PATH = "content/resume/resume.json";
 // Sections grounded directly in real config/experience.ts + config/skills.ts
 // data get full confidence; sections with no plausible source data (e.g.
 // education) are synthesized placeholders and marked accordingly.
-const GROUNDED_SECTIONS = new Set(["work_history", "skills_summary"]);
+const GROUNDED_SECTIONS = new Set<ResumeSectionType>([
+  "work_history",
+  "skills_summary",
+]);
 
 export async function loadResumeSource(
   filePath: string = DEFAULT_RESUME_PATH
@@ -35,7 +44,7 @@ export function normalizeResumeSource(
       sourceType: ContentSourceType.RESUME_SOURCE as const,
       sourceUrl: `/resume#${section.section}`,
       skillTags: [] as string[],
-      visibility: "public" as const,
+      visibility: ContentVisibility.PUBLIC,
       confidence,
       updatedAt: resume.lastUpdated,
       resumeSourceId: resume.id,

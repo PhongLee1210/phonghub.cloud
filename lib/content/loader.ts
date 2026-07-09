@@ -16,7 +16,7 @@ export interface LoadAllContentOptions {
   includeVisibility?: ContentVisibility[];
 }
 
-const DEFAULT_VISIBILITY: ContentVisibility[] = ["public"];
+const DEFAULT_VISIBILITY: ContentVisibility[] = [ContentVisibility.PUBLIC];
 
 /**
  * Aggregate entry point for the content layer. No caching here — mirrors
