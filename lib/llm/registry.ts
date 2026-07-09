@@ -4,6 +4,7 @@ import { anthropicProvider } from "./providers/anthropic";
 import { openaiProvider } from "./providers/openai";
 import { googleProvider } from "./providers/google";
 import { groqProvider } from "./providers/groq";
+import { mistralProvider } from "./providers/mistral";
 import { LLMProvider, ProviderId } from "./types";
 
 const ALL_PROVIDERS: LLMProvider[] = [
@@ -11,6 +12,7 @@ const ALL_PROVIDERS: LLMProvider[] = [
   openaiProvider,
   googleProvider,
   groqProvider,
+  mistralProvider,
 ];
 
 let cache: Map<ProviderId, LLMProvider> | undefined;

@@ -1,9 +1,9 @@
 import "server-only";
 
 // ── Provider identity ─────────────────────────────────────────────
-// Extending to a 5th provider = add a literal here + one adapter file +
+// Extending to another provider = add a literal here + one adapter file +
 // one env key (see lib/llm/README.md).
-export type ProviderId = "anthropic" | "openai" | "google" | "groq";
+export type ProviderId = "anthropic" | "openai" | "google" | "groq" | "mistral";
 
 export type ModelRef = `${ProviderId}:${string}`;
 export type ModelAlias = "chat" | "cheap";

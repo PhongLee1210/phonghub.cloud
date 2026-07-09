@@ -7,6 +7,7 @@ const PROVIDER_IDS: readonly ProviderId[] = [
   "openai",
   "google",
   "groq",
+  "mistral",
 ];
 
 // D2 defaults — reviewed defaults from the plan, adopted as-is (see
@@ -83,5 +84,7 @@ export function envKeyForProvider(providerId: ProviderId): string {
       return "GOOGLE_GENERATIVE_AI_API_KEY";
     case "groq":
       return "GROQ_API_KEY";
+    case "mistral":
+      return "MISTRAL_API_KEY";
   }
 }
