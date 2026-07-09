@@ -18,6 +18,22 @@ function ndjson(event: ChatStreamEvent): string {
   return JSON.stringify(event) + "\n";
 }
 
+/**
+ * Conservative, regex-based detection for an explicit "I want to support /
+ * star the project" intent in the visitor's latest message. Deliberately
+ * not routed through the LLM (no tool-calling wired up yet — see
+ * `// tool_call chunks are phase 2` below) — this only needs to catch a
+ * clear, narrow phrase, and a false negative just means the visitor uses
+ * the always-visible header button instead.
+ */
+const STAR_INTENT_PATTERN =
+  /\b(star|support)\b[\s\w'-]{0,40}\b(repo|repository|project|github)\b/i;
+
+function detectsStarIntent(latestUserMessage: string | undefined): boolean {
+  if (!latestUserMessage) return false;
+  return STAR_INTENT_PATTERN.test(latestUserMessage);
+}
+
 function errorResponse(
   status: number,
   code: ChatErrorCode,
@@ -83,6 +99,9 @@ export async function POST(req: NextRequest) {
       "Invalid request: check message count, roles, and length."
     );
   }
+
+  const latestUserMessage = [...parsed.messages].reverse().find((m) => m.role === "user");
+  const starIntentDetected = detectsStarIntent(latestUserMessage?.content);
 
   // Pure/sync, zero I/O — cheapest possible step, done before any network round trip.
   const trimmedHistory = trimHistoryToBudget(parsed.messages, {
@@ -200,6 +219,11 @@ export async function POST(req: NextRequest) {
           void recordTokenUsage(ip, redis, chunk.usage.outputTokens).catch(
             (err) => console.error("[chat/route] recordTokenUsage failed:", err)
           );
+          if (starIntentDetected) {
+            controller.enqueue(
+              encoder.encode(ndjson({ type: "action", action: "star_repo" }))
+            );
+          }
           controller.enqueue(encoder.encode(ndjson({ type: "done" })));
         }
         // tool_call chunks are phase 2 (card/navigate events) — ignored for now.

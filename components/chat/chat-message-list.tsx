@@ -2,6 +2,7 @@
 
 import { useEffect, useRef } from "react";
 
+import { StarButton } from "@/components/chat/star-button";
 import { ChatMessage } from "@/types/chat";
 import { cn } from "@/lib/utils";
 
@@ -37,23 +38,31 @@ export const ChatMessageList = ({
         <div
           key={message.id}
           className={cn(
-            "max-w-[85%] whitespace-pre-wrap break-words rounded-lg px-3.5 py-2.5 text-sm leading-relaxed",
-            message.role === "user"
-              ? "self-end rounded-br-sm bg-primary text-primary-foreground"
-              : "self-start rounded-bl-sm bg-muted text-foreground",
-            message.error && "border border-destructive/50"
+            "flex max-w-[85%] flex-col gap-2",
+            message.role === "user" ? "self-end items-end" : "self-start items-start"
           )}
         >
-          {message.content}
-          {isStreaming &&
-            message.id === lastMessage?.id &&
-            message.role === "assistant" &&
-            message.content && (
-              <span
-                aria-hidden="true"
-                className="ml-0.5 inline-block h-3.5 w-[7px] animate-pulse bg-foreground/65 align-[-2px]"
-              />
+          <div
+            className={cn(
+              "whitespace-pre-wrap break-words rounded-lg px-3.5 py-2.5 text-sm leading-relaxed",
+              message.role === "user"
+                ? "rounded-br-sm bg-primary text-primary-foreground"
+                : "rounded-bl-sm bg-muted text-foreground",
+              message.error && "border border-destructive/50"
             )}
+          >
+            {message.content}
+            {isStreaming &&
+              message.id === lastMessage?.id &&
+              message.role === "assistant" &&
+              message.content && (
+                <span
+                  aria-hidden="true"
+                  className="ml-0.5 inline-block h-3.5 w-[7px] animate-pulse bg-foreground/65 align-[-2px]"
+                />
+              )}
+          </div>
+          {message.action === "star_repo" && <StarButton variant="inline" />}
         </div>
       ))}
 

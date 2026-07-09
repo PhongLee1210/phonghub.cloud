@@ -163,6 +163,13 @@ export const useChatStore = create<ChatStoreState>((set, get) => ({
             return { messages };
           });
         },
+        onAction: (action) => {
+          set((state) => ({
+            messages: state.messages.map((m) =>
+              m.id === assistantMessage.id ? { ...m, action } : m
+            ),
+          }));
+        },
         onDone: (suggestions) => {
           set({
             status: "idle",
