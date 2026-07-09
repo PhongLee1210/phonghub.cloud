@@ -15,6 +15,7 @@ Tracks progress implementing `docs/chat-widget-implementation-plan.html` (v2) ag
 - [x] §9 — mechanical refactoring / cleanup
 - [x] Manual browser verification (dev server + preview tooling) — see Deviations #11, #12
 - [x] Phase 1e — abuse/cost hardening (concurrency limit, token quota, hard context budget, test suite) — see below
+- [x] Content layer + agent state/event types — foundation for a future agent runtime (types-only, additive, non-breaking) — see below
 
 ## Bugs found and fixed during manual verification
 
@@ -279,4 +280,74 @@ through), `config/chat.ts` (`concurrency`, `contextBudget`,
    credentials should re-run the manual burst/quota checks described in the
    plan's Verification section against live Redis before relying on these
    guards in production.
+
+## Content layer + agent state/event types (2026-07-09)
+
+Separate feature branch (`feature/init-porfolio-into-data-content`, own worktree). Not
+part of the chat-widget plan above — lays the foundation for a future, more capable AI
+portfolio agent by unifying `projects`/`skills`/`experiences`/`resume_source`/`blog` into
+one typed content layer, and defining the state/event type contracts a future agent
+runtime would use instead of raw text. Full design in
+`/Users/phongmac/.claude/plans/convert-the-current-portfolio-optimized-kurzweil.md`.
+
+Explicitly scoped as **types-only and purely additive** per user decision during
+planning: zero changes to `config/*.ts`, `lib/blog/*`, `lib/chat/*`, `types/chat.ts`,
+`app/api/chat/route.ts`, or `hooks/use-chat-store.ts`. Confirmed via
+`grep -rn 'from "@/lib/content\|from "@/types/agent\|from "@/types/content"' app hooks
+lib/chat types/chat.ts` returning no matches — the new layer is unreachable from any
+existing runtime path.
+
+**New files:**
+- `types/content.ts` — `ContentItem` discriminated union (`ProjectContentItem` /
+  `SkillContentItem` / `ExperienceContentItem` / `ResumeSourceContentItem` /
+  `BlogContentItem`) over a shared `ContentItemBase` (`id`, `sourceType`, `sourceUrl`,
+  `skillTags`, `visibility`, `confidence`, `updatedAt`, `summary`), plus the
+  `ResumeSource`/`ResumeSection` schema and shared ID aliases (`ProjectId`, `SkillTag`,
+  `CitationId`, etc).
+- `types/agent.ts` — `PortfolioAgentState` (`query`/`context`/`retrievedContext`/
+  `uiState`/`actionQueue`), generic `BaseAgentEvent<TType, TPayload>`, and the 12-member
+  `PortfolioAgentEvent` union (`AssistantTextEvent`, `CitationCardEvent`, `UIPatchEvent`,
+  `ProjectFocusEvent`, `TimelineFocusEvent`, `SkillResultEvent`, `ToolStartedEvent`,
+  `ToolFinishedEvent`, `WorkflowStartedEvent`, `ApprovalRequiredEvent`, `ErrorEvent`,
+  `DoneEvent`). Type-only import from `types/content.ts` for the shared ID aliases — no
+  runtime coupling.
+- `lib/content/{from-project,from-skill,from-experience,from-resume,from-blog}.ts` —
+  pure normalizer adapters mapping each existing source (`config/projects.ts`,
+  `config/skills.ts`, `config/experience.ts`, `lib/blog/service.ts`) plus the new
+  `resume_source` into the unified `ContentItem` shape, each with a sibling `.test.ts`.
+  Shared `resolveSkillTag()` helper (in `from-project.ts`, reused by `from-experience.ts`)
+  best-effort matches `ValidSkills` display names (e.g. `"Next.js"`) to canonical
+  `ISkill.key`s (e.g. `"nextjs"`), falling back to a slugified tag + dev-only
+  `console.warn` on no match.
+- `lib/content/schema.ts` — Zod schema validating `content/resume/resume.json` at the
+  file-I/O boundary only (not used for `config/*.ts`, which is compiler-checked, not
+  external input).
+- `lib/content/loader.ts` + `index.ts` — `loadAllContent()` aggregate entry point (no
+  caching, matching `lib/blog/service.ts`'s own stance) and a barrel re-export.
+- `content/resume/resume.json` — new structured resume data. `work_history` and
+  `skills_summary` sections are grounded in real `EXPERIENCES`/`SKILLS` config (ids
+  cross-checked against `config/experience.ts`/`config/skills.ts` before writing),
+  normalized with `confidence: 1.0`; `summary`/`education`/`certifications` are
+  plausible-but-synthesized placeholders (no source data exists for them today),
+  normalized with `confidence: 0.5`. `certifications` ships as an empty array rather
+  than fabricated credentials.
+
+**Verification:** `bunx tsc --noEmit` clean; `bun run lint` clean on every new file
+(the only findings are 2 pre-existing errors + 3 warnings in unrelated files —
+`app/(root)/projects/[projectId]/page.tsx`, `providers/modal-provider.tsx`,
+`components/common/intersection-observer-wrapper.tsx`, `components/ui/adaptive-image.tsx`,
+`components/ui/responsive-image.tsx` — not touched by this change); `bun run test
+--conditions react-server` — 72/72 pass. No browser verification needed/possible: this
+change has no rendered UI surface (types, pure functions, and a JSON data file only).
+
+**Observation, not a deviation:** `resolveSkillTag()`'s dev-only warning fires
+frequently when normalizing the real `PROJECTS`/`EXPERIENCES` data — `ValidSkills`
+(`config/constants.ts`) contains several display names with no matching `ISkill` entry
+in `config/skills.ts` (e.g. `"PostgreSQL"`, `"Python"`, `"Material UI"`, `"Jest"`,
+`"Figma"`). This is a pre-existing gap between the two config files, correctly
+surfaced (not hidden) by the new adapter rather than something this change introduced or
+needed to fix — flagged here for whoever next edits `config/skills.ts`.
+
+No other deviations from the approved plan — implementation matches the plan file
+verbatim (file paths, type shapes, adapter signatures, and out-of-scope list).
 
