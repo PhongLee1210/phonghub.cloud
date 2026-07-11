@@ -20,6 +20,7 @@ export default function ProjectCard({ project }: ProjectCardProps) {
           alt={project.companyName}
           fill
           loading="lazy"
+          sizes="(max-width: 640px) 100vw, 384px"
         />
       </div>
       <div className="pt-5 space-y-3">
