@@ -1,8 +1,10 @@
 "use client";
 
 import { useEffect, useRef } from "react";
+import { motion, useReducedMotion } from "framer-motion";
 
 import { StarButton } from "@/components/chat/star-button";
+import { ThinkingChecklist } from "@/components/chat/thinking-checklist";
 import { ChatMessage } from "@/types/chat";
 import { cn } from "@/lib/utils";
 
@@ -16,6 +18,7 @@ export const ChatMessageList = ({
   isStreaming,
 }: ChatMessageListProps) => {
   const containerRef = useRef<HTMLDivElement>(null);
+  const reducedMotion = useReducedMotion();
 
   useEffect(() => {
     const el = containerRef.current;
@@ -23,7 +26,7 @@ export const ChatMessageList = ({
   }, [messages]);
 
   const lastMessage = messages[messages.length - 1];
-  const showTypingIndicator =
+  const showThinkingChecklist =
     isStreaming && lastMessage?.role === "assistant" && !lastMessage.content;
 
   return (
@@ -35,8 +38,11 @@ export const ChatMessageList = ({
       aria-relevant="additions"
     >
       {messages.map((message) => (
-        <div
+        <motion.div
           key={message.id}
+          initial={{ opacity: 0, y: 8 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: reducedMotion ? 0 : 0.22, ease: "easeOut" }}
           className={cn(
             "flex max-w-[85%] flex-col gap-2",
             message.role === "user" ? "self-end items-end" : "self-start items-start"
@@ -63,20 +69,10 @@ export const ChatMessageList = ({
               )}
           </div>
           {message.action === "star_repo" && <StarButton variant="inline" />}
-        </div>
+        </motion.div>
       ))}
 
-      {showTypingIndicator && (
-        <div className="flex w-fit items-center gap-1 self-start rounded-lg rounded-bl-sm bg-muted px-3.5 py-3">
-          {[0, 1, 2].map((i) => (
-            <span
-              key={i}
-              className="h-1.5 w-1.5 animate-bounce rounded-full bg-muted-foreground"
-              style={{ animationDelay: `${i * 0.15}s` }}
-            />
-          ))}
-        </div>
-      )}
+      {showThinkingChecklist && <ThinkingChecklist />}
     </div>
   );
 };

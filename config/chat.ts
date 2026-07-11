@@ -1,3 +1,12 @@
+import { Icons } from "@/components/common/icons";
+
+export interface SeedSuggestionCard {
+  title: string;
+  subtitle: string;
+  icon: keyof typeof Icons;
+  prompt: string;
+}
+
 /**
  * Widget-facing chat configuration. Models are referenced only by alias
  * ("chat" | "cheap") — never by concrete provider/model id, per plan D2.
@@ -12,6 +21,33 @@ export const chatConfig = {
     "What's his tech stack?",
     "Is he open to new opportunities?",
   ],
+
+  seedSuggestionCards: [
+    {
+      title: "Experience",
+      subtitle: "Where he's worked and what he owned",
+      icon: "work",
+      prompt: "What's Phong's work experience?",
+    },
+    {
+      title: "Projects",
+      subtitle: "AI agents, dashboards, and more",
+      icon: "gitRepoIcon",
+      prompt: "What has Phong built with AI?",
+    },
+    {
+      title: "Skills",
+      subtitle: "Languages, frameworks, and tools",
+      icon: "settings",
+      prompt: "What are Phong's strongest skills?",
+    },
+    {
+      title: "Tech stack",
+      subtitle: "What powers this site and his work",
+      icon: "git",
+      prompt: "What's his tech stack?",
+    },
+  ] satisfies SeedSuggestionCard[],
 
   footnote: "AI assistant — may make mistakes",
 

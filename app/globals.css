@@ -33,6 +33,11 @@
 
     --ring: 215 20.2% 65.1%;
 
+    --lavender: 250 70% 66%;
+    --lavender-foreground: 0 0% 100%;
+    --lavender-soft: 250 60% 96%;
+    --lavender-soft-foreground: 250 40% 40%;
+
     --radius: 0.5rem;
 
     --d: 700ms;
@@ -69,11 +74,16 @@
 
     --ring: 216 34% 17%;
 
+    --lavender: 250 65% 72%;
+    --lavender-foreground: 224 71% 4%;
+    --lavender-soft: 250 30% 18%;
+    --lavender-soft-foreground: 250 60% 88%;
+
     --radius: 0.5rem;
     --d: 700ms;
     --e: cubic-bezier(0.19, 1, 0.22, 1);
   }
-  
+
   .retro {
     --background: 39 70% 90%;
     --foreground: 20 80% 20%;
