@@ -45,6 +45,7 @@ export async function buildSystemPrompt(): Promise<{
       id: p.id,
       companyName: p.companyName,
       shortDescription: p.shortDescription,
+      descriptionPreview: p.descriptionDetails?.paragraphs?.[0],
       techStack: p.techStack,
       category: p.category,
     })),

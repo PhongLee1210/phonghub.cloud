@@ -20,7 +20,7 @@ export interface SkillCategory {
   skills: ISkill[];
 }
 
-export const skillsUnsorted: ISkill[] = [
+export const skillsUnsorted = [
   {
     key: "react",
     name: "React",
@@ -408,10 +408,48 @@ export const skillsUnsorted: ISkill[] = [
     icon: "settings",
     category: SkillCategoryEnum.COLLABORATION_TOOLS,
   },
-];
+  {
+    key: "postgresql",
+    name: "PostgreSQL",
+    description:
+      "Powerful open-source relational database system with advanced features for complex queries and data integrity.",
+    rating: 4,
+    icon: "postgresql",
+    category: SkillCategoryEnum.BACKEND,
+  },
+  {
+    key: "python",
+    name: "Python",
+    description:
+      "Versatile programming language for web development, data science, automation, and AI/ML applications.",
+    rating: 4,
+    icon: "python",
+    category: SkillCategoryEnum.BACKEND,
+  },
+  {
+    key: "materialui",
+    name: "Material UI",
+    description:
+      "Popular React UI framework implementing Google's Material Design with a comprehensive component library.",
+    rating: 4,
+    icon: "materialui",
+    category: SkillCategoryEnum.FRONTEND,
+  },
+  {
+    key: "jest",
+    name: "Jest",
+    description:
+      "Delightful JavaScript testing framework with focus on simplicity and support for large web applications.",
+    rating: 4,
+    icon: "jest",
+    category: SkillCategoryEnum.CLOUD_DEVOPS,
+  },
+] as const satisfies readonly ISkill[];
 
-export const SKILLS = skillsUnsorted
-  .slice()
-  .sort((a, b) => b.rating - a.rating);
+export type ValidSkills = (typeof skillsUnsorted)[number]["name"];
+
+export const SKILLS: ISkill[] = [...skillsUnsorted].sort(
+  (a, b) => b.rating - a.rating
+);
 
 export const featuredSkills = SKILLS.slice(0, 6);

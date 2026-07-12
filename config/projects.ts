@@ -89,7 +89,7 @@ export const PROJECTS: ProjectInterface[] = [
     type: "Professional",
     category: ["Web Dev", "Full Stack", "UI/UX"],
     shortDescription:
-      "Developed a comprehensive content management and blog platform using Next.js and React with TypeScript. Built SEO-optimized architecture with server-side rendering and integrated CMS for streamlined content creation and management.",
+      "Architected an AI-powered enrollment platform with FastAPI microservices, GraphQL routing, and RAG-based lead classification. Built embeddable Vue.js chat widgets and integrated Langfuse for LLM observability.",
     websiteLink: "https://som.edu.vn/",
     techStack: [
       "Vue.js",
@@ -505,48 +505,6 @@ export const PROJECTS: ProjectInterface[] = [
         "Integrated PostgreSQL database with optimized queries for healthcare data management",
         "Refactored and optimized code for better performance, scalability, and maintainability",
         "Collaborated in remote environment with healthcare professionals and development team",
-      ],
-    },
-  },
-  {
-    id: "project-template",
-    companyName: "Project Template - UI Component Library",
-    type: "Professional",
-    category: ["Web Dev", "Frontend"],
-    shortDescription:
-      "Developed a comprehensive UI component library and project template using Vue.js with TailwindCSS and Element Plus. Designed and built reusable UI components based on Figma designs for rapid project development.",
-    techStack: ["Vue.js", "Tailwind CSS", "Material UI", "Figma", "Typescript"],
-    startDate: new Date("2022-08-01"),
-    endDate: new Date("2022-10-01"),
-    companyLogoImg: "/projects/project-template/home-page.png",
-    pagesInfoArr: [
-      {
-        title: "Component Library",
-        description:
-          "Reusable Vue.js component library with TailwindCSS styling and Element Plus integration",
-        imgArr: ["/projects/project-template/component-library.png"],
-      },
-      {
-        title: "Design System",
-        description:
-          "Comprehensive design system with Figma-based components and documentation",
-        imgArr: ["/projects/project-template/design-system.png"],
-      },
-    ],
-    descriptionDetails: {
-      paragraphs: [
-        "At Project Template, I worked as a Frontend Web Developer creating a comprehensive UI component library and project template system that accelerated development workflows and ensured design consistency across multiple projects.",
-        "I designed and built reusable Vue.js components using TypeScript, implementing a complete design system based on Figma mockups. The component library included form elements, navigation components, data display components, and layout systems.",
-        "I integrated TailwindCSS for utility-first styling and Element Plus for advanced UI components, creating a flexible and maintainable styling architecture. The system included comprehensive documentation and usage examples.",
-        "The project template provided a solid foundation for new projects, including pre-configured build tools, development server, testing setup, and deployment pipeline. I focused on developer experience and rapid prototyping capabilities.",
-      ],
-      bullets: [
-        "Developed comprehensive Vue.js component library with TypeScript for reusable UI elements",
-        "Implemented TailwindCSS and Element Plus integration for flexible and modern styling",
-        "Created design system based on Figma mockups with comprehensive documentation",
-        "Built project template with pre-configured development tools and deployment pipeline",
-        "Designed reusable components for forms, navigation, data display, and layout systems",
-        "Collaborated remotely with design and development teams to ensure consistency",
       ],
     },
   },

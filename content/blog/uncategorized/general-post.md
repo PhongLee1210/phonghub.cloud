@@ -8,7 +8,7 @@ tags:
   - Company
 summary: "Latest updates and announcements from the company."
 coverImage: "https://images.unsplash.com/photo-1519125323398-675f0ddb6308"
-status: "published"
+status: "draft"
 ---
 
 As a software engineer, I’m usually buried in code, diagrams, and logs. But every so often, there’s a moment where I get to zoom out and see how all the pieces—products, people, and technology—come together.
