@@ -8,6 +8,7 @@ import { checkRateLimit } from "@/lib/chat/rate-limit";
 import { getRedisClient } from "@/lib/chat/redis";
 import { checkCombinedBudget, trimHistoryToBudget } from "@/lib/chat/token-budget";
 import { checkTokenQuota, recordTokenUsage } from "@/lib/chat/token-quota";
+import { isNonEmptyString, isObject } from "@/lib/guards";
 import { effectiveContextBudget, streamLLM } from "@/lib/llm";
 import { LLMError, LLMMessage, LLMStreamChunk } from "@/lib/llm/types";
 import {
@@ -73,16 +74,16 @@ function secondsUntilNextUtcMidnight(now: Date = new Date()): number {
 }
 
 function validateBody(body: unknown): ChatRequestBody | undefined {
-  if (typeof body !== "object" || body === null) return undefined;
-  const messages = (body as { messages?: unknown }).messages;
+  if (!isObject(body)) return undefined;
+  const { messages } = body;
   if (!Array.isArray(messages) || messages.length === 0) return undefined;
   if (messages.length > chatConfig.limits.maxHistoryMessages) return undefined;
 
   for (const m of messages) {
-    if (typeof m !== "object" || m === null) return undefined;
-    const { role, content } = m as { role?: unknown; content?: unknown };
+    if (!isObject(m)) return undefined;
+    const { role, content } = m;
     if (role !== "user" && role !== "assistant") return undefined;
-    if (typeof content !== "string" || content.length === 0) return undefined;
+    if (!isNonEmptyString(content)) return undefined;
     if (content.length > chatConfig.limits.maxInputChars) return undefined;
   }
 

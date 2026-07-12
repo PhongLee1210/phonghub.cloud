@@ -51,6 +51,21 @@ When developing features, always ensure:
 4. Run full verification (lint, typecheck, and tests) and resolve all issues.
 5. Update `README.md` or add to `docs/` if behavior/setup/routes change.
 
+## Task Isolation with `ai session` (Worktrees)
+
+One task = one session = one branch. Each feature/fix with a small, self-contained scope gets its own worktree; never develop directly on `main`.
+
+```bash
+ai session new feature/<name>   # or fix/<name>, hotfix/<name>
+cd worktrees/<name>
+bun install                     # deps are NOT installed automatically
+```
+
+- All work and verification happens inside `worktrees/<name>`.
+- `ai session list` / `resume <branch>` — inspect or reopen sessions.
+- Agents must NOT run `ai session remove` (interactive prompts) — leave cleanup to the user.
+- `worktrees/` is gitignored; skip sessions for trivial doc/typo changes.
+
 ## Coding Conventions
 
 - Follow conventions present in `app/`, `components/`, `lib/`, and `config/`.
@@ -62,6 +77,9 @@ When developing features, always ensure:
 - Formatting is managed by Prettier (`.prettierrc`).
 - Keep changes focused; do not combine unrelated refactoring.
 - IF the same set of Tailwind utility classes is repeated across 3+ usages, extract it into a reusable component or a `cva`/`class-variance-authority` variant instead of copy-pasting the class string.
+
+### Runtime Type Guards (`lib/guards.ts`)
+Always use `lib/guards.ts` for runtime type checks.
 
 ### Tailwind CSS Design System
 
