@@ -22,10 +22,20 @@ const norican = Norican({
 
 export function MobileNav({ items, children }: MobileNavProps) {
   useLockBody();
-  const { theme } = useTheme();
+  const { resolvedTheme } = useTheme();
+  const [mounted, setMounted] = React.useState(false);
   const [list100Color, setList100Color] = React.useState<string>(
     "hsl(var(--primary))"
   );
+
+  React.useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  const logoSrc =
+    mounted && resolvedTheme === "light"
+      ? "/logo/phonghub-grayscale.png"
+      : "/logo/phonghub.png";
 
   React.useEffect(() => {
     const colors = [
@@ -54,11 +64,7 @@ export function MobileNav({ items, children }: MobileNavProps) {
       <div className="relative z-20 grid gap-6 rounded-md bg-popover p-4 text-popover-foreground shadow-md">
         <Link href="/" className="flex items-center space-x-2">
           <Image
-            src={
-              theme === "light"
-                ? "/logo/phonghub-grayscale.png"
-                : "/logo/phonghub.png"
-            }
+            src={logoSrc}
             alt={siteConfig.authorName}
             width={120}
             height={40}
@@ -74,20 +80,8 @@ export function MobileNav({ items, children }: MobileNavProps) {
               className={cn(
                 "flex w-full items-center rounded-md p-2 text-sm font-medium hover:underline relative",
                 item.disabled && "cursor-not-allowed opacity-60",
-                item.href === "/list100" && "animate-pulse"
+                item.href === "/list100" && "animate-pulse text-gradient-animated"
               )}
-              style={
-                item.href === "/list100"
-                  ? {
-                      background: `linear-gradient(45deg, hsl(var(--primary)), hsl(var(--accent)), hsl(var(--destructive)), hsl(var(--primary)))`,
-                      backgroundSize: "400% 400%",
-                      animation: "gradientShift 3s ease infinite",
-                      WebkitBackgroundClip: "text",
-                      WebkitTextFillColor: "transparent",
-                      backgroundClip: "text",
-                    }
-                  : undefined
-              }
             >
               {item.title}
               {item.href === "/list100" && (

@@ -1,5 +1,4 @@
 import { Icons } from "@/components/common/icons";
-import { siteConfig } from "@/config/site";
 
 export interface ExploringTopic {
   label: string;
@@ -25,44 +24,45 @@ export const collageItems: CollageItem[] = [
   {
     src: "/me.JPG",
     caption: "me :)",
-    rotate: -3,
-    className: "absolute left-[6%] top-[2%] z-30 w-36 sm:w-44",
+    rotate: -5,
+    className: "absolute left-[215px] top-[0px] z-30",
   },
   {
     src: "/experience/hiliosai/hiliosai-team.JPG",
     caption: "hiliosai team",
-    rotate: 4,
-    className: "absolute left-[42%] top-0 z-20 w-32 sm:w-40",
+    rotate: 5,
+    className: "absolute right-[0px] top-[85px] z-20",
   },
   {
     src: "/experience/ltv/ltv-meeting.JPG",
     caption: "LTV meeting",
-    rotate: -4,
-    className: "absolute right-[1%] top-[16%] z-10 w-32 sm:w-40",
+    rotate: -7,
+    className: "absolute left-[0px] top-[170px] z-[15]",
   },
   {
     src: "/experience/hiliosai/hiliosai-workspace.jpg",
     caption: "workspace",
     rotate: 3,
-    className: "absolute left-0 top-[48%] z-10 w-32 sm:w-40",
+    className: "absolute left-[215px] top-[255px] z-[25]",
   },
   {
     src: "/projects/gymintelops/dashboard.png",
     caption: "GymIntelOps",
-    rotate: -2,
-    className: "absolute left-[30%] top-[54%] z-20 w-36 sm:w-44",
+    rotate: -3,
+    className: "absolute left-[20px] top-[340px] z-20",
   },
   {
     src: "/projects/ai-agent-sales/chat-ui.png",
     caption: "AI Agent Sales",
-    rotate: 2,
-    className: "absolute right-[3%] top-[60%] z-30 w-32 sm:w-40",
+    rotate: 5,
+    className: "absolute right-[36px] bottom-6 z-10",
   },
 ];
 
 export const heroCopy = {
   greeting: "hello there! I'm",
-  name: siteConfig.authorName,
+  name: "Phong Lee",
   intro:
-    "Senior software engineer building scalable web apps, cloud infrastructure, and AI-powered products. Always learning, always shipping.",
+    "I'm a software engineer specializing in web applications. I hope to keep seeing, learning, building, and loving.",
+  scrollHint: "Scroll to explore",
 };

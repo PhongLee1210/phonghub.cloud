@@ -6,15 +6,18 @@ import { streamText } from "ai";
 import { toLLMError } from "../errors";
 import { LLMProvider, LLMRequest, LLMStreamChunk } from "../types";
 import { envKeyForProvider } from "../config";
+import { splitSystemMessage } from "../utils";
 
 async function* run(
   model: string,
   req: LLMRequest
 ): AsyncIterable<LLMStreamChunk> {
   try {
+    const { system, messages } = splitSystemMessage(req.messages);
     const result = streamText({
       model: google(model),
-      messages: req.messages,
+      system,
+      messages,
       maxOutputTokens: req.maxTokens,
       temperature: req.temperature,
       abortSignal: req.signal,

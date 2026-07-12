@@ -1,9 +1,12 @@
 "use client";
 
-import { forwardRef } from "react";
+import { forwardRef, useEffect, useRef, useState } from "react";
+import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 
 import { Icons } from "@/components/common/icons";
 import { cn } from "@/lib/utils";
+
+const HINT_DELAY_MS = 5000;
 
 interface ChatLauncherProps {
   isOpen: boolean;
@@ -12,36 +15,65 @@ interface ChatLauncherProps {
 
 export const ChatLauncher = forwardRef<HTMLButtonElement, ChatLauncherProps>(
   ({ isOpen, onClick }, ref) => {
+    const [showHint, setShowHint] = useState(false);
+    const revealedRef = useRef(false);
+    const reducedMotion = useReducedMotion();
+
+    useEffect(() => {
+      if (isOpen || revealedRef.current) return;
+
+      const timer = setTimeout(() => {
+        revealedRef.current = true;
+        setShowHint(true);
+      }, HINT_DELAY_MS);
+
+      return () => clearTimeout(timer);
+    }, [isOpen]);
+
     return (
-      <button
-        ref={ref}
-        type="button"
-        onClick={onClick}
-        aria-label={isOpen ? "Close chat" : "Open chat"}
-        aria-expanded={isOpen}
-        className={cn(
-          "fixed bottom-6 right-6 z-[60] flex h-14 w-14 items-center justify-center rounded-full",
-          "bg-primary text-primary-foreground shadow-[0_8px_24px_hsl(var(--foreground)/0.18)]",
-          "transition-transform hover:scale-[1.06]",
-          isOpen && "max-[480px]:hidden"
-        )}
-      >
-        {!isOpen && (
-          <span className="absolute right-0 top-0 h-3.5 w-3.5 rounded-full border-[2.5px] border-background bg-emerald-500" />
-        )}
-        <Icons.chatBubble
-          className={cn(
-            "absolute h-6 w-6 transition-all duration-200",
-            isOpen && "rotate-90 scale-50 opacity-0"
+      <div className="fixed bottom-6 right-6 z-[60] flex items-center gap-3">
+        <AnimatePresence>
+          {showHint && !isOpen && (
+            <motion.button
+              type="button"
+              onClick={onClick}
+              initial={{ opacity: 0, x: -20 }}
+              animate={{ opacity: 1, x: 0 }}
+              exit={{ opacity: 0, x: -20 }}
+              transition={{
+                duration: reducedMotion ? 0 : 0.4,
+                ease: "easeOut",
+              }}
+              className="cursor-pointer whitespace-nowrap rounded-full bg-card px-4 py-2 text-sm font-medium text-foreground shadow-md"
+            >
+              Ask me anything
+            </motion.button>
           )}
-        />
-        <Icons.close
+        </AnimatePresence>
+        <button
+          ref={ref}
+          type="button"
+          onClick={onClick}
+          aria-label={isOpen ? "Close chat" : "Open chat"}
+          aria-expanded={isOpen}
           className={cn(
-            "absolute h-6 w-6 rotate-[-90deg] scale-50 opacity-0 transition-all duration-200",
-            isOpen && "rotate-0 scale-100 opacity-100"
+            "relative flex h-14 w-14 shrink-0 items-center justify-center rounded-full",
+            "bg-chat-launcher text-foreground",
+            "shadow-[0_4px_16px_hsl(var(--foreground)/0.10)]",
+            "transition-transform hover:scale-[1.05]",
+            isOpen && "max-[480px]:hidden"
           )}
-        />
-      </button>
+        >
+          {!isOpen ? (
+            <span className="relative flex h-5 w-5 items-center justify-center">
+              <Icons.chatBubble className="h-5 w-5" />
+              <span className="absolute -right-0.5 -top-0.5 h-2 w-2 rounded-full border-[1.5px] border-background bg-success" />
+            </span>
+          ) : (
+            <Icons.close className="h-5 w-5" />
+          )}
+        </button>
+      </div>
     );
   }
 );

@@ -14,7 +14,7 @@ export interface SeedSuggestionCard {
  */
 export const chatConfig = {
   greeting:
-    "Hi there 👋 I'm Phong's AI assistant. I can tell you about his projects, skills, and experience — or point you to the right page. What would you like to know?",
+    "Hi there 👋 I'm Phong's AI Portfolio Assistant. I can help you explore projects, skills, experience, and anything else you'd like to know about Phong.",
 
   seedSuggestions: [
     "What has Phong built with AI?",
@@ -41,15 +41,9 @@ export const chatConfig = {
       icon: "settings",
       prompt: "What are Phong's strongest skills?",
     },
-    {
-      title: "Tech stack",
-      subtitle: "What powers this site and his work",
-      icon: "git",
-      prompt: "What's his tech stack?",
-    },
   ] satisfies SeedSuggestionCard[],
 
-  footnote: "AI assistant — may make mistakes",
+  footnote: "AI responses may not be 100% accurate.",
 
   limits: {
     /** Max chars accepted per user message, enforced client + server. */
@@ -58,15 +52,17 @@ export const chatConfig = {
     maxHistoryMessages: 20,
     /** Messages kept in localStorage, trimmed on every write. */
     maxPersistedMessages: 50,
-    /** Max output tokens requested from the model per reply. */
-    maxOutputTokens: 1024,
+    /** Sampling temperature — 0 for deterministic, factual, on-brand answers. */
+    temperature: 0,
+    /** Max output tokens per reply — kept low to match the concise-answer persona. */
+    maxOutputTokens: 512,
     /**
      * Cumulative output tokens allowed per IP per UTC day, across all
      * requests — separate from rateLimit.perDay (a request-count budget).
-     * Chosen slightly above the theoretical max from the request-count
-     * limiter alone (40 req/day * 1024 max output tokens = 40,960), so in
-     * normal operation the request-count limit stays the binding
-     * constraint and this only kicks in if responses run unusually long.
+     * Well above the theoretical max from the request-count limiter alone
+     * (40 req/day * 512 max output tokens = 20,480), so in normal operation
+     * the request-count limit stays the binding constraint and this only
+     * kicks in if responses run unusually long.
      */
     dailyTokenBudget: 50_000,
   },

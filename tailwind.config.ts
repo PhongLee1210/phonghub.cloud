@@ -8,6 +8,7 @@ const config = {
   content: [
     "./pages/**/*.{ts,tsx}",
     "./components/**/*.{ts,tsx}",
+    "./config/**/*.{ts,tsx}",
     "./app/**/*.{ts,tsx}",
     "./src/**/*.{ts,tsx}",
   ],
@@ -60,15 +61,49 @@ const config = {
           soft: "hsl(var(--lavender-soft))",
           "soft-foreground": "hsl(var(--lavender-soft-foreground))",
         },
+        success: {
+          DEFAULT: "hsl(var(--success))",
+          foreground: "hsl(var(--success-foreground))",
+        },
+        warning: {
+          DEFAULT: "hsl(var(--warning))",
+          foreground: "hsl(var(--warning-foreground))",
+        },
+        chat: {
+          bg: "hsl(var(--chat-bg))",
+          header: "hsl(var(--chat-header))",
+          border: "hsl(var(--chat-border))",
+          input: "hsl(var(--chat-input))",
+          "bubble-ai": "hsl(var(--chat-bubble-ai))",
+          "bubble-user": "hsl(var(--chat-bubble-user))",
+          "bubble-user-border": "hsl(var(--chat-bubble-user-border))",
+          thinking: "hsl(var(--chat-thinking))",
+          launcher: "hsl(var(--chat-launcher))",
+          placeholder: "hsl(var(--chat-placeholder))",
+        },
       },
       fontFamily: {
         sans: ["var(--font-sans)", ...fontFamily.sans],
         heading: ["var(--font-heading)", ...fontFamily.sans],
+        karla: ["var(--font-karla)", ...fontFamily.sans],
+        miniver: ["var(--font-miniver)", ...fontFamily.sans],
+        name: ['"Times New Roman"', "Times", "Georgia", "serif"],
       },
       borderRadius: {
         lg: "var(--radius)",
         md: "calc(var(--radius) - 2px)",
         sm: "calc(var(--radius) - 4px)",
+        xl: "var(--radius-xl)",
+        "2xl": "var(--radius-lg)",
+        pill: "var(--radius-pill)",
+        chat: "var(--radius-chat)",
+        "chat-lg": "var(--radius-chat-lg)",
+      },
+      boxShadow: {
+        soft: "var(--shadow-1)",
+        medium: "var(--shadow-2)",
+        large: "var(--shadow-3)",
+        "lavender-glow": "0 20px 60px rgba(120, 90, 255, 0.28)",
       },
       keyframes: {
         "accordion-down": {

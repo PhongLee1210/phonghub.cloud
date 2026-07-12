@@ -37,7 +37,7 @@ export const AnimatedSection = ({
         x: 0,
         y: 0,
         transition: {
-          duration: 0.45,
+          duration: 0.6,
           delay,
           ease: [0.22, 1, 0.36, 1],
         },

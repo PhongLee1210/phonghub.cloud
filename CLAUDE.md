@@ -61,6 +61,11 @@ When developing features, always ensure:
 - Do not add unnecessary dependencies — this is a static site.
 - Formatting is managed by Prettier (`.prettierrc`).
 - Keep changes focused; do not combine unrelated refactoring.
+- IF the same set of Tailwind utility classes is repeated across 3+ usages, extract it into a reusable component or a `cva`/`class-variance-authority` variant instead of copy-pasting the class string.
+
+### Tailwind CSS Design System
+
+See tokens before arbitrary values, scale before `[px]`, primitives before raw elements, canonical focus ring, no dead CSS.
 
 ### Constants and Enum Definition Standards
 

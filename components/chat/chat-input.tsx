@@ -40,37 +40,62 @@ export const ChatInput = ({ disabled, onSubmit }: ChatInputProps) => {
   };
 
   return (
-    <div className="flex flex-shrink-0 items-end gap-2 border-t border-border px-4 py-3">
-      <textarea
-        ref={textareaRef}
-        rows={1}
-        value={value}
-        maxLength={chatConfig.limits.maxInputChars}
-        placeholder="Ask about Phong's projects, skills…"
-        aria-label="Message"
-        onChange={(e) => {
-          setValue(e.target.value);
-          autoGrow();
-        }}
-        onKeyDown={handleKeyDown}
-        className={cn(
-          "max-h-24 flex-1 resize-none rounded-md border border-border bg-background px-3 py-2.5",
-          "text-sm leading-tight outline-none focus:border-primary/60"
-        )}
-      />
-      <button
-        type="button"
-        aria-label="Send"
-        disabled={!canSend}
-        onClick={submit}
-        className={cn(
-          "flex h-[38px] w-[38px] flex-shrink-0 items-center justify-center rounded-md",
-          "bg-primary text-primary-foreground transition-opacity",
-          !canSend && "opacity-40"
-        )}
-      >
-        <Icons.send className="h-4 w-4" />
-      </button>
+    <div className="flex flex-col gap-1.5">
+      <div className="flex items-center gap-1.5 rounded-[22px] border border-chat-border bg-chat-input px-[10px] py-[7px] shadow-[0_4px_16px_rgba(0,0,0,0.05)] transition-shadow focus-within:shadow-[0_4px_20px_rgba(0,0,0,0.08)]">
+        {/* LEFT: attachment / file button */}
+        <button
+          type="button"
+          aria-label="Attach file"
+          className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full text-muted-foreground transition-colors hover:bg-muted hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+        >
+          <Icons.paperclip className="h-[15px] w-[15px]" />
+        </button>
+
+        {/* MIDDLE: textarea */}
+        <textarea
+          ref={textareaRef}
+          rows={1}
+          value={value}
+          maxLength={chatConfig.limits.maxInputChars}
+          placeholder="Ask anything about my work.."
+          aria-label="Message"
+          onChange={(e) => {
+            setValue(e.target.value);
+            autoGrow();
+          }}
+          onKeyDown={handleKeyDown}
+          className="max-h-24 flex-1 resize-none bg-transparent text-[13px] leading-tight text-foreground outline-none placeholder:text-chat-placeholder"
+        />
+
+        {/* RIGHT: mic + send */}
+        <button
+          type="button"
+          aria-label="Voice input"
+          className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full text-foreground/70 transition-colors hover:bg-muted hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+        >
+          <Icons.mic className="h-[15px] w-[15px]" />
+        </button>
+        <button
+          type="button"
+          aria-label="Send"
+          disabled={!canSend}
+          onClick={submit}
+          className={cn(
+            "flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full",
+            "bg-lavender text-lavender-foreground transition-all duration-200",
+            "hover:scale-[1.05] active:scale-[0.95]",
+            "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
+            !canSend && "cursor-not-allowed opacity-40 hover:scale-100 active:scale-100"
+          )}
+        >
+          <Icons.send className="h-3.5 w-3.5" />
+        </button>
+      </div>
+
+      {/* Footnote BELOW the input — not inside */}
+      <p className="text-center text-[0.65rem] leading-tight text-muted-foreground/80">
+        {chatConfig.footnote}
+      </p>
     </div>
   );
 };

@@ -83,7 +83,7 @@ export const StarButton = ({ variant = "icon", className }: StarButtonProps) => 
   const icon = isLoading ? (
     <Icons.spinner className="h-4 w-4 animate-spin" />
   ) : isStarred ? (
-    <Icons.star className="h-4 w-4 text-amber-400" />
+    <Icons.star className="h-4 w-4 text-warning" />
   ) : (
     <Icons.starOutline className="h-4 w-4" />
   );
@@ -105,7 +105,7 @@ export const StarButton = ({ variant = "icon", className }: StarButtonProps) => 
         disabled={isLoading}
         className={cn(
           "flex h-[30px] w-[30px] items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-muted hover:text-foreground disabled:cursor-not-allowed disabled:opacity-70",
-          isStarred && "text-amber-400 hover:text-amber-400",
+          isStarred && "text-warning hover:text-warning",
           className
         )}
       >
@@ -123,7 +123,7 @@ export const StarButton = ({ variant = "icon", className }: StarButtonProps) => 
         disabled={isLoading}
         className={cn(
           "flex w-fit items-center gap-1.5 rounded-full border border-border px-3 py-1.5 text-xs font-medium text-foreground transition-colors hover:border-primary disabled:cursor-not-allowed disabled:opacity-70",
-          isStarred && "border-amber-400/50 bg-amber-400/10 text-amber-400"
+          isStarred && "border-warning/50 bg-warning/10 text-warning"
         )}
       >
         {icon}

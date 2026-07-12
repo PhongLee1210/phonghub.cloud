@@ -1,17 +1,21 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { motion, useReducedMotion } from "framer-motion";
+import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 
 import { AssistantPanel } from "@/components/chat/assistant-panel";
 import { ChatLauncher } from "@/components/chat/chat-launcher";
 import { ChatPanel } from "@/components/chat/chat-panel";
+import { Icons } from "@/components/common/icons";
 import { useChatStore } from "@/hooks/use-chat-store";
-import { cn } from "@/lib/utils";
+
+const HINT_DELAY_MS = 5000;
 
 export const HeroAssistant = () => {
   const [isMounted, setIsMounted] = useState(false);
-  const [isMinimized, setIsMinimized] = useState(false);
+  const [isWidgetOpen, setIsWidgetOpen] = useState(false);
+  const [showHint, setShowHint] = useState(false);
+  const revealedRef = useRef(false);
   const launcherRef = useRef<HTMLButtonElement>(null);
   const { isOpen, setOpen, hydrate } = useChatStore();
   const reducedMotion = useReducedMotion();
@@ -22,11 +26,22 @@ export const HeroAssistant = () => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
+  useEffect(() => {
+    if (isWidgetOpen || revealedRef.current) return;
+
+    const timer = setTimeout(() => {
+      revealedRef.current = true;
+      setShowHint(true);
+    }, HINT_DELAY_MS);
+
+    return () => clearTimeout(timer);
+  }, [isWidgetOpen]);
+
   if (!isMounted) return null;
 
   return (
     <>
-      {/* Mobile: launcher + floating panel — the global ChatWidget is suppressed on this route */}
+      {/* Mobile: launcher + floating panel */}
       <div className="md:hidden">
         <ChatLauncher
           ref={launcherRef}
@@ -40,39 +55,66 @@ export const HeroAssistant = () => {
         />
       </div>
 
-      {/* Desktop: docked overlay extending upward over the hero */}
-      <motion.div
-        initial={{ opacity: 0, y: 16 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{
-          duration: reducedMotion ? 0 : 0.55,
-          ease: [0.22, 1, 0.36, 1],
-        }}
-        className="fixed bottom-6 right-6 z-40 hidden w-[380px] md:block"
-      >
-        <div
-          className={cn(
-            "flex flex-col overflow-hidden rounded-2xl border border-border bg-card text-card-foreground shadow-[0_24px_64px_hsl(var(--foreground)/0.18)]",
-            isMinimized ? "h-14" : "h-[520px]"
-          )}
-        >
-          {isMinimized ? (
-            <button
-              type="button"
-              onClick={() => setIsMinimized(false)}
-              aria-label="Expand assistant"
-              className="flex h-14 w-full items-center gap-3 px-4 text-left"
-            >
-              <span className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full bg-lavender text-sm font-bold text-lavender-foreground">
-                A
-              </span>
-              <span className="text-sm font-medium">Ask me anything</span>
-            </button>
-          ) : (
-            <AssistantPanel onMinimize={() => setIsMinimized(true)} />
-          )}
+      {/* Desktop: circle FAB toggles the widget */}
+      {!isWidgetOpen && (
+        <div className="fixed bottom-[42px] right-[48px] z-30 hidden items-center gap-3 md:flex">
+          <AnimatePresence>
+            {showHint && (
+              <motion.button
+                type="button"
+                onClick={() => {
+                  setShowHint(false);
+                  setIsWidgetOpen(true);
+                }}
+                initial={{ opacity: 0, x: -20 }}
+                animate={{ opacity: 1, x: 0 }}
+                exit={{ opacity: 0, x: -20 }}
+                transition={{
+                  duration: reducedMotion ? 0 : 0.4,
+                  ease: "easeOut",
+                }}
+                className="cursor-pointer whitespace-nowrap rounded-full bg-card px-4 py-2 text-sm font-medium text-foreground shadow-md"
+              >
+                Ask me anything
+              </motion.button>
+            )}
+          </AnimatePresence>
+          <motion.button
+            type="button"
+            aria-label="Open AI chat"
+            onClick={() => {
+              setShowHint(false);
+              setIsWidgetOpen(true);
+            }}
+            initial={{ opacity: 0, scale: 0.8 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ duration: reducedMotion ? 0 : 0.3 }}
+            className="flex h-14 w-14 shrink-0 items-center justify-center rounded-full bg-chat-launcher text-foreground shadow-lavender-glow transition-transform hover:scale-[1.05] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+          >
+            <span className="relative flex h-5 w-5 items-center justify-center">
+              <Icons.chatBubble className="h-5 w-5" />
+              <span className="absolute -right-0.5 -top-0.5 h-2 w-2 rounded-full border-[1.5px] border-background bg-success" />
+            </span>
+          </motion.button>
         </div>
-      </motion.div>
+      )}
+
+      {/* Desktop: floating chat widget inside hero */}
+      {isWidgetOpen && (
+        <motion.div
+          initial={{ opacity: 0, y: 16 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{
+            duration: reducedMotion ? 0 : 0.45,
+            ease: [0.22, 1, 0.36, 1],
+          }}
+          className="fixed right-[60px] top-[80px] z-20 hidden w-[380px] md:block"
+        >
+          <div className="relative flex h-[calc(100dvh-120px)] max-h-[640px] min-h-[440px] flex-col overflow-hidden rounded-[28px] bg-chat-bg shadow-large">
+            <AssistantPanel onClose={() => setIsWidgetOpen(false)} />
+          </div>
+        </motion.div>
+      )}
     </>
   );
 };

@@ -36,6 +36,21 @@ export interface PersistedChat {
   updatedAt: number;
 }
 
+export interface Conversation {
+  id: string;
+  title: string;
+  messages: ChatMessage[];
+  createdAt: number;
+  updatedAt: number;
+}
+
+export interface PersistedChatV2 {
+  version: 2;
+  conversations: Conversation[];
+  activeConversationId: string | null;
+  updatedAt: number;
+}
+
 export interface ChatRequestBody {
   messages: Array<{ role: ChatRole; content: string }>;
 }

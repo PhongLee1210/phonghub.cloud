@@ -88,7 +88,7 @@ export const ChatPanel = ({ isOpen, onClose, launcherRef }: ChatPanelProps) => {
           animate={{ opacity: 1, y: 0, scale: 1 }}
           exit={{ opacity: 0, y: 12, scale: 0.98 }}
           transition={{ duration: 0.22, ease: "easeOut" }}
-          className="fixed bottom-0 right-0 z-[59] flex h-[100dvh] w-full flex-col overflow-hidden border-border bg-card text-card-foreground shadow-[0_24px_64px_hsl(var(--foreground)/0.22)] min-[481px]:bottom-24 min-[481px]:right-6 min-[481px]:h-[560px] min-[481px]:max-h-[calc(100vh-8rem)] min-[481px]:w-[380px] min-[481px]:max-w-[calc(100vw-3rem)] min-[481px]:rounded-2xl min-[481px]:border"
+          className="fixed bottom-0 right-0 z-[59] flex h-[100dvh] w-full flex-col overflow-hidden border-border bg-chat-bg text-card-foreground shadow-[0_24px_64px_hsl(var(--foreground)/0.22)] min-[481px]:bottom-20 min-[481px]:right-6 min-[481px]:h-[440px] min-[481px]:max-h-[calc(100vh-6rem)] min-[481px]:w-[300px] min-[481px]:max-w-[calc(100vw-3rem)] min-[481px]:rounded-2xl min-[481px]:border"
         >
           <AssistantPanel onClose={onClose} />
         </motion.div>

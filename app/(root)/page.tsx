@@ -76,7 +76,7 @@ export default function IndexPage() {
 
       <Hero />
       <AnimatedSection
-        className="container space-y-6 bg-muted py-10"
+        className="container space-y-6 bg-muted py-10 my-14"
         id="skills"
       >
         <div className="flex max-w-[42rem] flex-col items-start space-y-4 text-left">

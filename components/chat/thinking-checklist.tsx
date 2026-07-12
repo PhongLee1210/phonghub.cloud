@@ -28,8 +28,12 @@ export const ThinkingChecklist = () => {
     <div
       role="status"
       aria-label="Assistant is thinking"
-      className="flex w-fit flex-col gap-1.5 self-start rounded-lg rounded-bl-sm bg-muted px-3.5 py-3"
+      className="flex w-fit flex-col gap-[8px] self-start rounded-[16px] rounded-bl-sm border border-chat-border bg-chat-thinking px-[14px] py-[12px]"
     >
+      <div className="flex items-center gap-1.5 text-lavender-soft-foreground">
+        <Icons.aurora className="h-3.5 w-3.5" />
+        <span className="text-xs font-semibold tracking-wide">Thinking</span>
+      </div>
       {STEPS.map((step, index) => {
         const isDone = index < activeStep;
         const isActive = index === activeStep;
