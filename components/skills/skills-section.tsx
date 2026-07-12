@@ -29,6 +29,7 @@ export default function SkillsSection({ categories }: SkillsSectionProps) {
               return (
                 <div
                   key={skillIndex}
+                  data-agent-id={`skill:${skill.key}`}
                   className="group relative overflow-hidden rounded-lg border bg-background p-2 transition-all hover:shadow-md hover:shadow-primary/5"
                 >
                   <div className="flex h-[230px] flex-col justify-between rounded-md p-6 sm:h-[230px]">

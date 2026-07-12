@@ -63,14 +63,15 @@ export const chatConfig = {
     /** Sampling temperature — 0 for deterministic, factual, on-brand answers. */
     temperature: 0,
     /** Max output tokens per reply — covers the visible answer (~100 tokens
-     * for 2-4 sentences) + the command tail (~30-50 tokens for the marker +
-     * JSON). Kept low to match the concise-answer persona. */
-    maxOutputTokens: 640,
+     * for 2-4 sentences) + the command tail (marker + multi-key JSON for
+     * suggest/highlight/navigate, ~80-120 tokens). Kept low to match the
+     * concise-answer persona. */
+    maxOutputTokens: 1024,
     /**
      * Cumulative output tokens allowed per IP per UTC day, across all
      * requests — separate from rateLimit.perDay (a request-count budget).
-     * Well above the theoretical max from the request-count limiter alone
-     * (40 req/day * 640 max output tokens = 25,600), so in normal operation
+     * Above the theoretical max from the request-count limiter alone
+     * (40 req/day * 1024 max output tokens = 40,960), so in normal operation
      * the request-count limit stays the binding constraint and this only
      * kicks in if responses run unusually long.
      */
@@ -108,3 +109,7 @@ export const THINKING_STEP_LABELS: Record<string, string> = {
   preparing: "Preparing",
   thinking: "Reading the portfolio",
 };
+
+/** How long an agent highlight ring stays lit before auto-clearing.
+ *  Matches the CSS `agent-highlight-pulse` (2 × 1.6s ≈ 3.2s) + a beat. */
+export const HIGHLIGHT_DURATION_MS = 4000;

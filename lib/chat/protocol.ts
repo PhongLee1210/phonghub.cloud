@@ -1,6 +1,12 @@
 import { chatConfig } from "@/config/chat";
+import { ALLOWED_ROUTES } from "@/lib/chat/prompt";
 import { isObject, isString, isUndefined } from "@/lib/guards";
-import { ChatStreamEvent } from "@/types/chat";
+import {
+  AgentEntityId,
+  ChatStreamEvent,
+  EntityKind,
+  InternalRoute,
+} from "@/types/chat";
 
 /**
  * Agent command channel — the single source of truth for agent↔client
@@ -22,6 +28,42 @@ import { ChatStreamEvent } from "@/types/chat";
  */
 export function encodeEvent(event: ChatStreamEvent): string {
   return JSON.stringify(event) + "\n";
+}
+
+// ── Task 4.0: addressable entity-id scheme ──────────────────────
+
+/**
+ * The four entity kinds the agent can cite. Shared by the prompt builder
+ * (context.ts emits these as `agentId`) and the client resolver
+ * (entity-dom.ts parses them back). One source of truth so the prompt and
+ * the DOM cannot drift.
+ *
+ * EntityKind / AgentEntityId live in types/chat.ts (client-safe, wire-level)
+ * so types/chat.ts can reference them without a circular import.
+ */
+export const ENTITY_ID_PREFIXES = {
+  project: "project",
+  skill: "skill",
+  experience: "experience",
+  blog: "blog",
+} as const satisfies Record<EntityKind, string>;
+
+/** Builds an addressable id, e.g. buildEntityId("project", "enrollment-platform"). */
+export function buildEntityId(kind: EntityKind, id: string): AgentEntityId {
+  return `${ENTITY_ID_PREFIXES[kind]}:${id}`;
+}
+
+/** Parses one back; returns undefined if the prefix is unknown. */
+export function parseEntityId(
+  agentId: string
+): { kind: EntityKind; id: string } | undefined {
+  const idx = agentId.indexOf(":");
+  if (idx <= 0) return undefined;
+  const kind = agentId.slice(0, idx) as EntityKind;
+  if (!(kind in ENTITY_ID_PREFIXES)) return undefined;
+  const id = agentId.slice(idx + 1);
+  if (id.length === 0) return undefined;
+  return { kind, id };
 }
 
 // ── Task 2.1: command-channel contract ──────────────────────────
@@ -52,9 +94,9 @@ export const AGENT_CMD_MARKER = "<<<AGENT_CMDS>>>";
  */
 export interface ParsedCommands {
   suggest?: string[];
-  // highlight?: string;        // Task 4 — addressable entity id
-  // open?: string;             // Task 4
-  // navigate?: InternalRoute;  // Task 4 — must be an ALLOWED_ROUTE
+  highlight?: AgentEntityId;
+  navigate?: InternalRoute;
+  // open?: string;             // post-v1 — needs imperative handles
 }
 
 /**
@@ -75,14 +117,16 @@ export const RESPONSE_FORMAT_INSTRUCTIONS = `How to format every reply:
 - Write 2-4 sentences as the answer the visitor reads.
 - On a new line after the answer, emit the delimiter exactly: ${AGENT_CMD_MARKER}
 - Immediately after the delimiter, emit one JSON object (no markdown fences) with any of these keys you need:
-  "suggest" — an array of 2-3 short follow-up questions the visitor might ask next, each phrased in their voice ("What did he...", "Is he..."), never yours ("Ask me about..."). Only include questions answerable from the data above.
+  "suggest" — an array of 2-3 **SHORT** follow-up questions the visitor might ask next, each phrased in their voice ("What did he...", "Is he..."), never yours ("Ask me about..."). Only include questions answerable from the data above.
+  "highlight" — the 'agentId' of the single entity your answer is about, exactly as it appears in the data above (e.g. "project:enrollment-platform"). Omit it if your answer is not about one specific entity.
+  "navigate" — a route from the allowed list that the visitor should open next, with any <id> or <slug> filled from the data (e.g. "/projects/enrollment-platform"). Only emit it when moving the visitor to another page is the natural next step.
 - The delimiter and JSON must never appear inside the visible answer.
 - Omit a key rather than guess; the system fills in defaults.
 
 Example reply:
 Phong's strongest AI work is the enrollment platform — FastAPI microservices, GraphQL routing, and RAG-based lead classification.
 ${AGENT_CMD_MARKER}
-{"suggest": ["What's his strongest project?", "Is he open to remote work?"]}`;
+{"suggest": ["What's his core tech stack?", "Has he worked with JS/TS?"], "highlight": "project:enrollment-platform"}`;
 
 // ── Task 2.3: stream parser & command validator registry ───────
 
@@ -144,8 +188,40 @@ function validateSuggest(value: unknown): string[] | undefined {
   return cleaned.length >= 1 ? cleaned.slice(0, 3) : undefined;
 }
 
+/** Validates a highlight command — must be a known-prefix entity id. */
+function validateHighlight(value: unknown): AgentEntityId | undefined {
+  if (!isString(value)) return undefined;
+  const trimmed = value.trim();
+  return parseEntityId(trimmed) ? (trimmed as AgentEntityId) : undefined;
+}
+
+/**
+ * Builds a single regex from ALLOWED_ROUTES so the prompt and the validator
+ * cannot drift. Converts `<id>`/`<slug>` placeholders into segment matchers.
+ * Called once at module load.
+ */
+function buildAllowedRouteMatcher(): RegExp {
+  const patterns = ALLOWED_ROUTES.map((route) =>
+    route.replace(/<(?:id|slug)>/g, "[^/]+")
+  );
+  return new RegExp(`^(?:${patterns.join("|")})$`);
+}
+
+const ALLOWED_ROUTE_RE = buildAllowedRouteMatcher();
+
+/** Validates a navigate command — must match an allowed route with ids filled. */
+function validateNavigate(value: unknown): InternalRoute | undefined {
+  if (!isString(value)) return undefined;
+  const trimmed = value.trim();
+  return ALLOWED_ROUTE_RE.test(trimmed)
+    ? (trimmed as InternalRoute)
+    : undefined;
+}
+
 const COMMAND_VALIDATORS = {
   suggest: validateSuggest,
+  highlight: validateHighlight,
+  navigate: validateNavigate,
 } satisfies Record<string, CommandValidator>;
 
 export function parseCommandStream(raw: string): ParsedCommands {

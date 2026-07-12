@@ -7,7 +7,7 @@ import { SKILLS } from "@/config/skills";
 import { siteConfig } from "@/config/site";
 import { listPublishedPosts } from "@/lib/blog/service";
 import { buildPersona, GUARDRAILS } from "./prompt";
-import { RESPONSE_FORMAT_INSTRUCTIONS } from "./protocol";
+import { buildEntityId, RESPONSE_FORMAT_INSTRUCTIONS } from "./protocol";
 import { assembleSystemPrompt, SystemPromptData } from "./token-budget";
 
 const CONTENT_DIR = "content/blog";
@@ -43,7 +43,7 @@ export async function buildSystemPrompt(): Promise<{
     persona,
     guardrails: `${GUARDRAILS}\n\n${RESPONSE_FORMAT_INSTRUCTIONS}`,
     projects: PROJECTS.map((p) => ({
-      id: p.id,
+      agentId: buildEntityId("project", p.id),
       companyName: p.companyName,
       shortDescription: p.shortDescription,
       descriptionPreview: p.descriptionDetails?.paragraphs?.[0],
@@ -51,12 +51,14 @@ export async function buildSystemPrompt(): Promise<{
       category: p.category,
     })),
     skills: SKILLS.map((s) => ({
+      agentId: buildEntityId("skill", s.key),
       name: s.name,
       description: s.description,
       rating: s.rating,
       category: s.category,
     })),
     experience: EXPERIENCES.map((e) => ({
+      agentId: buildEntityId("experience", e.id),
       position: e.position,
       company: e.company,
       startDate: e.startDate,
@@ -68,6 +70,7 @@ export async function buildSystemPrompt(): Promise<{
     // listPublishedPosts already sorts newest-first, which is exactly the
     // order assembleSystemPrompt needs to trim oldest posts first.
     blogPosts: posts.map((p) => ({
+      agentId: buildEntityId("blog", p.slug),
       slug: p.slug,
       title: p.title,
       category: p.category,

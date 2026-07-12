@@ -14,6 +14,9 @@ export type InternalRoute =
   | `/projects/${string}`
   | `/blogs/${string}`;
 
+export type EntityKind = "project" | "skill" | "experience" | "blog";
+export type AgentEntityId = `${EntityKind}:${string}`;
+
 export interface ProjectCardPayload {
   projectId: string;
   title: string;
@@ -76,6 +79,13 @@ export const ChatEventType = {
   Error: "error",
 } as const;
 
+export type DoneEvent = {
+  type: typeof ChatEventType.Done;
+  suggestions?: string[];
+  highlight?: AgentEntityId;
+  navigate?: InternalRoute;
+};
+
 export type ChatStreamEvent =
   | { type: typeof ChatEventType.Thinking; step: string }
   | { type: typeof ChatEventType.Token; text: string }
@@ -85,5 +95,5 @@ export type ChatStreamEvent =
       type: typeof ChatEventType.Action;
       action: ChatMessageAction;
     }
-  | { type: typeof ChatEventType.Done; suggestions?: string[] }
+  | DoneEvent
   | { type: typeof ChatEventType.Error; code: ChatErrorCode; message: string };

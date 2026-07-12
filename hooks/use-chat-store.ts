@@ -4,6 +4,7 @@ import { chatConfig } from "@/config/chat";
 import { streamChat } from "@/lib/chat/client";
 import { pickRandom } from "@/lib/utils";
 import {
+  AgentEntityId,
   ChatMessage,
   ChatRole,
   Conversation,
@@ -14,6 +15,7 @@ import {
 export const ChatStatus = {
   Idle: "idle",
   Streaming: "streaming",
+  Acting: "acting",
   Error: "error",
 } as const;
 export type ChatStatus = (typeof ChatStatus)[keyof typeof ChatStatus];
@@ -31,6 +33,8 @@ interface ChatStoreState {
   streamingContent: string;
   draft: string;
   pendingNavigate?: InternalRoute;
+  pendingHighlight?: AgentEntityId;
+  activeHighlight?: AgentEntityId;
   hydrated: boolean;
   errorMessage?: string;
   activeAbort?: () => void;
@@ -39,6 +43,8 @@ interface ChatStoreState {
   setOpen: (open: boolean) => void;
   setDraft: (text: string) => void;
   clearNavigate: () => void;
+  clearHighlight: () => void;
+  setActiveHighlight: (id: AgentEntityId | undefined) => void;
   sendMessage: (text: string) => void;
   stopStreaming: () => void;
   reset: () => void;
@@ -137,6 +143,8 @@ export const useChatStore = create<ChatStoreState>((set, get) => ({
   streamingContent: "",
   draft: "",
   pendingNavigate: undefined,
+  pendingHighlight: undefined,
+  activeHighlight: undefined,
   hydrated: false,
 
   hydrate: () => {
@@ -186,6 +194,14 @@ export const useChatStore = create<ChatStoreState>((set, get) => ({
     set({ pendingNavigate: undefined });
   },
 
+  clearHighlight: () => {
+    set({ pendingHighlight: undefined, activeHighlight: undefined });
+  },
+
+  setActiveHighlight: (id: AgentEntityId | undefined) => {
+    set({ activeHighlight: id });
+  },
+
   sendMessage: (text: string) => {
     const trimmed = text.trim().slice(0, chatConfig.limits.maxInputChars);
     if (!trimmed || get().status === ChatStatus.Streaming) return;
@@ -229,6 +245,8 @@ export const useChatStore = create<ChatStoreState>((set, get) => ({
       thinkingSteps: [],
       streamingContent: "",
       draft: "",
+      pendingHighlight: undefined,
+      activeHighlight: undefined,
       errorMessage: undefined,
     });
     persist(updatedConversations, activeConversationId);
@@ -288,7 +306,7 @@ export const useChatStore = create<ChatStoreState>((set, get) => ({
             return { messages: newMessages, conversations: newConversations };
           });
         },
-        onDone: (suggestions) => {
+        onDone: (done) => {
           if (get().status !== ChatStatus.Streaming) return;
 
           cancelRaf();
@@ -296,7 +314,8 @@ export const useChatStore = create<ChatStoreState>((set, get) => ({
           tokenBuffer = "";
 
           const resolved =
-            suggestions ?? pickRandom(chatConfig.seedSuggestions, 3);
+            done.suggestions ?? pickRandom(chatConfig.seedSuggestions, 3);
+          const hasCommand = Boolean(done.highlight || done.navigate);
           set((state) => {
             const messages = state.messages.map((m) =>
               m.id === assistantMessage.id
@@ -309,13 +328,15 @@ export const useChatStore = create<ChatStoreState>((set, get) => ({
                 : c
             );
             return {
-              status: ChatStatus.Idle,
+              status: hasCommand ? ChatStatus.Acting : ChatStatus.Idle,
               suggestions: resolved,
               thinkingSteps: [],
               streamingContent: "",
               activeAbort: undefined,
               messages,
               conversations: newConversations,
+              pendingHighlight: done.highlight,
+              pendingNavigate: done.navigate ?? state.pendingNavigate,
             };
           });
           persist(get().conversations, get().activeConversationId);
@@ -407,6 +428,8 @@ export const useChatStore = create<ChatStoreState>((set, get) => ({
       streamingContent: "",
       draft: "",
       pendingNavigate: undefined,
+      pendingHighlight: undefined,
+      activeHighlight: undefined,
       errorMessage: undefined,
       activeAbort: undefined,
     });
@@ -426,6 +449,8 @@ export const useChatStore = create<ChatStoreState>((set, get) => ({
       streamingContent: "",
       draft: "",
       pendingNavigate: undefined,
+      pendingHighlight: undefined,
+      activeHighlight: undefined,
       errorMessage: undefined,
       activeAbort: undefined,
     }));
@@ -445,6 +470,8 @@ export const useChatStore = create<ChatStoreState>((set, get) => ({
       streamingContent: "",
       draft: "",
       pendingNavigate: undefined,
+      pendingHighlight: undefined,
+      activeHighlight: undefined,
       errorMessage: undefined,
       activeAbort: undefined,
     });

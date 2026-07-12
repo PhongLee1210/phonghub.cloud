@@ -275,6 +275,8 @@ export async function POST(req: NextRequest) {
             send({
               type: ChatEventType.Done,
               suggestions: parsed.suggest,
+              highlight: parsed.highlight,
+              navigate: parsed.navigate,
             });
           }
           // tool_call chunks are phase 2 (card/navigate events) — ignored for now.

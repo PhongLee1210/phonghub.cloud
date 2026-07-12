@@ -8,7 +8,15 @@ import { ChatMessageList } from "@/components/chat/chat-message-list";
 import { ConversationSidebar } from "@/components/chat/conversation-sidebar";
 import { Icons } from "@/components/common/icons";
 import { useChatStore } from "@/hooks/use-chat-store";
+import { parseEntityId } from "@/lib/chat/protocol";
 import { cn } from "@/lib/utils";
+
+const ENTITY_HIGHLIGHT_LABELS: Record<string, string> = {
+  project: "project",
+  skill: "skill",
+  experience: "experience",
+  blog: "blog post",
+};
 
 interface AssistantPanelProps {
   onMinimize?: () => void;
@@ -23,6 +31,7 @@ export const AssistantPanel = ({
 }: AssistantPanelProps) => {
   const status = useChatStore((s) => s.status);
   const errorMessage = useChatStore((s) => s.errorMessage);
+  const activeHighlight = useChatStore((s) => s.activeHighlight);
   const sendMessage = useChatStore((s) => s.sendMessage);
   const setDraft = useChatStore((s) => s.setDraft);
   const stopStreaming = useChatStore((s) => s.stopStreaming);
@@ -97,6 +106,23 @@ export const AssistantPanel = ({
           >
             Stop generating
           </button>
+        </div>
+      )}
+
+      {status === "acting" && activeHighlight && (
+        <div
+          role="status"
+          aria-live="polite"
+          className="mx-[14px] mb-2 flex flex-shrink-0 items-center gap-1.5 rounded-[12px] border border-primary/20 bg-primary/5 px-[12px] py-1.5 text-xs text-muted-foreground"
+        >
+          <Icons.aurora className="h-3 w-3 animate-pulse text-primary" />
+          <span>
+            Highlighting a{" "}
+            {ENTITY_HIGHLIGHT_LABELS[
+              parseEntityId(activeHighlight)?.kind ?? ""
+            ] ?? "section"}{" "}
+            on the page
+          </span>
         </div>
       )}
 

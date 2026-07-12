@@ -339,6 +339,31 @@
     -webkit-text-fill-color: transparent;
     animation: gradientShift 3s ease infinite;
   }
+
+  .agent-highlighted {
+    outline: 2px solid hsl(var(--ring));
+    outline-offset: 2px;
+    border-radius: var(--radius);
+    box-shadow: 0 0 0 4px hsl(var(--ring) / 0.18);
+    animation: agent-highlight-pulse 1.6s ease-in-out 2;
+  }
+
+  @keyframes agent-highlight-pulse {
+    0%,
+    100% {
+      box-shadow: 0 0 0 4px hsl(var(--ring) / 0.18);
+    }
+    50% {
+      box-shadow: 0 0 0 8px hsl(var(--ring) / 0.06);
+    }
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .agent-highlighted {
+    animation: none;
+    box-shadow: 0 0 0 4px hsl(var(--ring) / 0.22);
+  }
 }
 
 @supports (animation: grow 0.5s cubic-bezier(0.25, 0.25, 0.25, 1) forwards) {

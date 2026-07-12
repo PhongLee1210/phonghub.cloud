@@ -1,7 +1,7 @@
 "use client";
 
-import { memo, useEffect, useMemo, useRef } from "react";
 import { motion, useReducedMotion } from "framer-motion";
+import { memo, useEffect, useMemo, useRef } from "react";
 
 import { MessageMarkdown } from "@/components/chat/message-markdown";
 import { StarButton } from "@/components/chat/star-button";
@@ -11,8 +11,8 @@ import { ThinkingChecklist } from "@/components/chat/thinking-checklist";
 import { Icons } from "@/components/common/icons";
 import { chatConfig } from "@/config/chat";
 import { useChatStore } from "@/hooks/use-chat-store";
-import { ChatMessage } from "@/types/chat";
 import { cn } from "@/lib/utils";
+import { ChatMessage } from "@/types/chat";
 
 interface ChatMessageListProps {
   onSuggestionSelect?: (prompt: string) => void;
@@ -69,7 +69,7 @@ const MessageRow = memo(function MessageRow({
       transition={{ duration: reducedMotion ? 0 : 0.22, ease: "easeOut" }}
       className={cn(
         "flex items-end gap-2",
-        isUser ? "self-end flex-row-reverse" : "self-start",
+        isUser ? "self-end flex-row-reverse" : "self-start"
       )}
     >
       <span
@@ -77,7 +77,7 @@ const MessageRow = memo(function MessageRow({
           "flex h-7 w-7 flex-shrink-0 items-center justify-center rounded-full",
           isUser
             ? "bg-muted text-muted-foreground"
-            : "bg-lavender text-lavender-foreground",
+            : "bg-lavender text-lavender-foreground"
         )}
       >
         {isUser ? (
@@ -90,22 +90,25 @@ const MessageRow = memo(function MessageRow({
       <div
         className={cn(
           "flex max-w-[80%] flex-col gap-1",
-          isUser ? "items-end" : "items-start",
+          isUser ? "items-end" : "items-start"
         )}
       >
         <div
           className={cn(
             "break-words rounded-[16px] px-[12px] py-[10px] text-[13px] leading-relaxed",
             isUser
-              ? "whitespace-pre-wrap rounded-br-sm border-2 border-chat-bubble-user-border bg-chat-bubble-user text-foreground"
-              : "rounded-tl-sm border border-chat-border bg-chat-bubble-ai text-foreground",
-            message.error && "border-destructive/50",
+              ? "whitespace-pre-wrap rounded-br-sm border-2 border-chat-bubble-user-border bg-chat-bubble-user text-foreground dark:text-muted-foreground"
+              : "rounded-tl-sm border border-chat-border bg-chat-bubble-ai text-foreground dark:text-muted-foreground",
+            message.error && "border-destructive/50"
           )}
         >
           {isUser ? (
             displayContent
           ) : (
-            <MessageMarkdown content={displayContent} />
+            <MessageMarkdown
+              className="text-foreground dark:text-muted-foreground"
+              content={displayContent}
+            />
           )}
           {isStreamingLast && displayContent && (
             <span
@@ -163,7 +166,7 @@ export const ChatMessageList = ({
 
   const lastAssistantId = useMemo(
     () => [...messages].reverse().find((m) => m.role === "assistant")?.id,
-    [messages],
+    [messages]
   );
 
   const lastIndex = messages.length - 1;

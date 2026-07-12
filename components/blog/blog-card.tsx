@@ -11,6 +11,7 @@ export default function BlogCard({ post }: BlogCardProps) {
   return (
     <Link
       href={`/blogs/${post.slug}`}
+      data-agent-id={`blog:${post.slug}`}
       className="group block rounded-[var(--radius)] bg-card text-card-foreground shadow-lg hover:shadow-xl transition-shadow duration-200 border border-border overflow-hidden focus:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
       aria-label={`Read blog post: ${post.title}`}
     >

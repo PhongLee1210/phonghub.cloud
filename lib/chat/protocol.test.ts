@@ -2,9 +2,12 @@ import { describe, expect, test } from "bun:test";
 
 import {
   AGENT_CMD_MARKER,
+  buildEntityId,
   createCommandSplitter,
   encodeEvent,
+  ENTITY_ID_PREFIXES,
   parseCommandStream,
+  parseEntityId,
 } from "./protocol";
 
 const M = AGENT_CMD_MARKER;
@@ -98,7 +101,7 @@ describe("parseCommandStream", () => {
 
   test("unknown keys silently ignored", () => {
     expect(
-      parseCommandStream('{"suggest": ["q1"], "highlight": "x", "future": 42}'),
+      parseCommandStream('{"suggest": ["q1"], "future": 42}'),
     ).toEqual({ suggest: ["q1"] });
   });
 
@@ -205,5 +208,150 @@ describe("encodeEvent", () => {
     const line = encodeEvent({ type: "token", text: "hi" });
     expect(line).toBe('{"type":"token","text":"hi"}\n');
     expect(line.endsWith("\n")).toBe(true);
+  });
+});
+
+// ── entity-id scheme (Task 4.0) ────────────────────────────────
+
+describe("entity-id scheme", () => {
+  test("buildEntityId prefixes with the kind", () => {
+    expect(buildEntityId("project", "enrollment-platform")).toBe(
+      "project:enrollment-platform"
+    );
+    expect(buildEntityId("skill", "react")).toBe("skill:react");
+    expect(buildEntityId("experience", "hiliosai")).toBe("experience:hiliosai");
+    expect(buildEntityId("blog", "my-post")).toBe("blog:my-post");
+  });
+
+  test("ENTITY_ID_PREFIXES covers all four kinds", () => {
+    expect(Object.keys(ENTITY_ID_PREFIXES).sort()).toEqual([
+      "blog",
+      "experience",
+      "project",
+      "skill",
+    ]);
+  });
+
+  test("parseEntityId round-trips buildEntityId output", () => {
+    for (const kind of ["project", "skill", "experience", "blog"] as const) {
+      const id = buildEntityId(kind, `test-${kind}`);
+      expect(parseEntityId(id)).toEqual({ kind, id: `test-${kind}` });
+    }
+  });
+
+  test("parseEntityId rejects missing colon", () => {
+    expect(parseEntityId("nocolonhere")).toBeUndefined();
+  });
+
+  test("parseEntityId rejects unknown prefix", () => {
+    expect(parseEntityId("unknown:thing")).toBeUndefined();
+  });
+
+  test("parseEntityId rejects empty id after prefix", () => {
+    expect(parseEntityId("project:")).toBeUndefined();
+  });
+
+  test("parseEntityId handles ids containing colons", () => {
+    expect(parseEntityId("blog:my:weird:slug")).toEqual({
+      kind: "blog",
+      id: "my:weird:slug",
+    });
+  });
+});
+
+// ── validateHighlight + validateNavigate (Task 4.1) ────────────
+
+describe("parseCommandStream — highlight", () => {
+  test("valid prefixed highlight passes", () => {
+    expect(
+      parseCommandStream('{"highlight": "project:enrollment-platform"}')
+    ).toEqual({ highlight: "project:enrollment-platform" });
+  });
+
+  test("highlight with whitespace is trimmed", () => {
+    expect(
+      parseCommandStream('{"highlight": "  skill:react  "}')
+    ).toEqual({ highlight: "skill:react" });
+  });
+
+  test("highlight with unknown prefix rejected", () => {
+    expect(parseCommandStream('{"highlight": "unknown:thing"}')).toEqual({});
+  });
+
+  test("highlight with no colon rejected", () => {
+    expect(parseCommandStream('{"highlight": "nocolon"}')).toEqual({});
+  });
+
+  test("non-string highlight rejected", () => {
+    expect(parseCommandStream('{"highlight": 42}')).toEqual({});
+  });
+});
+
+describe("parseCommandStream — navigate", () => {
+  test("static allowed routes pass", () => {
+    const routes = ["/skills", "/projects", "/experience", "/blogs"] as const;
+    for (const route of routes) {
+      expect(parseCommandStream(`{"navigate": "${route}"}`)).toEqual({
+        navigate: route,
+      });
+    }
+  });
+
+  test("parameterized project route passes", () => {
+    expect(
+      parseCommandStream('{"navigate": "/projects/enrollment-platform"}')
+    ).toEqual({ navigate: "/projects/enrollment-platform" });
+  });
+
+  test("parameterized blog route passes", () => {
+    expect(
+      parseCommandStream('{"navigate": "/blogs/general-post"}')
+    ).toEqual({ navigate: "/blogs/general-post" });
+  });
+
+  test("navigate with whitespace trimmed", () => {
+    expect(
+      parseCommandStream('{"navigate": "  /skills  "}')
+    ).toEqual({ navigate: "/skills" });
+  });
+
+  test("non-allowed route rejected", () => {
+    expect(parseCommandStream('{"navigate": "/admin"}')).toEqual({});
+    expect(parseCommandStream('{"navigate": "/projects/"}')).toEqual({});
+    expect(parseCommandStream('{"navigate": "https://evil.com"}')).toEqual({});
+  });
+
+  test("non-string navigate rejected", () => {
+    expect(parseCommandStream('{"navigate": 42}')).toEqual({});
+  });
+});
+
+// ── multi-key isolation (Task 4.1) ─────────────────────────────
+
+describe("parseCommandStream — multi-key", () => {
+  test("all three keys parse together", () => {
+    expect(
+      parseCommandStream(
+        '{"suggest": ["q1","q2"], "highlight": "project:x", "navigate": "/skills"}'
+      )
+    ).toEqual({
+      suggest: ["q1", "q2"],
+      highlight: "project:x",
+      navigate: "/skills",
+    });
+  });
+
+  test("one invalid key leaves the others intact (isolation)", () => {
+    expect(
+      parseCommandStream(
+        '{"suggest": ["q1"], "highlight": "badprefix:x", "navigate": "/skills"}'
+      )
+    ).toEqual({ suggest: ["q1"], navigate: "/skills" });
+  });
+
+  test("only highlight present (no suggest)", () => {
+    expect(
+      parseCommandStream('{"highlight": "skill:react"}')
+    ).toEqual({ highlight: "skill:react" });
   });
 });

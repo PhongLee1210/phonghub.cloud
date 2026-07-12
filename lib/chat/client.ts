@@ -1,4 +1,4 @@
-import { ChatMessageAction, ChatRequestBody, ChatStreamEvent } from "@/types/chat";
+import { ChatMessageAction, ChatRequestBody, ChatStreamEvent, DoneEvent } from "@/types/chat";
 
 /**
  * POSTs to /api/chat, incrementally parses the NDJSON response, and
@@ -13,7 +13,7 @@ export function streamChat(
     onCard?: (card: Extract<ChatStreamEvent, { type: "card" }>["card"]) => void;
     onNavigate?: (href: Extract<ChatStreamEvent, { type: "navigate" }>["href"]) => void;
     onAction?: (action: ChatMessageAction) => void;
-    onDone: (suggestions?: string[]) => void;
+    onDone: (done: DoneEvent) => void;
     onError: (
       code: Extract<ChatStreamEvent, { type: "error" }>["code"],
       message: string
@@ -99,7 +99,7 @@ function dispatch(
       handlers.onAction?.(event.action);
       break;
     case "done":
-      handlers.onDone(event.suggestions);
+      handlers.onDone(event);
       break;
     case "error":
       handlers.onError(event.code, event.message);

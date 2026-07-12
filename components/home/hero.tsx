@@ -89,7 +89,7 @@ export const Hero = () => {
           </ul>
         </motion.div>
 
-        <motion.div {...fadeUp(0.25)} className="flex gap-[18px] pt-2">
+        <motion.div {...fadeUp(0.25)} className="flex gap-[18px] pt-2 -ml-1.5">
           {SocialLinks.map((social) => (
             <SocialButton
               key={social.name}
