@@ -1,11 +1,12 @@
 import "server-only";
 
+import { getModelMetadata, resolveModelRef } from "./config";
 import { anthropicProvider } from "./providers/anthropic";
 import { openaiProvider } from "./providers/openai";
 import { googleProvider } from "./providers/google";
 import { groqProvider } from "./providers/groq";
 import { mistralProvider } from "./providers/mistral";
-import { LLMProvider, ProviderId } from "./types";
+import { LLMProvider, ModelAlias, ProviderId } from "./types";
 
 const ALL_PROVIDERS: LLMProvider[] = [
   anthropicProvider,
@@ -31,6 +32,16 @@ function getRegistry(): Map<ProviderId, LLMProvider> {
       JSON.stringify({
         scope: "llm.gateway.startup",
         configuredProviders: Array.from(cache.keys()),
+        models: (["chat", "cheap"] as ModelAlias[]).map((alias) => {
+          const ref = resolveModelRef(alias);
+          const meta = getModelMetadata(ref);
+          return {
+            alias,
+            modelRef: ref,
+            contextWindowTokens: meta.contextWindowTokens,
+            maxOutputTokens: meta.maxOutputTokens,
+          };
+        }),
         message:
           "Verify spend caps are set in each provider's console — see lib/llm/README.md",
       })

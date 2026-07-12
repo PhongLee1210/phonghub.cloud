@@ -1,7 +1,6 @@
 import "server-only";
 
 import { ModelAlias, ModelRef, ProviderId } from "./types";
-
 const PROVIDER_IDS: readonly ProviderId[] = [
   "anthropic",
   "openai",
@@ -87,4 +86,41 @@ export function envKeyForProvider(providerId: ProviderId): string {
     case "mistral":
       return "MISTRAL_API_KEY";
   }
+}
+
+export interface ModelMetadata {
+  contextWindowTokens: number;
+  maxOutputTokens: number;
+}
+
+const CONSERVATIVE_DEFAULT: ModelMetadata = {
+  contextWindowTokens: 8_192,
+  maxOutputTokens: 4_096,
+};
+
+const MODEL_METADATA: Partial<Record<string, ModelMetadata>> = {
+  "claude-haiku-4-5": { contextWindowTokens: 200_000, maxOutputTokens: 8_192 },
+  "claude-sonnet-4-5": { contextWindowTokens: 200_000, maxOutputTokens: 16_384 },
+  "gpt-4o": { contextWindowTokens: 128_000, maxOutputTokens: 16_384 },
+  "gpt-4o-mini": { contextWindowTokens: 128_000, maxOutputTokens: 16_384 },
+  "gemini-2.0-flash": { contextWindowTokens: 1_000_000, maxOutputTokens: 8_192 },
+  "llama-3.1-8b-instant": { contextWindowTokens: 128_000, maxOutputTokens: 8_192 },
+  "llama-3.3-70b-versatile": { contextWindowTokens: 128_000, maxOutputTokens: 32_768 },
+  "mistral-small-latest": { contextWindowTokens: 32_000, maxOutputTokens: 8_192 },
+  "mistral-large-latest": { contextWindowTokens: 128_000, maxOutputTokens: 8_192 },
+};
+
+export function getModelMetadata(ref: ModelRef): ModelMetadata {
+  const { model } = splitModelRef(ref);
+  return MODEL_METADATA[model] ?? CONSERVATIVE_DEFAULT;
+}
+
+export function effectiveContextBudget(
+  alias: ModelAlias,
+  internalBudget: number
+): number {
+  const ref = resolveModelRef(alias);
+  const meta = getModelMetadata(ref);
+  const modelInputCeiling = meta.contextWindowTokens - meta.maxOutputTokens;
+  return Math.min(internalBudget, modelInputCeiling);
 }

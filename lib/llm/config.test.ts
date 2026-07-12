@@ -1,7 +1,9 @@
 import { afterEach, beforeEach, describe, expect, test } from "bun:test";
 
 import {
+  effectiveContextBudget,
   envKeyForProvider,
+  getModelMetadata,
   resolveFallbackChain,
   resolveModelRef,
   splitModelRef,
@@ -82,5 +84,46 @@ describe("splitModelRef", () => {
       providerId: "anthropic",
       model: "claude-haiku-4-5",
     });
+  });
+});
+
+describe("getModelMetadata", () => {
+  test("returns known metadata for claude-haiku-4-5", () => {
+    expect(getModelMetadata("anthropic:claude-haiku-4-5")).toEqual({
+      contextWindowTokens: 200_000,
+      maxOutputTokens: 8_192,
+    });
+  });
+
+  test("returns known metadata for groq:llama-3.1-8b-instant", () => {
+    expect(getModelMetadata("groq:llama-3.1-8b-instant")).toEqual({
+      contextWindowTokens: 128_000,
+      maxOutputTokens: 8_192,
+    });
+  });
+
+  test("returns conservative default for an unknown model", () => {
+    expect(getModelMetadata("groq:some-unknown-model")).toEqual({
+      contextWindowTokens: 8_192,
+      maxOutputTokens: 4_096,
+    });
+  });
+});
+
+describe("effectiveContextBudget", () => {
+  test("internal budget is binding when model window is large", () => {
+    expect(effectiveContextBudget("chat", 28_000)).toBe(28_000);
+  });
+
+  test("model window is binding when internal budget exceeds it", () => {
+    process.env.LLM_CHAT_MODEL = "groq:unknown-tiny-model";
+    expect(effectiveContextBudget("chat", 28_000)).toBe(8_192 - 4_096);
+  });
+
+  test("returns internal budget when model window exactly matches it", () => {
+    process.env.LLM_CHAT_MODEL = "mistral:mistral-small-latest";
+    expect(effectiveContextBudget("chat", 28_000)).toBe(
+      Math.min(28_000, 32_000 - 8_192)
+    );
   });
 });

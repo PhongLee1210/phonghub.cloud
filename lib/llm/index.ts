@@ -1,6 +1,7 @@
 import "server-only";
 
 import {
+  effectiveContextBudget,
   resolveFallbackChain,
   resolveModelRef,
   splitModelRef,
@@ -129,3 +130,5 @@ function logUsage(entry: {
     })
   );
 }
+
+export { effectiveContextBudget };

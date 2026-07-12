@@ -7,7 +7,7 @@ import { checkRateLimit } from "@/lib/chat/rate-limit";
 import { getRedisClient } from "@/lib/chat/redis";
 import { checkCombinedBudget, trimHistoryToBudget } from "@/lib/chat/token-budget";
 import { checkTokenQuota, recordTokenUsage } from "@/lib/chat/token-quota";
-import { streamLLM } from "@/lib/llm";
+import { effectiveContextBudget, streamLLM } from "@/lib/llm";
 import { LLMError, LLMMessage, LLMStreamChunk } from "@/lib/llm/types";
 import { ChatErrorCode, ChatRequestBody, ChatStreamEvent } from "@/types/chat";
 
@@ -162,7 +162,10 @@ export async function POST(req: NextRequest) {
     systemPromptTokens: systemPromptResult.estimatedTokens,
     historyTokens: trimmedHistory.estimatedTokens,
     historyMessageCount: trimmedHistory.messages.length,
-    maxTotalContextTokens: chatConfig.contextBudget.hardCombinedTokenBudget,
+    maxTotalContextTokens: effectiveContextBudget(
+      "chat",
+      chatConfig.contextBudget.hardCombinedTokenBudget
+    ),
   });
   if (!combinedBudget.ok) {
     await slot.release();
