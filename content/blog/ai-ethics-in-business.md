@@ -12,7 +12,7 @@ coverImage: "https://images.unsplash.com/photo-1506744038136-46273834b3fb"
 status: "published"
 ---
 
-bAs a software engineer who has helped ship AI-powered products into real companies, I’ve learned that the hardest problems are rarely technical. They are ethical.
+As a software engineer who has helped ship AI-powered products into real companies, I’ve learned that the hardest problems are rarely technical. They are ethical.
 
 I still remember the first time a sales leader asked me, “Can we use this model to auto-approve small customer loans so we close deals faster?” Technically, yes. But as we dug into the data, I realized our “high-performing” model had quietly learned patterns that could disadvantage specific groups of customers. That moment changed how I, Phong Lee, think about AI in business forever.
 
