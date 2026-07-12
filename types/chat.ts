@@ -1,4 +1,8 @@
-export type ChatRole = "user" | "assistant";
+export const ChatRole = {
+  User: "user",
+  Assistant: "assistant",
+} as const;
+export type ChatRole = (typeof ChatRole)[keyof typeof ChatRole];
 
 export type InternalRoute =
   | "/skills"
@@ -18,7 +22,11 @@ export interface ProjectCardPayload {
   href: `/projects/${string}`;
 }
 
-export type ChatMessageAction = "star_repo";
+export const ChatMessageAction = {
+  StarRepo: "star_repo",
+} as const;
+export type ChatMessageAction =
+  (typeof ChatMessageAction)[keyof typeof ChatMessageAction];
 
 export interface ChatMessage {
   id: string;
@@ -30,12 +38,6 @@ export interface ChatMessage {
   error?: boolean;
 }
 
-export interface PersistedChat {
-  version: 1;
-  messages: ChatMessage[];
-  updatedAt: number;
-}
-
 export interface Conversation {
   id: string;
   title: string;
@@ -44,8 +46,7 @@ export interface Conversation {
   updatedAt: number;
 }
 
-export interface PersistedChatV2 {
-  version: 2;
+export interface PersistedChat {
   conversations: Conversation[];
   activeConversationId: string | null;
   updatedAt: number;
@@ -55,18 +56,33 @@ export interface ChatRequestBody {
   messages: Array<{ role: ChatRole; content: string }>;
 }
 
-export type ChatErrorCode =
-  | "rate_limited"
-  | "concurrency_limited"
-  | "input_too_long"
-  | "upstream_error"
-  | "aborted";
+export const ChatErrorCode = {
+  RateLimited: "rate_limited",
+  ConcurrencyLimited: "concurrency_limited",
+  InputTooLong: "input_too_long",
+  UpstreamError: "upstream_error",
+  Aborted: "aborted",
+} as const;
+export type ChatErrorCode = (typeof ChatErrorCode)[keyof typeof ChatErrorCode];
+
+export const ChatEventType = {
+  Thinking: "thinking",
+  Token: "token",
+  Card: "card",
+  Navigate: "navigate",
+  Action: "action",
+  Done: "done",
+  Error: "error",
+} as const;
 
 export type ChatStreamEvent =
-  | { type: "thinking"; step: string }
-  | { type: "token"; text: string }
-  | { type: "card"; card: ProjectCardPayload }
-  | { type: "navigate"; href: InternalRoute }
-  | { type: "action"; action: ChatMessageAction }
-  | { type: "done"; suggestions?: string[] }
-  | { type: "error"; code: ChatErrorCode; message: string };
+  | { type: typeof ChatEventType.Thinking; step: string }
+  | { type: typeof ChatEventType.Token; text: string }
+  | { type: typeof ChatEventType.Card; card: ProjectCardPayload }
+  | { type: typeof ChatEventType.Navigate; href: InternalRoute }
+  | {
+      type: typeof ChatEventType.Action;
+      action: ChatMessageAction;
+    }
+  | { type: typeof ChatEventType.Done; suggestions?: string[] }
+  | { type: typeof ChatEventType.Error; code: ChatErrorCode; message: string };
