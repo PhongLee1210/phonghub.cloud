@@ -63,6 +63,7 @@ export type ChatErrorCode =
   | "aborted";
 
 export type ChatStreamEvent =
+  | { type: "thinking"; step: string }
   | { type: "token"; text: string }
   | { type: "card"; card: ProjectCardPayload }
   | { type: "navigate"; href: InternalRoute }

@@ -13,6 +13,7 @@ interface ChatStoreState {
   status: ChatStatus;
   isOpen: boolean;
   suggestions: string[];
+  thinkingSteps: string[];
   hydrated: boolean;
   errorMessage?: string;
   activeAbort?: () => void;
@@ -133,6 +134,7 @@ export const useChatStore = create<ChatStoreState>((set, get) => ({
   status: "idle",
   isOpen: false,
   suggestions: [],
+  thinkingSteps: [],
   hydrated: false,
 
   hydrate: () => {
@@ -212,6 +214,7 @@ export const useChatStore = create<ChatStoreState>((set, get) => ({
       messages: updatedMessages,
       status: "streaming",
       suggestions: [],
+      thinkingSteps: [],
       errorMessage: undefined,
     });
     persist(updatedConversations, activeConversationId);
@@ -235,8 +238,19 @@ export const useChatStore = create<ChatStoreState>((set, get) => ({
                 ? { ...c, messages: newMessages }
                 : c
             );
-            return { messages: newMessages, conversations: newConversations };
+            return {
+              messages: newMessages,
+              conversations: newConversations,
+              ...(state.thinkingSteps.length > 0
+                ? { thinkingSteps: [] }
+                : {}),
+            };
           });
+        },
+        onThinking: (step) => {
+          set((state) => ({
+            thinkingSteps: [...state.thinkingSteps, step],
+          }));
         },
         onAction: (action) => {
           set((state) => {
@@ -261,6 +275,7 @@ export const useChatStore = create<ChatStoreState>((set, get) => ({
             return {
               status: "idle",
               suggestions: suggestions ?? [...chatConfig.seedSuggestions],
+              thinkingSteps: [],
               activeAbort: undefined,
               conversations: newConversations,
             };
@@ -280,6 +295,7 @@ export const useChatStore = create<ChatStoreState>((set, get) => ({
             return {
               status: "error",
               errorMessage: message,
+              thinkingSteps: [],
               activeAbort: undefined,
               messages: newMessages,
               conversations: newConversations,
@@ -301,7 +317,7 @@ export const useChatStore = create<ChatStoreState>((set, get) => ({
           ? { ...c, messages: state.messages, updatedAt: Date.now() }
           : c
       );
-      return { status: "idle", activeAbort: undefined, conversations: newConversations };
+      return { status: "idle", thinkingSteps: [], activeAbort: undefined, conversations: newConversations };
     });
     persist(get().conversations, get().activeConversationId);
   },
@@ -320,6 +336,7 @@ export const useChatStore = create<ChatStoreState>((set, get) => ({
       messages: [greeting],
       status: "idle",
       suggestions: [...chatConfig.seedSuggestions],
+      thinkingSteps: [],
       errorMessage: undefined,
       activeAbort: undefined,
     });
@@ -335,6 +352,7 @@ export const useChatStore = create<ChatStoreState>((set, get) => ({
       messages: conv.messages,
       status: "idle",
       suggestions: [...chatConfig.seedSuggestions],
+      thinkingSteps: [],
       errorMessage: undefined,
       activeAbort: undefined,
     }));
@@ -350,6 +368,7 @@ export const useChatStore = create<ChatStoreState>((set, get) => ({
       messages: conv.messages,
       status: "idle",
       suggestions: [...chatConfig.seedSuggestions],
+      thinkingSteps: [],
       errorMessage: undefined,
       activeAbort: undefined,
     });
@@ -368,6 +387,7 @@ export const useChatStore = create<ChatStoreState>((set, get) => ({
         messages: conv.messages,
         status: "idle",
         suggestions: [...chatConfig.seedSuggestions],
+        thinkingSteps: [],
         errorMessage: undefined,
         activeAbort: undefined,
       });
@@ -380,6 +400,7 @@ export const useChatStore = create<ChatStoreState>((set, get) => ({
       set({
         conversations: remaining,
         activeConversationId: newActiveId,
+        thinkingSteps: [],
         messages: wasActive
           ? remaining[0].messages
           : syncMessages(remaining, activeConversationId),
