@@ -184,6 +184,7 @@ export async function POST(req: NextRequest) {
   const iterator = streamLLM("chat", {
     messages: llmMessages,
     maxTokens: chatConfig.limits.maxOutputTokens,
+    temperature: chatConfig.limits.temperature,
     signal: abortController.signal,
   })[Symbol.asyncIterator]();
 

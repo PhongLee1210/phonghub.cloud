@@ -2,11 +2,13 @@ import { create } from "zustand";
 
 import { chatConfig } from "@/config/chat";
 import { streamChat } from "@/lib/chat/client";
-import { ChatMessage, PersistedChat } from "@/types/chat";
+import { ChatMessage, Conversation, PersistedChat, PersistedChatV2 } from "@/types/chat";
 
 export type ChatStatus = "idle" | "streaming" | "error";
 
 interface ChatStoreState {
+  conversations: Conversation[];
+  activeConversationId: string | null;
   messages: ChatMessage[];
   status: ChatStatus;
   isOpen: boolean;
@@ -20,6 +22,9 @@ interface ChatStoreState {
   sendMessage: (text: string) => void;
   stopStreaming: () => void;
   reset: () => void;
+  newChat: () => void;
+  selectConversation: (id: string) => void;
+  deleteConversation: (id: string) => void;
 }
 
 function genId(): string {
@@ -35,41 +40,95 @@ function greetingMessage(): ChatMessage {
   };
 }
 
-function persist(messages: ChatMessage[]) {
+function createConversation(): Conversation {
+  const now = Date.now();
+  return {
+    id: genId(),
+    title: "New chat",
+    messages: [greetingMessage()],
+    createdAt: now,
+    updatedAt: now,
+  };
+}
+
+function deriveTitle(text: string): string {
+  const trimmed = text.trim();
+  if (!trimmed) return "New chat";
+  return trimmed.length > 40 ? `${trimmed.slice(0, 40)}…` : trimmed;
+}
+
+const STORAGE_KEY_V2 = "phonghub.chat.v2";
+
+function persist(
+  conversations: Conversation[],
+  activeConversationId: string | null
+) {
   if (typeof window === "undefined") return;
-  const trimmed = messages.slice(-chatConfig.limits.maxPersistedMessages);
-  const payload: PersistedChat = {
-    version: 1,
-    messages: trimmed,
+  const payload: PersistedChatV2 = {
+    version: 2,
+    conversations: conversations.slice(-50),
+    activeConversationId,
     updatedAt: Date.now(),
   };
   try {
-    window.localStorage.setItem(
-      chatConfig.storageKeys.chat,
-      JSON.stringify(payload)
-    );
+    window.localStorage.setItem(STORAGE_KEY_V2, JSON.stringify(payload));
   } catch {
-    // localStorage can throw in private-browsing/quota-exceeded edge cases;
-    // conversation just won't persist across reloads in that case.
+    // localStorage can throw in private-browsing/quota-exceeded edge cases
   }
 }
 
-function loadPersisted(): ChatMessage[] | undefined {
+function loadPersisted():
+  | { conversations: Conversation[]; activeConversationId: string | null }
+  | undefined {
   if (typeof window === "undefined") return undefined;
   try {
-    const raw = window.localStorage.getItem(chatConfig.storageKeys.chat);
-    if (!raw) return undefined;
-    const parsed = JSON.parse(raw) as PersistedChat;
-    if (parsed.version !== 1 || !Array.isArray(parsed.messages)) {
-      return undefined; // stale schema — never migrated, per plan §2
+    const rawV2 = window.localStorage.getItem(STORAGE_KEY_V2);
+    if (rawV2) {
+      const parsed = JSON.parse(rawV2) as PersistedChatV2;
+      if (parsed.version === 2 && Array.isArray(parsed.conversations)) {
+        return {
+          conversations: parsed.conversations,
+          activeConversationId: parsed.activeConversationId,
+        };
+      }
     }
-    return parsed.messages;
+    // Migrate from v1
+    const rawV1 = window.localStorage.getItem(chatConfig.storageKeys.chat);
+    if (rawV1) {
+      const parsed = JSON.parse(rawV1) as PersistedChat;
+      if (
+        parsed.version === 1 &&
+        Array.isArray(parsed.messages) &&
+        parsed.messages.length > 0
+      ) {
+        const firstUser = parsed.messages.find((m) => m.role === "user");
+        const conv: Conversation = {
+          id: genId(),
+          title: firstUser ? deriveTitle(firstUser.content) : "New chat",
+          messages: parsed.messages,
+          createdAt: parsed.messages[0]?.createdAt ?? Date.now(),
+          updatedAt: parsed.updatedAt ?? Date.now(),
+        };
+        return { conversations: [conv], activeConversationId: conv.id };
+      }
+    }
+    return undefined;
   } catch {
     return undefined;
   }
 }
 
+function syncMessages(
+  conversations: Conversation[],
+  activeId: string | null
+): ChatMessage[] {
+  const active = conversations.find((c) => c.id === activeId);
+  return active ? active.messages : [];
+}
+
 export const useChatStore = create<ChatStoreState>((set, get) => ({
+  conversations: [],
+  activeConversationId: null,
   messages: [],
   status: "idle",
   isOpen: false,
@@ -78,51 +137,48 @@ export const useChatStore = create<ChatStoreState>((set, get) => ({
 
   hydrate: () => {
     if (get().hydrated) return;
-    const persisted = loadPersisted();
-    const isOpen =
-      typeof window !== "undefined" &&
-      window.localStorage.getItem(chatConfig.storageKeys.open) === "1";
+    const loaded = loadPersisted();
 
-    if (persisted && persisted.length > 0) {
-      const lastMessage = persisted[persisted.length - 1];
-      // Resuming an existing conversation: re-seed the default suggestions
-      // unless the assistant is mid-stream (empty trailing assistant
-      // message) — contextual suggestions from the last `done` event
-      // aren't persisted (plan §2: provider/model info is deliberately not
-      // persisted; suggestions are the same kind of ephemeral ops detail).
-      const resumedSuggestions =
-        lastMessage?.role === "assistant" && !lastMessage.content
-          ? []
-          : [...chatConfig.seedSuggestions];
+    if (loaded && loaded.conversations.length > 0) {
+      const conversations = loaded.conversations;
+      const activeId =
+        loaded.activeConversationId &&
+        conversations.some((c) => c.id === loaded.activeConversationId)
+          ? loaded.activeConversationId
+          : conversations[0].id;
       set({
-        messages: persisted,
-        suggestions: resumedSuggestions,
-        hydrated: true,
-        isOpen,
-      });
-    } else {
-      const greeting = greetingMessage();
-      set({
-        messages: [greeting],
+        conversations,
+        activeConversationId: activeId,
+        messages: syncMessages(conversations, activeId),
         suggestions: [...chatConfig.seedSuggestions],
         hydrated: true,
-        isOpen,
+        isOpen: false,
       });
-      persist([greeting]);
+    } else {
+      const conv = createConversation();
+      set({
+        conversations: [conv],
+        activeConversationId: conv.id,
+        messages: conv.messages,
+        suggestions: [...chatConfig.seedSuggestions],
+        hydrated: true,
+        isOpen: false,
+      });
+      persist([conv], conv.id);
     }
   },
 
   setOpen: (open: boolean) => {
     set({ isOpen: open });
-    if (typeof window !== "undefined") {
-      if (open) window.localStorage.setItem(chatConfig.storageKeys.open, "1");
-      else window.localStorage.removeItem(chatConfig.storageKeys.open);
-    }
   },
 
   sendMessage: (text: string) => {
     const trimmed = text.trim().slice(0, chatConfig.limits.maxInputChars);
     if (!trimmed || get().status === "streaming") return;
+
+    const { conversations, activeConversationId } = get();
+    const activeConv = conversations.find((c) => c.id === activeConversationId);
+    if (!activeConv) return;
 
     const userMessage: ChatMessage = {
       id: genId(),
@@ -137,16 +193,30 @@ export const useChatStore = create<ChatStoreState>((set, get) => ({
       createdAt: Date.now(),
     };
 
-    const history = [...get().messages, userMessage];
+    const updatedMessages = [...activeConv.messages, userMessage, assistantMessage];
+    const shouldRetitle =
+      activeConv.messages.length <= 1 &&
+      (activeConv.title === "New chat" || !activeConv.title);
+    const updatedConv: Conversation = {
+      ...activeConv,
+      title: shouldRetitle ? deriveTitle(trimmed) : activeConv.title,
+      messages: updatedMessages,
+      updatedAt: Date.now(),
+    };
+    const updatedConversations = conversations.map((c) =>
+      c.id === activeConv.id ? updatedConv : c
+    );
+
     set({
-      messages: [...history, assistantMessage],
+      conversations: updatedConversations,
+      messages: updatedMessages,
       status: "streaming",
       suggestions: [],
       errorMessage: undefined,
     });
-    persist([...history, assistantMessage]);
+    persist(updatedConversations, activeConversationId);
 
-    const wireMessages = history
+    const wireMessages = [...activeConv.messages, userMessage]
       .slice(-chatConfig.limits.maxHistoryMessages)
       .map((m) => ({ role: m.role, content: m.content }));
 
@@ -155,39 +225,67 @@ export const useChatStore = create<ChatStoreState>((set, get) => ({
       {
         onToken: (delta) => {
           set((state) => {
-            const messages = state.messages.map((m) =>
+            const newMessages = state.messages.map((m) =>
               m.id === assistantMessage.id
                 ? { ...m, content: m.content + delta }
                 : m
             );
-            return { messages };
+            const newConversations = state.conversations.map((c) =>
+              c.id === activeConversationId
+                ? { ...c, messages: newMessages }
+                : c
+            );
+            return { messages: newMessages, conversations: newConversations };
           });
         },
         onAction: (action) => {
-          set((state) => ({
-            messages: state.messages.map((m) =>
+          set((state) => {
+            const newMessages = state.messages.map((m) =>
               m.id === assistantMessage.id ? { ...m, action } : m
-            ),
-          }));
+            );
+            const newConversations = state.conversations.map((c) =>
+              c.id === activeConversationId
+                ? { ...c, messages: newMessages }
+                : c
+            );
+            return { messages: newMessages, conversations: newConversations };
+          });
         },
         onDone: (suggestions) => {
-          set({
-            status: "idle",
-            suggestions: suggestions ?? [...chatConfig.seedSuggestions],
-            activeAbort: undefined,
+          set((state) => {
+            const newConversations = state.conversations.map((c) =>
+              c.id === activeConversationId
+                ? { ...c, messages: state.messages, updatedAt: Date.now() }
+                : c
+            );
+            return {
+              status: "idle",
+              suggestions: suggestions ?? [...chatConfig.seedSuggestions],
+              activeAbort: undefined,
+              conversations: newConversations,
+            };
           });
-          persist(get().messages);
+          persist(get().conversations, get().activeConversationId);
         },
         onError: (_code, message) => {
-          set((state) => ({
-            status: "error",
-            errorMessage: message,
-            activeAbort: undefined,
-            messages: state.messages.map((m) =>
+          set((state) => {
+            const newMessages = state.messages.map((m) =>
               m.id === assistantMessage.id ? { ...m, error: true } : m
-            ),
-          }));
-          persist(get().messages);
+            );
+            const newConversations = state.conversations.map((c) =>
+              c.id === activeConversationId
+                ? { ...c, messages: newMessages }
+                : c
+            );
+            return {
+              status: "error",
+              errorMessage: message,
+              activeAbort: undefined,
+              messages: newMessages,
+              conversations: newConversations,
+            };
+          });
+          persist(get().conversations, get().activeConversationId);
         },
       }
     );
@@ -197,20 +295,96 @@ export const useChatStore = create<ChatStoreState>((set, get) => ({
 
   stopStreaming: () => {
     get().activeAbort?.();
-    set({ status: "idle", activeAbort: undefined });
-    persist(get().messages);
+    set((state) => {
+      const newConversations = state.conversations.map((c) =>
+        c.id === state.activeConversationId
+          ? { ...c, messages: state.messages, updatedAt: Date.now() }
+          : c
+      );
+      return { status: "idle", activeAbort: undefined, conversations: newConversations };
+    });
+    persist(get().conversations, get().activeConversationId);
   },
 
   reset: () => {
     get().activeAbort?.();
+    const { conversations, activeConversationId } = get();
     const greeting = greetingMessage();
+    const updatedConversations = conversations.map((c) =>
+      c.id === activeConversationId
+        ? { ...c, title: "New chat", messages: [greeting], updatedAt: Date.now() }
+        : c
+    );
     set({
+      conversations: updatedConversations,
       messages: [greeting],
       status: "idle",
       suggestions: [...chatConfig.seedSuggestions],
       errorMessage: undefined,
       activeAbort: undefined,
     });
-    persist([greeting]);
+    persist(updatedConversations, activeConversationId);
+  },
+
+  newChat: () => {
+    get().activeAbort?.();
+    const conv = createConversation();
+    set((state) => ({
+      conversations: [conv, ...state.conversations],
+      activeConversationId: conv.id,
+      messages: conv.messages,
+      status: "idle",
+      suggestions: [...chatConfig.seedSuggestions],
+      errorMessage: undefined,
+      activeAbort: undefined,
+    }));
+    persist(get().conversations, conv.id);
+  },
+
+  selectConversation: (id: string) => {
+    const conv = get().conversations.find((c) => c.id === id);
+    if (!conv) return;
+    get().activeAbort?.();
+    set({
+      activeConversationId: id,
+      messages: conv.messages,
+      status: "idle",
+      suggestions: [...chatConfig.seedSuggestions],
+      errorMessage: undefined,
+      activeAbort: undefined,
+    });
+  },
+
+  deleteConversation: (id: string) => {
+    get().activeAbort?.();
+    const { conversations, activeConversationId } = get();
+    const remaining = conversations.filter((c) => c.id !== id);
+
+    if (remaining.length === 0) {
+      const conv = createConversation();
+      set({
+        conversations: [conv],
+        activeConversationId: conv.id,
+        messages: conv.messages,
+        status: "idle",
+        suggestions: [...chatConfig.seedSuggestions],
+        errorMessage: undefined,
+        activeAbort: undefined,
+      });
+      persist([conv], conv.id);
+    } else {
+      const wasActive = activeConversationId === id;
+      const newActiveId = wasActive
+        ? remaining[0].id
+        : (activeConversationId ?? remaining[0].id);
+      set({
+        conversations: remaining,
+        activeConversationId: newActiveId,
+        messages: wasActive
+          ? remaining[0].messages
+          : syncMessages(remaining, activeConversationId),
+      });
+      persist(remaining, newActiveId);
+    }
   },
 }));

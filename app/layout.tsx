@@ -1,11 +1,11 @@
 import "./globals.css";
 
 import { GoogleAnalytics } from "@next/third-parties/google";
-import { Inter as FontSans } from "next/font/google";
+import { Inter as FontSans, Karla, Miniver } from "next/font/google";
 import localFont from "next/font/local";
 
 import { Analytics } from "@/components/common/analytics";
-import { ChatWidget } from "@/components/chat/chat-widget";
+import { GlobalChatWidget } from "@/components/chat/global-chat-widget";
 import { ThemeProvider } from "@/components/common/theme-provider";
 import { Toaster } from "@/components/ui/toaster";
 import { siteConfig } from "@/config/site";
@@ -21,6 +21,18 @@ const fontSans = FontSans({
 const fontHeading = localFont({
   src: "../assets/fonts/CalSans-SemiBold.woff2",
   variable: "--font-heading",
+});
+
+const fontKarla = Karla({
+  subsets: ["latin"],
+  weight: ["700"],
+  variable: "--font-karla",
+});
+
+const fontMiniver = Miniver({
+  subsets: ["latin"],
+  weight: ["400"],
+  variable: "--font-miniver",
 });
 
 interface RootLayoutProps {
@@ -103,10 +115,13 @@ export default function RootLayout({ children }: RootLayoutProps) {
     <html lang="en" suppressHydrationWarning>
       <head />
       <body
+        suppressHydrationWarning
         className={cn(
           "min-h-screen bg-background font-sans antialiased",
           fontSans.variable,
-          fontHeading.variable
+          fontHeading.variable,
+          fontKarla.variable,
+          fontMiniver.variable
         )}
       >
         <ThemeProvider
@@ -119,7 +134,7 @@ export default function RootLayout({ children }: RootLayoutProps) {
           <Analytics />
           <Toaster />
           <ModalProvider />
-          <ChatWidget />
+          <GlobalChatWidget />
         </ThemeProvider>
       </body>
       {GA_ID && <GoogleAnalytics gaId={GA_ID} />}

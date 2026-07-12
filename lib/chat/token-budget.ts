@@ -1,3 +1,5 @@
+import { DATA_BLOCK_CLOSE, DATA_BLOCK_OPEN } from "./prompt";
+
 /**
  * Pure token-estimation and trimming logic for the chat context budget.
  * No I/O, no env access, no "server-only" — nothing here touches secrets
@@ -34,14 +36,14 @@ function renderPrompt(data: Omit<SystemPromptData, "blogPosts">, blogPosts: unkn
   return [
     data.persona,
     data.guardrails,
-    "<data>",
+    DATA_BLOCK_OPEN,
     JSON.stringify({
       projects: data.projects,
       skills: data.skills,
       experience: data.experience,
       blogPosts,
     }),
-    "</data>",
+    DATA_BLOCK_CLOSE,
   ].join("\n\n");
 }
 

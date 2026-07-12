@@ -13,15 +13,15 @@ interface AnimatedTextProps {
 const textVariants: Variants = {
   hidden: {
     opacity: 0,
-    y: 20,
+    y: 16,
   },
   visible: (delay: number) => ({
     opacity: 1,
     y: 0,
     transition: {
       delay,
-      duration: 0.6,
-      ease: [0.4, 0.0, 0.2, 1],
+      duration: 0.45,
+      ease: [0.22, 1, 0.36, 1],
     },
   }),
 };

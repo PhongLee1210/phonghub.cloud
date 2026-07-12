@@ -19,10 +19,10 @@ export const AnimatedSection = ({
   id,
 }: AnimatedSectionProps) => {
   const directionOffset = {
-    up: { y: 50 },
-    down: { y: -50 },
-    left: { x: 50 },
-    right: { x: -50 },
+    up: { y: 16 },
+    down: { y: -16 },
+    left: { x: 16 },
+    right: { x: -16 },
   };
 
   const initialOffset = directionOffset[direction];
@@ -37,9 +37,9 @@ export const AnimatedSection = ({
         x: 0,
         y: 0,
         transition: {
-          duration: 0.8,
+          duration: 0.6,
           delay,
-          ease: [0.4, 0.0, 0.2, 1],
+          ease: [0.22, 1, 0.36, 1],
         },
       }}
       viewport={{ once: true, margin: "-100px" }}
