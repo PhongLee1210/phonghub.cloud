@@ -3,12 +3,19 @@ import { NextRequest } from "next/server";
 import { chatConfig } from "@/config/chat";
 import { acquireConcurrencySlot } from "@/lib/chat/concurrency-limiter";
 import { buildSystemPrompt } from "@/lib/chat/context";
-import { encodeEvent } from "@/lib/chat/protocol";
+import {
+  createCommandSplitter,
+  encodeEvent,
+  parseCommandStream,
+} from "@/lib/chat/protocol";
 import { checkRateLimit } from "@/lib/chat/rate-limit";
 import { getRedisClient } from "@/lib/chat/redis";
-import { checkCombinedBudget, trimHistoryToBudget } from "@/lib/chat/token-budget";
+import {
+  checkCombinedBudget,
+  trimHistoryToBudget,
+} from "@/lib/chat/token-budget";
 import { checkTokenQuota, recordTokenUsage } from "@/lib/chat/token-quota";
-import { isNonEmptyString, isObject } from "@/lib/guards";
+import { isNonEmptyString, isObject, isUndefined } from "@/lib/guards";
 import { effectiveContextBudget, streamLLM } from "@/lib/llm";
 import { LLMError, LLMMessage, LLMStreamChunk } from "@/lib/llm/types";
 import {
@@ -186,6 +193,8 @@ export async function POST(req: NextRequest) {
         controller.enqueue(encoder.encode(encodeEvent(event)));
       };
 
+      const splitter = createCommandSplitter();
+
       try {
         // 1. Signal "preparing" — system prompt construction is next.
         send({ type: ChatEventType.Thinking, step: "preparing" });
@@ -226,9 +235,7 @@ export async function POST(req: NextRequest) {
         ];
 
         const abortController = new AbortController();
-        req.signal.addEventListener("abort", () =>
-          abortController.abort()
-        );
+        req.signal.addEventListener("abort", () => abortController.abort());
 
         const iterator = streamLLM("chat", {
           messages: llmMessages,
@@ -241,22 +248,34 @@ export async function POST(req: NextRequest) {
         //    mid-stream) falls through to the unified catch below.
         const emit = (chunk: LLMStreamChunk) => {
           if (chunk.type === "text") {
-            send({ type: ChatEventType.Token, text: chunk.text });
+            const visible = splitter.push(chunk.text);
+            if (visible) {
+              send({ type: ChatEventType.Token, text: visible });
+            }
           } else if (chunk.type === "done") {
-            void recordTokenUsage(
-              ip,
-              redis,
-              chunk.usage.outputTokens
-            ).catch((err) =>
-              console.error("[chat/route] recordTokenUsage failed:", err)
+            void recordTokenUsage(ip, redis, chunk.usage.outputTokens).catch(
+              (err) =>
+                console.error("[chat/route] recordTokenUsage failed:", err)
             );
+
+            const { remainder, raw } = splitter.finish();
+            if (remainder) {
+              send({ type: ChatEventType.Token, text: remainder });
+            }
+
+            const parsed = !isUndefined(raw) ? parseCommandStream(raw) : {};
+
             if (starIntentDetected) {
               send({
                 type: ChatEventType.Action,
                 action: ChatMessageAction.StarRepo,
               });
             }
-            send({ type: ChatEventType.Done });
+
+            send({
+              type: ChatEventType.Done,
+              suggestions: parsed.suggest,
+            });
           }
           // tool_call chunks are phase 2 (card/navigate events) — ignored for now.
         };
@@ -273,6 +292,7 @@ export async function POST(req: NextRequest) {
         // fallback configured / exhausted) and mid-stream failures.
         // Rate-limited errors from the provider are surfaced distinctly;
         // everything else is a generic upstream error.
+        splitter.finish();
         const code: ChatErrorCode =
           err instanceof LLMError && err.code === "rate_limited"
             ? ChatErrorCode.RateLimited
@@ -280,8 +300,7 @@ export async function POST(req: NextRequest) {
         send({
           type: ChatEventType.Error,
           code,
-          message:
-            "Couldn't reach the assistant right now. Please try again.",
+          message: "Couldn't reach the assistant right now. Please try again.",
         });
       } finally {
         // Covers success, mid-stream error, pre-token error, and client

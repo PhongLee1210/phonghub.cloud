@@ -1,7 +1,7 @@
 import cloneDeep from "lodash.clonedeep";
 import lodashIsNull from "lodash.isnull";
 import isPlainObject from "lodash.isplainobject";
-import isString from "lodash.isstring";
+import lodashIsString from "lodash.isstring";
 import lodashIsUndefined from "lodash.isundefined";
 
 export function isUndefined(value: unknown): value is undefined {
@@ -19,6 +19,11 @@ export function isNil(value: unknown): value is null | undefined {
 /** True only for plain objects (`{}`), not arrays, functions, or class instances. */
 export function isObject(value: unknown): value is Record<string, unknown> {
   return isPlainObject(value);
+}
+
+/** True for any string value, including empty strings. */
+export function isString(value: unknown): value is string {
+  return lodashIsString(value);
 }
 
 /** True for strings with at least one character. */

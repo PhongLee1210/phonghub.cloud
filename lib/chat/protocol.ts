@@ -1,3 +1,5 @@
+import { chatConfig } from "@/config/chat";
+import { isObject, isString, isUndefined } from "@/lib/guards";
 import { ChatStreamEvent } from "@/types/chat";
 
 /**
@@ -81,3 +83,93 @@ Example reply:
 Phong's strongest AI work is the enrollment platform — FastAPI microservices, GraphQL routing, and RAG-based lead classification.
 ${AGENT_CMD_MARKER}
 {"suggest": ["What's his strongest project?", "Is he open to remote work?"]}`;
+
+// ── Task 2.3: stream parser & command validator registry ───────
+
+export interface CommandSplitter {
+  push(text: string): string;
+  finish(): { remainder: string; raw?: string };
+}
+
+export function createCommandSplitter(): CommandSplitter {
+  const MARKER = AGENT_CMD_MARKER;
+  let holdback = "";
+  let rawBuffer = "";
+  let markerFound = false;
+
+  return {
+    push(text: string): string {
+      if (markerFound) {
+        rawBuffer += text;
+        return "";
+      }
+
+      const combined = holdback + text;
+      const idx = combined.indexOf(MARKER);
+
+      if (idx !== -1) {
+        markerFound = true;
+        const visible = combined.slice(0, idx);
+        rawBuffer = combined.slice(idx + MARKER.length);
+        holdback = "";
+        return visible;
+      }
+
+      const withholdCount = Math.min(MARKER.length - 1, combined.length);
+      const visible = combined.slice(0, combined.length - withholdCount);
+      holdback = combined.slice(combined.length - withholdCount);
+      return visible;
+    },
+
+    finish(): { remainder: string; raw?: string } {
+      if (markerFound) {
+        return { remainder: "", raw: rawBuffer };
+      }
+      const remainder = holdback;
+      holdback = "";
+      return { remainder };
+    },
+  };
+}
+
+type CommandValidator = (value: unknown) => unknown;
+
+function validateSuggest(value: unknown): string[] | undefined {
+  if (!Array.isArray(value)) return undefined;
+
+  const cleaned = value
+    .map((item) => (isString(item) ? item.trim() : ""))
+    .filter((s) => s.length > 0 && s.length <= chatConfig.limits.maxInputChars);
+
+  return cleaned.length >= 1 ? cleaned.slice(0, 3) : undefined;
+}
+
+const COMMAND_VALIDATORS = {
+  suggest: validateSuggest,
+} satisfies Record<string, CommandValidator>;
+
+export function parseCommandStream(raw: string): ParsedCommands {
+  const result: ParsedCommands = {};
+
+  let parsed: unknown;
+  try {
+    parsed = JSON.parse(raw.trim());
+  } catch {
+    return result;
+  }
+
+  if (!isObject(parsed)) {
+    return result;
+  }
+
+  for (const [key, validator] of Object.entries(COMMAND_VALIDATORS)) {
+    if (key in parsed) {
+      const validated = validator(parsed[key]);
+      if (!isUndefined(validated)) {
+        (result as Record<string, unknown>)[key] = validated;
+      }
+    }
+  }
+
+  return result;
+}
