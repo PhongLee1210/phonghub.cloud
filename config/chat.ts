@@ -54,13 +54,15 @@ export const chatConfig = {
     maxPersistedMessages: 50,
     /** Sampling temperature — 0 for deterministic, factual, on-brand answers. */
     temperature: 0,
-    /** Max output tokens per reply — kept low to match the concise-answer persona. */
-    maxOutputTokens: 512,
+    /** Max output tokens per reply — covers the visible answer (~100 tokens
+     * for 2-4 sentences) + the command tail (~30-50 tokens for the marker +
+     * JSON). Kept low to match the concise-answer persona. */
+    maxOutputTokens: 640,
     /**
      * Cumulative output tokens allowed per IP per UTC day, across all
      * requests — separate from rateLimit.perDay (a request-count budget).
      * Well above the theoretical max from the request-count limiter alone
-     * (40 req/day * 512 max output tokens = 20,480), so in normal operation
+     * (40 req/day * 640 max output tokens = 25,600), so in normal operation
      * the request-count limit stays the binding constraint and this only
      * kicks in if responses run unusually long.
      */

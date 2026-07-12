@@ -7,6 +7,7 @@ import { SKILLS } from "@/config/skills";
 import { siteConfig } from "@/config/site";
 import { listPublishedPosts } from "@/lib/blog/service";
 import { buildPersona, GUARDRAILS } from "./prompt";
+import { RESPONSE_FORMAT_INSTRUCTIONS } from "./protocol";
 import { assembleSystemPrompt, SystemPromptData } from "./token-budget";
 
 const CONTENT_DIR = "content/blog";
@@ -40,7 +41,7 @@ export async function buildSystemPrompt(): Promise<{
 
   const data: SystemPromptData = {
     persona,
-    guardrails: GUARDRAILS,
+    guardrails: `${GUARDRAILS}\n\n${RESPONSE_FORMAT_INSTRUCTIONS}`,
     projects: PROJECTS.map((p) => ({
       id: p.id,
       companyName: p.companyName,
