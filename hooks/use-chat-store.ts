@@ -2,9 +2,21 @@ import { create } from "zustand";
 
 import { chatConfig } from "@/config/chat";
 import { streamChat } from "@/lib/chat/client";
-import { ChatMessage, Conversation, PersistedChat, PersistedChatV2 } from "@/types/chat";
+import {
+  ChatMessage,
+  ChatRole,
+  Conversation,
+  PersistedChat,
+} from "@/types/chat";
 
-export type ChatStatus = "idle" | "streaming" | "error";
+export const ChatStatus = {
+  Idle: "idle",
+  Streaming: "streaming",
+  Error: "error",
+} as const;
+export type ChatStatus = (typeof ChatStatus)[keyof typeof ChatStatus];
+
+const NEW_CHAT_TITLE = "New chat";
 
 interface ChatStoreState {
   conversations: Conversation[];
@@ -13,6 +25,7 @@ interface ChatStoreState {
   status: ChatStatus;
   isOpen: boolean;
   suggestions: string[];
+  thinkingSteps: string[];
   hydrated: boolean;
   errorMessage?: string;
   activeAbort?: () => void;
@@ -34,7 +47,7 @@ function genId(): string {
 function greetingMessage(): ChatMessage {
   return {
     id: genId(),
-    role: "assistant",
+    role: ChatRole.Assistant,
     content: chatConfig.greeting,
     createdAt: Date.now(),
   };
@@ -44,7 +57,7 @@ function createConversation(): Conversation {
   const now = Date.now();
   return {
     id: genId(),
-    title: "New chat",
+    title: NEW_CHAT_TITLE,
     messages: [greetingMessage()],
     createdAt: now,
     updatedAt: now,
@@ -53,25 +66,25 @@ function createConversation(): Conversation {
 
 function deriveTitle(text: string): string {
   const trimmed = text.trim();
-  if (!trimmed) return "New chat";
+  if (!trimmed) return NEW_CHAT_TITLE;
   return trimmed.length > 40 ? `${trimmed.slice(0, 40)}…` : trimmed;
 }
-
-const STORAGE_KEY_V2 = "phonghub.chat.v2";
 
 function persist(
   conversations: Conversation[],
   activeConversationId: string | null
 ) {
   if (typeof window === "undefined") return;
-  const payload: PersistedChatV2 = {
-    version: 2,
+  const payload: PersistedChat = {
     conversations: conversations.slice(-50),
     activeConversationId,
     updatedAt: Date.now(),
   };
   try {
-    window.localStorage.setItem(STORAGE_KEY_V2, JSON.stringify(payload));
+    window.localStorage.setItem(
+      chatConfig.storageKeys.chat,
+      JSON.stringify(payload)
+    );
   } catch {
     // localStorage can throw in private-browsing/quota-exceeded edge cases
   }
@@ -82,34 +95,14 @@ function loadPersisted():
   | undefined {
   if (typeof window === "undefined") return undefined;
   try {
-    const rawV2 = window.localStorage.getItem(STORAGE_KEY_V2);
-    if (rawV2) {
-      const parsed = JSON.parse(rawV2) as PersistedChatV2;
-      if (parsed.version === 2 && Array.isArray(parsed.conversations)) {
+    const raw = window.localStorage.getItem(chatConfig.storageKeys.chat);
+    if (raw) {
+      const parsed = JSON.parse(raw) as PersistedChat;
+      if (Array.isArray(parsed.conversations)) {
         return {
           conversations: parsed.conversations,
           activeConversationId: parsed.activeConversationId,
         };
-      }
-    }
-    // Migrate from v1
-    const rawV1 = window.localStorage.getItem(chatConfig.storageKeys.chat);
-    if (rawV1) {
-      const parsed = JSON.parse(rawV1) as PersistedChat;
-      if (
-        parsed.version === 1 &&
-        Array.isArray(parsed.messages) &&
-        parsed.messages.length > 0
-      ) {
-        const firstUser = parsed.messages.find((m) => m.role === "user");
-        const conv: Conversation = {
-          id: genId(),
-          title: firstUser ? deriveTitle(firstUser.content) : "New chat",
-          messages: parsed.messages,
-          createdAt: parsed.messages[0]?.createdAt ?? Date.now(),
-          updatedAt: parsed.updatedAt ?? Date.now(),
-        };
-        return { conversations: [conv], activeConversationId: conv.id };
       }
     }
     return undefined;
@@ -130,9 +123,10 @@ export const useChatStore = create<ChatStoreState>((set, get) => ({
   conversations: [],
   activeConversationId: null,
   messages: [],
-  status: "idle",
+  status: ChatStatus.Idle,
   isOpen: false,
   suggestions: [],
+  thinkingSteps: [],
   hydrated: false,
 
   hydrate: () => {
@@ -174,7 +168,7 @@ export const useChatStore = create<ChatStoreState>((set, get) => ({
 
   sendMessage: (text: string) => {
     const trimmed = text.trim().slice(0, chatConfig.limits.maxInputChars);
-    if (!trimmed || get().status === "streaming") return;
+    if (!trimmed || get().status === ChatStatus.Streaming) return;
 
     const { conversations, activeConversationId } = get();
     const activeConv = conversations.find((c) => c.id === activeConversationId);
@@ -182,13 +176,13 @@ export const useChatStore = create<ChatStoreState>((set, get) => ({
 
     const userMessage: ChatMessage = {
       id: genId(),
-      role: "user",
+      role: ChatRole.User,
       content: trimmed,
       createdAt: Date.now(),
     };
     const assistantMessage: ChatMessage = {
       id: genId(),
-      role: "assistant",
+      role: ChatRole.Assistant,
       content: "",
       createdAt: Date.now(),
     };
@@ -196,7 +190,7 @@ export const useChatStore = create<ChatStoreState>((set, get) => ({
     const updatedMessages = [...activeConv.messages, userMessage, assistantMessage];
     const shouldRetitle =
       activeConv.messages.length <= 1 &&
-      (activeConv.title === "New chat" || !activeConv.title);
+      (activeConv.title === NEW_CHAT_TITLE || !activeConv.title);
     const updatedConv: Conversation = {
       ...activeConv,
       title: shouldRetitle ? deriveTitle(trimmed) : activeConv.title,
@@ -210,8 +204,9 @@ export const useChatStore = create<ChatStoreState>((set, get) => ({
     set({
       conversations: updatedConversations,
       messages: updatedMessages,
-      status: "streaming",
+      status: ChatStatus.Streaming,
       suggestions: [],
+      thinkingSteps: [],
       errorMessage: undefined,
     });
     persist(updatedConversations, activeConversationId);
@@ -235,8 +230,19 @@ export const useChatStore = create<ChatStoreState>((set, get) => ({
                 ? { ...c, messages: newMessages }
                 : c
             );
-            return { messages: newMessages, conversations: newConversations };
+            return {
+              messages: newMessages,
+              conversations: newConversations,
+              ...(state.thinkingSteps.length > 0
+                ? { thinkingSteps: [] }
+                : {}),
+            };
           });
+        },
+        onThinking: (step) => {
+          set((state) => ({
+            thinkingSteps: [...state.thinkingSteps, step],
+          }));
         },
         onAction: (action) => {
           set((state) => {
@@ -259,8 +265,9 @@ export const useChatStore = create<ChatStoreState>((set, get) => ({
                 : c
             );
             return {
-              status: "idle",
+              status: ChatStatus.Idle,
               suggestions: suggestions ?? [...chatConfig.seedSuggestions],
+              thinkingSteps: [],
               activeAbort: undefined,
               conversations: newConversations,
             };
@@ -278,8 +285,9 @@ export const useChatStore = create<ChatStoreState>((set, get) => ({
                 : c
             );
             return {
-              status: "error",
+              status: ChatStatus.Error,
               errorMessage: message,
+              thinkingSteps: [],
               activeAbort: undefined,
               messages: newMessages,
               conversations: newConversations,
@@ -301,7 +309,12 @@ export const useChatStore = create<ChatStoreState>((set, get) => ({
           ? { ...c, messages: state.messages, updatedAt: Date.now() }
           : c
       );
-      return { status: "idle", activeAbort: undefined, conversations: newConversations };
+      return {
+        status: ChatStatus.Idle,
+        thinkingSteps: [],
+        activeAbort: undefined,
+        conversations: newConversations,
+      };
     });
     persist(get().conversations, get().activeConversationId);
   },
@@ -312,14 +325,20 @@ export const useChatStore = create<ChatStoreState>((set, get) => ({
     const greeting = greetingMessage();
     const updatedConversations = conversations.map((c) =>
       c.id === activeConversationId
-        ? { ...c, title: "New chat", messages: [greeting], updatedAt: Date.now() }
+        ? {
+            ...c,
+            title: NEW_CHAT_TITLE,
+            messages: [greeting],
+            updatedAt: Date.now(),
+          }
         : c
     );
     set({
       conversations: updatedConversations,
       messages: [greeting],
-      status: "idle",
+      status: ChatStatus.Idle,
       suggestions: [...chatConfig.seedSuggestions],
+      thinkingSteps: [],
       errorMessage: undefined,
       activeAbort: undefined,
     });
@@ -333,8 +352,9 @@ export const useChatStore = create<ChatStoreState>((set, get) => ({
       conversations: [conv, ...state.conversations],
       activeConversationId: conv.id,
       messages: conv.messages,
-      status: "idle",
+      status: ChatStatus.Idle,
       suggestions: [...chatConfig.seedSuggestions],
+      thinkingSteps: [],
       errorMessage: undefined,
       activeAbort: undefined,
     }));
@@ -348,8 +368,9 @@ export const useChatStore = create<ChatStoreState>((set, get) => ({
     set({
       activeConversationId: id,
       messages: conv.messages,
-      status: "idle",
+      status: ChatStatus.Idle,
       suggestions: [...chatConfig.seedSuggestions],
+      thinkingSteps: [],
       errorMessage: undefined,
       activeAbort: undefined,
     });
@@ -366,8 +387,9 @@ export const useChatStore = create<ChatStoreState>((set, get) => ({
         conversations: [conv],
         activeConversationId: conv.id,
         messages: conv.messages,
-        status: "idle",
+        status: ChatStatus.Idle,
         suggestions: [...chatConfig.seedSuggestions],
+        thinkingSteps: [],
         errorMessage: undefined,
         activeAbort: undefined,
       });
@@ -380,6 +402,7 @@ export const useChatStore = create<ChatStoreState>((set, get) => ({
       set({
         conversations: remaining,
         activeConversationId: newActiveId,
+        thinkingSteps: [],
         messages: wasActive
           ? remaining[0].messages
           : syncMessages(remaining, activeConversationId),

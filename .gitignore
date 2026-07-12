@@ -39,3 +39,8 @@ next-env.d.ts
 .claude/
 .openspec/
 openspec/
+
+opencode.json
+
+# AI session worktrees (ai session new <branch>)
+worktrees/

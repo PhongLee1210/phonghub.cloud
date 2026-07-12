@@ -90,7 +90,6 @@ export const chatConfig = {
   },
 
   storageKeys: {
-    chat: "phonghub.chat.v1",
-    open: "phonghub.chat.open",
+    chat: "phonghub.chat",
   },
 } as const;

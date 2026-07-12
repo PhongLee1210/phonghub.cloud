@@ -9,6 +9,7 @@ export function streamChat(
   body: ChatRequestBody,
   handlers: {
     onToken: (text: string) => void;
+    onThinking?: (step: string) => void;
     onCard?: (card: Extract<ChatStreamEvent, { type: "card" }>["card"]) => void;
     onNavigate?: (href: Extract<ChatStreamEvent, { type: "navigate" }>["href"]) => void;
     onAction?: (action: ChatMessageAction) => void;
@@ -82,6 +83,9 @@ function dispatch(
   handlers: Parameters<typeof streamChat>[1]
 ) {
   switch (event.type) {
+    case "thinking":
+      handlers.onThinking?.(event.step);
+      break;
     case "token":
       handlers.onToken(event.text);
       break;
