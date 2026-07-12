@@ -1,6 +1,6 @@
 "use client";
 
-import { memo } from "react";
+import { memo, useDeferredValue } from "react";
 import ReactMarkdown, { type Components } from "react-markdown";
 import remarkGfm from "remark-gfm";
 
@@ -68,6 +68,7 @@ export const MessageMarkdown = memo(function MessageMarkdown({
   content,
   className,
 }: MessageMarkdownProps) {
+  const deferred = useDeferredValue(content);
   return (
     <div
       className={cn(
@@ -83,7 +84,7 @@ export const MessageMarkdown = memo(function MessageMarkdown({
       )}
     >
       <ReactMarkdown remarkPlugins={[remarkGfm]} components={components}>
-        {content}
+        {deferred}
       </ReactMarkdown>
     </div>
   );

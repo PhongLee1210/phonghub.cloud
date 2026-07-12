@@ -17,9 +17,17 @@ export const chatConfig = {
     "Hi there 👋 I'm Phong's AI Portfolio Assistant. I can help you explore projects, skills, experience, and anything else you'd like to know about Phong.",
 
   seedSuggestions: [
-    "What has Phong built with AI?",
+    "What has Phong built?",
     "What's his tech stack?",
-    "Is he open to new opportunities?",
+    "How many years of experience does he have?",
+    "What frameworks does he use most?",
+    "Does he contribute to open source?",
+    "What kind of teams has he worked on?",
+    "Tell me some of his experiences.",
+    "Nearest experiences he has.",
+    "Tell me about his hobby?",
+    "What level of English does he have?",
+    "Has he worked on any overseas projects?",
   ],
 
   seedSuggestionCards: [
@@ -95,3 +103,8 @@ export const chatConfig = {
     chat: "phonghub.chat",
   },
 } as const;
+
+export const THINKING_STEP_LABELS: Record<string, string> = {
+  preparing: "Preparing",
+  thinking: "Reading the portfolio",
+};

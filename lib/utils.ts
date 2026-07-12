@@ -13,3 +13,7 @@ export function formatDate(input: Date | string | number): string {
     year: "numeric",
   });
 }
+
+export function pickRandom<T>(arr: readonly T[], n: number): T[] {
+  return [...arr].sort(() => Math.random() - 0.5).slice(0, n);
+}

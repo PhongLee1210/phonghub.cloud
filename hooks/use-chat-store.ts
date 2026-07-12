@@ -2,10 +2,12 @@ import { create } from "zustand";
 
 import { chatConfig } from "@/config/chat";
 import { streamChat } from "@/lib/chat/client";
+import { pickRandom } from "@/lib/utils";
 import {
   ChatMessage,
   ChatRole,
   Conversation,
+  InternalRoute,
   PersistedChat,
 } from "@/types/chat";
 
@@ -26,12 +28,17 @@ interface ChatStoreState {
   isOpen: boolean;
   suggestions: string[];
   thinkingSteps: string[];
+  streamingContent: string;
+  draft: string;
+  pendingNavigate?: InternalRoute;
   hydrated: boolean;
   errorMessage?: string;
   activeAbort?: () => void;
 
   hydrate: () => void;
   setOpen: (open: boolean) => void;
+  setDraft: (text: string) => void;
+  clearNavigate: () => void;
   sendMessage: (text: string) => void;
   stopStreaming: () => void;
   reset: () => void;
@@ -127,6 +134,9 @@ export const useChatStore = create<ChatStoreState>((set, get) => ({
   isOpen: false,
   suggestions: [],
   thinkingSteps: [],
+  streamingContent: "",
+  draft: "",
+  pendingNavigate: undefined,
   hydrated: false,
 
   hydrate: () => {
@@ -144,7 +154,8 @@ export const useChatStore = create<ChatStoreState>((set, get) => ({
         conversations,
         activeConversationId: activeId,
         messages: syncMessages(conversations, activeId),
-        suggestions: [...chatConfig.seedSuggestions],
+        suggestions: pickRandom(chatConfig.seedSuggestions, 3),
+        draft: "",
         hydrated: true,
         isOpen: false,
       });
@@ -154,7 +165,8 @@ export const useChatStore = create<ChatStoreState>((set, get) => ({
         conversations: [conv],
         activeConversationId: conv.id,
         messages: conv.messages,
-        suggestions: [...chatConfig.seedSuggestions],
+        suggestions: pickRandom(chatConfig.seedSuggestions, 3),
+        draft: "",
         hydrated: true,
         isOpen: false,
       });
@@ -164,6 +176,14 @@ export const useChatStore = create<ChatStoreState>((set, get) => ({
 
   setOpen: (open: boolean) => {
     set({ isOpen: open });
+  },
+
+  setDraft: (text: string) => {
+    set({ draft: text });
+  },
+
+  clearNavigate: () => {
+    set({ pendingNavigate: undefined });
   },
 
   sendMessage: (text: string) => {
@@ -207,6 +227,8 @@ export const useChatStore = create<ChatStoreState>((set, get) => ({
       status: ChatStatus.Streaming,
       suggestions: [],
       thinkingSteps: [],
+      streamingContent: "",
+      draft: "",
       errorMessage: undefined,
     });
     persist(updatedConversations, activeConversationId);
@@ -215,29 +237,38 @@ export const useChatStore = create<ChatStoreState>((set, get) => ({
       .slice(-chatConfig.limits.maxHistoryMessages)
       .map((m) => ({ role: m.role, content: m.content }));
 
+    let tokenBuffer = "";
+    let rafId: number | null = null;
+
+    const cancelRaf = () => {
+      if (rafId !== null) {
+        cancelAnimationFrame(rafId);
+        rafId = null;
+      }
+    };
+
+    const flushTokens = () => {
+      rafId = null;
+      if (!tokenBuffer) return;
+      const delta = tokenBuffer;
+      tokenBuffer = "";
+      set((s) => ({
+        streamingContent: s.streamingContent + delta,
+        ...(s.thinkingSteps.length > 0 ? { thinkingSteps: [] } : {}),
+      }));
+    };
+
     const { abort } = streamChat(
       { messages: wireMessages },
       {
+        onNavigate: (href) => {
+          set({ pendingNavigate: href });
+        },
         onToken: (delta) => {
-          set((state) => {
-            const newMessages = state.messages.map((m) =>
-              m.id === assistantMessage.id
-                ? { ...m, content: m.content + delta }
-                : m
-            );
-            const newConversations = state.conversations.map((c) =>
-              c.id === activeConversationId
-                ? { ...c, messages: newMessages }
-                : c
-            );
-            return {
-              messages: newMessages,
-              conversations: newConversations,
-              ...(state.thinkingSteps.length > 0
-                ? { thinkingSteps: [] }
-                : {}),
-            };
-          });
+          tokenBuffer += delta;
+          if (rafId === null) {
+            rafId = requestAnimationFrame(flushTokens);
+          }
         },
         onThinking: (step) => {
           set((state) => ({
@@ -258,26 +289,49 @@ export const useChatStore = create<ChatStoreState>((set, get) => ({
           });
         },
         onDone: (suggestions) => {
+          if (get().status !== ChatStatus.Streaming) return;
+
+          cancelRaf();
+          const finalContent = get().streamingContent + tokenBuffer;
+          tokenBuffer = "";
+
+          const resolved =
+            suggestions ?? pickRandom(chatConfig.seedSuggestions, 3);
           set((state) => {
+            const messages = state.messages.map((m) =>
+              m.id === assistantMessage.id
+                ? { ...m, content: finalContent, suggestions: resolved }
+                : m
+            );
             const newConversations = state.conversations.map((c) =>
               c.id === activeConversationId
-                ? { ...c, messages: state.messages, updatedAt: Date.now() }
+                ? { ...c, messages, updatedAt: Date.now() }
                 : c
             );
             return {
               status: ChatStatus.Idle,
-              suggestions: suggestions ?? [...chatConfig.seedSuggestions],
+              suggestions: resolved,
               thinkingSteps: [],
+              streamingContent: "",
               activeAbort: undefined,
+              messages,
               conversations: newConversations,
             };
           });
           persist(get().conversations, get().activeConversationId);
         },
         onError: (_code, message) => {
+          if (get().status !== ChatStatus.Streaming) return;
+
+          cancelRaf();
+          const partialContent = get().streamingContent + tokenBuffer;
+          tokenBuffer = "";
+
           set((state) => {
             const newMessages = state.messages.map((m) =>
-              m.id === assistantMessage.id ? { ...m, error: true } : m
+              m.id === assistantMessage.id
+                ? { ...m, content: partialContent, error: true }
+                : m
             );
             const newConversations = state.conversations.map((c) =>
               c.id === activeConversationId
@@ -288,6 +342,7 @@ export const useChatStore = create<ChatStoreState>((set, get) => ({
               status: ChatStatus.Error,
               errorMessage: message,
               thinkingSteps: [],
+              streamingContent: "",
               activeAbort: undefined,
               messages: newMessages,
               conversations: newConversations,
@@ -298,21 +353,31 @@ export const useChatStore = create<ChatStoreState>((set, get) => ({
       }
     );
 
-    set({ activeAbort: abort });
+    set({ activeAbort: () => { cancelRaf(); abort(); } });
   },
 
   stopStreaming: () => {
     get().activeAbort?.();
     set((state) => {
+      const partial = state.streamingContent;
+      const lastIdx = state.messages.length - 1;
+      const newMessages =
+        partial && lastIdx >= 0 && state.messages[lastIdx].role === "assistant"
+          ? state.messages.map((m, i) =>
+              i === lastIdx ? { ...m, content: partial } : m
+            )
+          : state.messages;
       const newConversations = state.conversations.map((c) =>
         c.id === state.activeConversationId
-          ? { ...c, messages: state.messages, updatedAt: Date.now() }
+          ? { ...c, messages: newMessages, updatedAt: Date.now() }
           : c
       );
       return {
         status: ChatStatus.Idle,
         thinkingSteps: [],
+        streamingContent: "",
         activeAbort: undefined,
+        messages: newMessages,
         conversations: newConversations,
       };
     });
@@ -337,8 +402,11 @@ export const useChatStore = create<ChatStoreState>((set, get) => ({
       conversations: updatedConversations,
       messages: [greeting],
       status: ChatStatus.Idle,
-      suggestions: [...chatConfig.seedSuggestions],
+      suggestions: pickRandom(chatConfig.seedSuggestions, 3),
       thinkingSteps: [],
+      streamingContent: "",
+      draft: "",
+      pendingNavigate: undefined,
       errorMessage: undefined,
       activeAbort: undefined,
     });
@@ -353,8 +421,11 @@ export const useChatStore = create<ChatStoreState>((set, get) => ({
       activeConversationId: conv.id,
       messages: conv.messages,
       status: ChatStatus.Idle,
-      suggestions: [...chatConfig.seedSuggestions],
+      suggestions: pickRandom(chatConfig.seedSuggestions, 3),
       thinkingSteps: [],
+      streamingContent: "",
+      draft: "",
+      pendingNavigate: undefined,
       errorMessage: undefined,
       activeAbort: undefined,
     }));
@@ -369,8 +440,11 @@ export const useChatStore = create<ChatStoreState>((set, get) => ({
       activeConversationId: id,
       messages: conv.messages,
       status: ChatStatus.Idle,
-      suggestions: [...chatConfig.seedSuggestions],
+      suggestions: pickRandom(chatConfig.seedSuggestions, 3),
       thinkingSteps: [],
+      streamingContent: "",
+      draft: "",
+      pendingNavigate: undefined,
       errorMessage: undefined,
       activeAbort: undefined,
     });
@@ -388,8 +462,10 @@ export const useChatStore = create<ChatStoreState>((set, get) => ({
         activeConversationId: conv.id,
         messages: conv.messages,
         status: ChatStatus.Idle,
-        suggestions: [...chatConfig.seedSuggestions],
+        suggestions: pickRandom(chatConfig.seedSuggestions, 3),
         thinkingSteps: [],
+        streamingContent: "",
+        draft: "",
         errorMessage: undefined,
         activeAbort: undefined,
       });
@@ -403,6 +479,8 @@ export const useChatStore = create<ChatStoreState>((set, get) => ({
         conversations: remaining,
         activeConversationId: newActiveId,
         thinkingSteps: [],
+        streamingContent: "",
+        draft: "",
         messages: wasActive
           ? remaining[0].messages
           : syncMessages(remaining, activeConversationId),

@@ -34,6 +34,7 @@ export interface ChatMessage {
   content: string;
   card?: ProjectCardPayload;
   action?: ChatMessageAction;
+  suggestions?: string[];
   createdAt: number;
   error?: boolean;
 }

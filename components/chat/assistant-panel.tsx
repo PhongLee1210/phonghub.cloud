@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 
 import { ChatInput } from "@/components/chat/chat-input";
@@ -21,8 +21,13 @@ export const AssistantPanel = ({
   onClose,
   className,
 }: AssistantPanelProps) => {
-  const { messages, status, errorMessage, sendMessage, stopStreaming, reset } =
-    useChatStore();
+  const status = useChatStore((s) => s.status);
+  const errorMessage = useChatStore((s) => s.errorMessage);
+  const sendMessage = useChatStore((s) => s.sendMessage);
+  const setDraft = useChatStore((s) => s.setDraft);
+  const stopStreaming = useChatStore((s) => s.stopStreaming);
+  const reset = useChatStore((s) => s.reset);
+  const inputRef = useRef<HTMLTextAreaElement>(null);
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
@@ -42,8 +47,21 @@ export const AssistantPanel = ({
   }, [isFullscreen, sidebarOpen]);
 
   const retryLastMessage = () => {
-    const lastUser = [...messages].reverse().find((m) => m.role === "user");
+    const msgs = useChatStore.getState().messages;
+    const lastUser = [...msgs].reverse().find((m) => m.role === "user");
     if (lastUser) sendMessage(lastUser.content);
+  };
+
+  const handleSuggestionSelect = (prompt: string) => {
+    setDraft(prompt);
+    const el = inputRef.current;
+    if (el) {
+      el.focus();
+      requestAnimationFrame(() => {
+        const len = el.value.length;
+        el.setSelectionRange(len, len);
+      });
+    }
   };
 
   const headerBtnClass =
@@ -52,9 +70,9 @@ export const AssistantPanel = ({
   const messageArea = (
     <>
       <ChatMessageList
-        messages={messages}
-        isStreaming={status === "streaming"}
-        onSuggestionSelect={status !== "streaming" ? sendMessage : undefined}
+        onSuggestionSelect={
+          status !== "streaming" ? handleSuggestionSelect : undefined
+        }
       />
 
       {status === "error" && errorMessage && (
@@ -83,7 +101,11 @@ export const AssistantPanel = ({
       )}
 
       <div className="flex-shrink-0 px-[12px] pb-[12px] pt-1">
-        <ChatInput disabled={status === "streaming"} onSubmit={sendMessage} />
+        <ChatInput
+          disabled={status === "streaming"}
+          onSubmit={sendMessage}
+          inputRef={inputRef}
+        />
       </div>
     </>
   );
