@@ -24,11 +24,18 @@ export type AgentEntityId = `${EntityKind}:${string}`;
  */
 export type CitationKind = EntityKind | "resume";
 
+/** resolveCitation's input — every addressable entity id, plus the resume
+ * singleton. Also what open_modal/expand_section/highlight_resource tool
+ * results carry, since every citable resource is a valid target for them. */
+export type CitationTarget = AgentEntityId | "resume";
+
 /** Per plan §"Citation Data Model" — what every agent response cites. */
 export interface AgentCitation {
   id: string;
   type: CitationKind;
   title: string;
+  /** Short blurb — also the content shown in a citation chip's hover preview and in open_modal/expand_section's modal. */
+  description: string;
   href: string;
 }
 
@@ -98,6 +105,10 @@ export type DoneEvent = {
   type: typeof ChatEventType.Done;
   suggestions?: string[];
   highlight?: AgentEntityId;
+  /** No-scroll counterpart to `highlight` — set by the `focus` tool. */
+  focus?: AgentEntityId;
+  /** Set by `open_modal`/`expand_section` — the resource to show in the modal. */
+  openModal?: CitationTarget;
   navigate?: InternalRoute;
   /** Every resource the assistant surfaced this turn via a search/highlight tool call. */
   citations?: AgentCitation[];

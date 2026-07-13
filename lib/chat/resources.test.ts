@@ -20,6 +20,7 @@ describe("resolveCitation", () => {
       id: project.id,
       type: "project",
       title: project.organization.name,
+      description: project.shortDescription,
       href: `/projects/${project.id}`,
     });
   });
@@ -34,6 +35,7 @@ describe("resolveCitation", () => {
       id: experience.id,
       type: "experience",
       title: experience.company,
+      description: experience.description[0] ?? "",
       href: `/experience/${experience.id}`,
     });
   });
@@ -46,6 +48,7 @@ describe("resolveCitation", () => {
       id: skill.key,
       type: "skill",
       title: skill.name,
+      description: skill.description,
       href: "/skills",
     });
   });
@@ -61,6 +64,7 @@ describe("resolveCitation", () => {
       id: post.slug,
       type: "blog",
       title: post.title,
+      description: post.summary,
       href: `/blogs/${post.slug}`,
     });
   });
@@ -72,6 +76,7 @@ describe("resolveCitation", () => {
       id: "resume",
       type: "resume",
       title: RESUME_RESOURCE.title,
+      description: RESUME_RESOURCE.description,
       href: RESUME_RESOURCE.href,
     });
   });

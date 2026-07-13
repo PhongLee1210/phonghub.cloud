@@ -24,6 +24,7 @@ import { filterSkillsByCategory, getStrongestSkills } from "@/lib/data/skills";
 import { isAllowedRoute } from "@/lib/chat/prompt";
 import { buildEntityId, parseEntityId } from "@/lib/chat/protocol";
 import { CitationTarget } from "@/lib/chat/resources";
+import { AgentEntityId } from "@/types/chat";
 
 const CONTENT_DIR = "content/blog";
 
@@ -202,6 +203,58 @@ const navigateToTool = tool({
   },
 });
 
+const focusResourceTool = tool({
+  description:
+    "Draw quiet visual attention to a resource already visible on the current page, without scrolling — use instead of highlight_resource when the visitor is already looking at that section and a scroll-into-view would be distracting.",
+  inputSchema: z.object({
+    target: z
+      .string()
+      .describe(
+        "The agentId to focus — e.g. 'project:enrollment-platform', 'skill:react', 'experience:hiliosai', 'blog:my-post'."
+      ),
+  }),
+  execute: async ({ target }) => {
+    const valid = Boolean(parseEntityId(target));
+    return valid
+      ? { ok: true as const, target: target as AgentEntityId }
+      : { ok: false as const, target, reason: "unrecognized agentId format" };
+  },
+});
+
+/**
+ * Shared by open_modal and expand_section — both surface the same resource
+ * detail modal, just from a different conversational phrasing ("tell me
+ * more about X" vs "show me X"). No distinct execute() logic between them.
+ */
+const modalTargetSchema = z.object({
+  target: z
+    .string()
+    .describe(
+      "The agentId to show — e.g. 'project:enrollment-platform', 'skill:react', 'experience:hiliosai', 'blog:my-post', or 'resume'."
+    ),
+});
+
+async function executeModalTarget({ target }: { target: string }) {
+  const valid = target === "resume" || Boolean(parseEntityId(target));
+  return valid
+    ? { ok: true as const, target: target as CitationTarget }
+    : { ok: false as const, target, reason: "unrecognized agentId format" };
+}
+
+const openModalTool = tool({
+  description:
+    "Open a detail modal (title + description) for a single resource without navigating away from the current page. Use the exact agentId from an earlier search result, or 'resume'.",
+  inputSchema: modalTargetSchema,
+  execute: executeModalTarget,
+});
+
+const expandSectionTool = tool({
+  description:
+    "Expand full detail for a single resource inline. Functionally identical to open_modal — use whichever phrasing best matches the visitor's request.",
+  inputSchema: modalTargetSchema,
+  execute: executeModalTarget,
+});
+
 const suggestFollowupsTool = tool({
   description:
     "Offer 2-3 short follow-up questions the visitor might ask next, phrased in their voice (e.g. \"What's his stack?\"), not yours.",
@@ -220,5 +273,8 @@ export const CHAT_TOOLS = {
   search_blog: searchBlogTool,
   highlight_resource: highlightResourceTool,
   navigate_to: navigateToTool,
+  focus: focusResourceTool,
+  open_modal: openModalTool,
+  expand_section: expandSectionTool,
   suggest_followups: suggestFollowupsTool,
 } satisfies ToolSet;

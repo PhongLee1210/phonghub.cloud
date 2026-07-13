@@ -99,7 +99,8 @@ function extractSearchAgentIds(result: unknown): CitationTarget[] {
     .map((item) => item.agentId);
 }
 
-function extractHighlightTarget(result: unknown): CitationTarget | undefined {
+/** Shared by highlight_resource/focus/open_modal/expand_section — all four echo `{ ok, target }`. */
+function extractTarget(result: unknown): CitationTarget | undefined {
   if (!isObject(result) || result.ok !== true) return undefined;
   return isNonEmptyString(result.target) ? (result.target as CitationTarget) : undefined;
 }
@@ -257,6 +258,8 @@ export async function POST(req: NextRequest) {
 
       const citationTargets = new Set<CitationTarget>();
       let highlightTarget: AgentEntityId | undefined;
+      let focusTarget: AgentEntityId | undefined;
+      let openModalTarget: CitationTarget | undefined;
       let navigateRoute: InternalRoute | undefined;
       let suggestions: string[] | undefined;
 
@@ -325,10 +328,22 @@ export async function POST(req: NextRequest) {
                 citationTargets.add(agentId);
               }
             } else if (chunk.name === "highlight_resource") {
-              const target = extractHighlightTarget(chunk.result);
+              const target = extractTarget(chunk.result);
               if (target) {
                 citationTargets.add(target);
                 if (target !== "resume") highlightTarget = target;
+              }
+            } else if (chunk.name === "focus") {
+              const target = extractTarget(chunk.result);
+              if (target) {
+                citationTargets.add(target);
+                if (target !== "resume") focusTarget = target;
+              }
+            } else if (chunk.name === "open_modal" || chunk.name === "expand_section") {
+              const target = extractTarget(chunk.result);
+              if (target) {
+                citationTargets.add(target);
+                openModalTarget = target;
               }
             } else if (chunk.name === "navigate_to") {
               navigateRoute = extractNavigateRoute(chunk.result) ?? navigateRoute;
@@ -354,6 +369,8 @@ export async function POST(req: NextRequest) {
               type: ChatEventType.Done,
               suggestions,
               highlight: highlightTarget,
+              focus: focusTarget,
+              openModal: openModalTarget,
               navigate: navigateRoute,
               citations,
             });

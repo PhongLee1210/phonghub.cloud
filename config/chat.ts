@@ -115,6 +115,9 @@ export const THINKING_STEP_LABELS: Record<string, string> = {
   search_blog: "Searching blog posts",
   highlight_resource: "Highlighting",
   navigate_to: "Preparing navigation",
+  focus: "Focusing",
+  open_modal: "Opening details",
+  expand_section: "Expanding details",
   suggest_followups: "Drafting follow-ups",
 };
 
