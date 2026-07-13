@@ -47,7 +47,7 @@ export function normalizeProject(
 
   return {
     id: `project:${project.id}`,
-    title: project.companyName,
+    title: project.organization.name,
     sourceType: ContentSourceType.PROJECT,
     sourceUrl: `/projects/${project.id}`,
     projectId: project.id,
@@ -56,14 +56,13 @@ export function normalizeProject(
     confidence: 1.0,
     updatedAt: endDate ?? startDate,
     summary: project.shortDescription,
-    companyName: project.companyName,
+    companyName: project.organization.name,
     category: project.category,
     techStack: project.techStack,
-    type: project.type,
+    type: project.organization.type,
     startDate,
     endDate,
     websiteLink: project.websiteLink,
-    githubLink: project.githubLink,
   };
 }
 

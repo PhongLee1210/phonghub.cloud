@@ -57,7 +57,6 @@ export interface ProjectContentItem extends ContentItemBase {
   startDate: string;
   endDate: string | null;
   websiteLink?: string;
-  githubLink?: string;
 }
 
 export interface SkillContentItem extends ContentItemBase {

@@ -20,7 +20,7 @@ export default function ProjectCard({ project }: ProjectCardProps) {
         <Image
           className="rounded-lg border border-border object-cover"
           src={project.companyLogoImg}
-          alt={project.companyName}
+          alt={project.organization.name}
           fill
           loading="lazy"
           sizes="(max-width: 640px) 100vw, 384px"
@@ -28,7 +28,7 @@ export default function ProjectCard({ project }: ProjectCardProps) {
       </div>
       <div className="pt-5 space-y-3">
         <h5 className="text-2xl font-bold tracking-tight text-foreground">
-          {project.companyName}
+          {project.organization.name}
         </h5>
         <p className="line-clamp-3 font-normal text-muted-foreground">
           {project.shortDescription}
@@ -44,7 +44,7 @@ export default function ProjectCard({ project }: ProjectCardProps) {
         </Link>
       </div>
       <div className="absolute bottom-4 right-4 p-3 rounded-full bg-background border border-border">
-        {project.type === "Personal" ? (
+        {project.organization.type === "personal" ? (
           <Icons.userFill className="h-4 w-4" />
         ) : (
           <Icons.work className="h-4 w-4" />

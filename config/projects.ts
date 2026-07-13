@@ -11,14 +11,17 @@ interface DescriptionDetailsInterface {
   bullets: string[];
 }
 
+export interface ProjectOrganization {
+  name: string;
+  type: ValidExpType;
+}
+
 export interface ProjectInterface {
   id: string;
-  type: ValidExpType;
-  companyName: string;
+  organization: ProjectOrganization;
   category: ValidCategory[];
   shortDescription: string;
   websiteLink?: string;
-  githubLink?: string;
   techStack: ValidSkills[];
   startDate: Date;
   endDate: Date | null;
@@ -30,13 +33,11 @@ export interface ProjectInterface {
 export const PROJECTS: ProjectInterface[] = [
   {
     id: "hiliosai-landing-sales-agent",
-    companyName: "AI Sales & Landing Page Platform",
-    type: "Professional",
+    organization: { name: "AI Sales & Landing Page Platform", type: "professional" },
     category: ["Web Dev", "Full Stack", "UI/UX"],
     shortDescription:
       "Developed a fully-automated landing page and AI-powered sales assistant for HiliosAI, combining Next.js SSR/SSG with FastAPI/GraphQL backend to capture, qualify and route leads.",
     websiteLink: "https://home.hilios.ai/",
-    githubLink: undefined,
     techStack: ["Next.js", "React", "FastAPI", "GraphQL", "Docker", "AWS"],
     startDate: new Date("2024-03-01"),
     endDate: null,
@@ -85,8 +86,7 @@ export const PROJECTS: ProjectInterface[] = [
   },
   {
     id: "ai-agents-enrollment",
-    companyName: "AI Assistant & Enrollment Platform",
-    type: "Professional",
+    organization: { name: "AI Assistant & Enrollment Platform", type: "professional" },
     category: ["Web Dev", "Full Stack", "UI/UX"],
     shortDescription:
       "Architected an AI-powered enrollment platform with FastAPI microservices, GraphQL routing, and RAG-based lead classification. Built embeddable Vue.js chat widgets and integrated Langfuse for LLM observability.",
@@ -100,7 +100,7 @@ export const PROJECTS: ProjectInterface[] = [
       "Redis",
       "AWS",
       "Docker",
-      "Typescript",
+      "TypeScript",
     ],
     startDate: new Date("2022-03-01"),
     endDate: null,
@@ -132,17 +132,15 @@ export const PROJECTS: ProjectInterface[] = [
         "Designed and implemented event workflows with n8n/webhooks to unify ingestion across multiple lead sources (Wix, Google Search, external forms)",
         "Deployed responsive Vue.js + TypeScript live-chat widget embedded into partner landing pages to deliver 24/7 conversational support",
         "Developed RAG-based lead-filtering using vectorised content retrieval, improving lead classification accuracy and routing efficiency",
-        "Enhanced my expertise in modern architecture (micro-services, GraphQL), AI/agent observability, and end-to-end full-stack engineering for education-tech",
       ],
     },
   },
   {
     id: "gymintelops",
-    companyName: "GymIntelOps - Gym Management Software",
-    type: "Personal",
+    organization: { name: "GymIntelOps", type: "personal" },
     category: ["Web Dev", "Full Stack"],
     shortDescription:
-      "Founded and developed GymIntelOps, a comprehensive gym management platform using Next.js and Node.js, featuring CRM, automated marketing funnels, AI chatbots, and landing page builders for gym businesses.",
+      "Built for gym operators: a gym management platform using Next.js and Node.js with CRM, automated marketing funnels, an AI chatbot, and a landing page builder.",
     websiteLink: "https://gymintelops.com/",
     techStack: [
       "Next.js",
@@ -150,7 +148,7 @@ export const PROJECTS: ProjectInterface[] = [
       "Node.js",
       "PostgreSQL",
       "AWS",
-      "Typescript",
+      "TypeScript",
       "Tailwind CSS",
       "Python",
     ],
@@ -191,26 +189,24 @@ export const PROJECTS: ProjectInterface[] = [
     ],
     descriptionDetails: {
       paragraphs: [
-        "As the founder of GymIntelOps, I single-handedly built a comprehensive gym management and marketing automation platform. The all-in-one solution combines CRM, automated marketing funnels, AI customer service, and business analytics to help gym owners increase revenue and streamline operations.",
-        "The marketing automation system includes automated email sequences, SMS campaigns, and social media posting, all triggered by member behavior and lifecycle events. I integrated AI chatbots for 24/7 customer support, lead qualification, and appointment booking, reducing manual work by 80%.",
-        "I built a visual funnel builder that allows gym owners to create complex customer journeys with drag-and-drop simplicity. The platform includes landing page templates, A/B testing, and conversion optimization features that have helped clients increase their lead conversion by 300%.",
-        "The CRM system tracks every customer interaction, from initial inquiry through membership and retention. I implemented advanced analytics to show gym owners exactly which marketing channels and campaigns generate the highest ROI, enabling data-driven decisions.",
+        "As the founder of GymIntelOps, I built a gym management and marketing automation platform. The all-in-one solution combines CRM, automated marketing funnels, an AI chatbot, and business analytics to help gym owners run their operations from one place.",
+        "The marketing automation system includes automated email sequences, SMS campaigns, and social media posting, triggered by member behavior and lifecycle events. I integrated an AI chatbot for customer inquiries, lead qualification, and appointment booking.",
+        "I built a visual funnel builder that lets gym owners create customer journeys with drag-and-drop simplicity, including landing page templates and A/B testing.",
+        "The CRM system tracks every customer interaction, from initial inquiry through membership and retention, with analytics showing which marketing channels and campaigns are performing.",
       ],
       bullets: [
-        "Founded and developed comprehensive gym management platform as solo entrepreneur serving 1000+ clients",
-        "Built automated marketing funnel system with drag-and-drop builder and A/B testing capabilities",
-        "Integrated AI chatbots and customer service automation reducing manual work by 80%",
-        "Developed CRM system with advanced analytics and ROI tracking for gym businesses",
-        "Implemented payment processing, subscription management, and automated billing systems",
-        "Created landing page builder with templates and conversion optimization tools",
-        "Enhanced expertise in SaaS development, marketing automation, and business analytics",
+        "Built for gym operators, as a solo founder",
+        "Automated membership tracking and lead follow-up",
+        "Integrated an AI chatbot for customer inquiries",
+        "Built a visual, drag-and-drop marketing funnel builder with A/B testing",
+        "Developed a CRM with campaign and channel analytics",
+        "Implemented payment processing, subscription management, and automated billing",
       ],
     },
   },
   {
     id: "svtech-cloudcam",
-    companyName: "SVTech - CloudCam Platform",
-    type: "Professional",
+    organization: { name: "SVTech - CloudCam Platform", type: "professional" },
     category: ["Web Dev", "Full Stack"],
     shortDescription:
       "Developed and deployed successful applications as a Software Engineer at SVTech, focusing on cloud-based camera systems with Vue.js frontend and Node.js backend. Optimized code for performance and scalability while building user-friendly interfaces.",
@@ -220,7 +216,7 @@ export const PROJECTS: ProjectInterface[] = [
       "Material UI",
       "Tailwind CSS",
       "Jest",
-      "Typescript",
+      "TypeScript",
     ],
     startDate: new Date("2022-02-01"),
     endDate: null,
@@ -235,7 +231,7 @@ export const PROJECTS: ProjectInterface[] = [
       {
         title: "Login Interface",
         description:
-          "Secure login interface with user authentication and access management",
+          "Login interface for the CloudCam dashboard, with fingerprint authentication as an additional access-control layer",
         imgArr: ["/projects/svtech/login-ui.jpg"],
       },
       {
@@ -282,13 +278,12 @@ export const PROJECTS: ProjectInterface[] = [
   },
   {
     id: "contentxpert-ai-platform",
-    companyName: "ContentXpert - AI Content Creation Platform",
-    type: "Personal",
+    organization: { name: "ContentXpert - AI Content Creation Platform", type: "personal" },
     category: ["Web Dev", "Full Stack"],
     shortDescription:
       "Built a comprehensive AI-powered content creation platform using Next.js and FastAPI, featuring AI-driven content generation, keyword research, multimedia creation, and collaborative workspace tools.",
     websiteLink: "https://contentxpert-7bfe7.web.app/",
-    techStack: ["Next.js", "React", "Supabase", "Typescript", "Tailwind CSS"],
+    techStack: ["Next.js", "React", "Supabase", "TypeScript", "Tailwind CSS"],
     startDate: new Date("2024-01-01"),
     endDate: null,
     companyLogoImg: "/projects/contentxpert/contentxpert-logo.png",
@@ -296,7 +291,7 @@ export const PROJECTS: ProjectInterface[] = [
       {
         title: "Login Interface",
         description:
-          "Secure login interface with user authentication and access management",
+          "Login interface for the ContentXpert workspace, with authentication and access management",
         imgArr: ["/projects/contentxpert/login-ui.png"],
       },
       {
@@ -320,20 +315,18 @@ export const PROJECTS: ProjectInterface[] = [
         "Built multimedia generation tools for AI-powered image and video creation within the content workflow",
         "Developed real-time collaboration features with content scheduling and performance analytics",
         "Integrated payment processing with Stripe and deployed scalable AWS infrastructure with Docker",
-        "Enhanced expertise in AI integration, content optimization, and SaaS platform development",
       ],
     },
   },
 
   {
     id: "promptbank-ai-management",
-    companyName: "PromptBank - AI Prompt Management Platform",
-    type: "Personal",
+    organization: { name: "PromptBank - AI Prompt Management Platform", type: "personal" },
     category: ["Web Dev", "Full Stack"],
     shortDescription:
       "Developed PromptBank, an AI prompt management and optimization platform using React and Node.js, featuring prompt versioning, performance analytics, and collaborative sharing for AI developers and content creators.",
     websiteLink: "https://promptbank.cloud/",
-    techStack: ["React", "Node.js", "MongoDB", "Vercel", "Typescript"],
+    techStack: ["React", "Node.js", "MongoDB", "Vercel", "TypeScript"],
     startDate: new Date("2024-02-01"),
     endDate: null,
     companyLogoImg: "/projects/promptbank/promptbank-logo.png",
@@ -366,14 +359,12 @@ export const PROJECTS: ProjectInterface[] = [
         "Integrated with multiple AI APIs for cross-platform prompt testing",
         "Created analytics dashboard for tracking prompt performance and cost optimization",
         "Developed API-first architecture for seamless integration with AI development tools",
-        "Enhanced expertise in AI prompt engineering, performance optimization, and developer tools",
       ],
     },
   },
   {
     id: "cursorrulescraft",
-    companyName: "CursorRulesCraft - Development Tools Platform",
-    type: "Personal",
+    organization: { name: "CursorRulesCraft - Development Tools Platform", type: "personal" },
     category: ["Web Dev"],
     shortDescription:
       "Built CursorRulesCraft, a development tools platform using Next.js and Bun.js, featuring Cursor IDE customization, rule management, code generation, and developer productivity enhancements.",
@@ -384,7 +375,7 @@ export const PROJECTS: ProjectInterface[] = [
       "Node.js",
       "Vercel",
       "Supabase",
-      "Typescript",
+      "TypeScript",
       "Tailwind CSS",
     ],
     startDate: new Date("2024-03-01"),
@@ -400,7 +391,7 @@ export const PROJECTS: ProjectInterface[] = [
       {
         title: "Login Interface",
         description:
-          "Secure login interface with user authentication and access management",
+          "Login interface for the CursorRulesCraft dashboard, with authentication and access management",
         imgArr: ["/projects/cursorrulescraft/login-ui.png"],
       },
     ],
@@ -419,18 +410,16 @@ export const PROJECTS: ProjectInterface[] = [
         "Created analytics dashboard for tracking development productivity and patterns",
         "Integrated with development tools and services for seamless workflow",
         "Developed marketplace for sharing and discovering IDE configurations",
-        "Enhanced expertise in developer tools, IDE customization, and productivity software",
       ],
     },
   },
   {
     id: "my-garment",
-    companyName: "My Garment - E-commerce Platform",
-    type: "Professional",
+    organization: { name: "My Garment - E-commerce Platform", type: "professional" },
     category: ["Web Dev", "Full Stack"],
     shortDescription:
       "Built a full-stack e-commerce platform for garment business using Vue.js frontend and Node.js backend with AWS infrastructure. Implemented inventory management, order processing, and customer management systems.",
-    techStack: ["Vue.js", "Node.js", "AWS", "PostgreSQL", "Typescript"],
+    techStack: ["Vue.js", "Node.js", "AWS", "PostgreSQL", "TypeScript"],
     startDate: new Date("2022-04-01"),
     endDate: null,
     companyLogoImg: "/projects/mygarment/banner.jpeg",
@@ -468,12 +457,11 @@ export const PROJECTS: ProjectInterface[] = [
 
   {
     id: "jetcare-platform",
-    companyName: "JetCare - Healthcare Management System",
-    type: "Professional",
+    organization: { name: "JetCare - Healthcare Management System", type: "professional" },
     category: ["Web Dev", "Full Stack"],
     shortDescription:
       "Built a comprehensive healthcare management platform using Vue.js frontend and Node.js microservices with GraphQL API. Optimized and refactored code for better performance and maintainability while designing intuitive UI based on mockups.",
-    techStack: ["Vue.js", "Node.js", "GraphQL", "PostgreSQL", "Typescript"],
+    techStack: ["Vue.js", "Node.js", "GraphQL", "PostgreSQL", "TypeScript"],
     startDate: new Date("2022-06-01"),
     endDate: null,
     companyLogoImg: "/projects/jetcare/jetcare-logo.svg",
@@ -510,12 +498,11 @@ export const PROJECTS: ProjectInterface[] = [
   },
   {
     id: "oasis-platform",
-    companyName: "OASIS - Business Management Platform",
-    type: "Professional",
+    organization: { name: "OASIS - Business Management Platform", type: "professional" },
     category: ["Web Dev", "Frontend"],
     shortDescription:
       "Developed the frontend for OASIS business management platform using Vue.js and Node.js microservices. Built responsive UI components and integrated with backend services while working in a remote development environment.",
-    techStack: ["Vue.js", "Node.js", "Typescript"],
+    techStack: ["Vue.js", "Node.js", "TypeScript"],
     startDate: new Date("2022-10-01"),
     endDate: null,
     companyLogoImg: "/projects/oasis/ship-2.jpg",
