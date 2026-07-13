@@ -13,7 +13,6 @@ import ChipContainer from "@/components/ui/chip-container";
 import { ResponsiveTabs } from "@/components/ui/responsive-tabs";
 import { EXPERIENCES } from "@/config/experience";
 import { siteConfig } from "@/config/site";
-import { getApiBaseUrl } from "@/lib/api";
 
 interface ExperienceDetailPageProps {
   params: Promise<{
@@ -56,17 +55,8 @@ export async function generateMetadata({
     },
   };
 }
-export async function generateStaticParams() {
-  const { experiences } = await fetch(`${getApiBaseUrl()}/api/experiences`, {
-    method: "GET",
-    headers: {
-      "Content-Type": "application/json",
-    },
-  })
-    .then((res) => res.json())
-    .catch(() => ({ experiences: EXPERIENCES }));
-
-  return experiences.map((experience: { id: string }) => ({
+export function generateStaticParams() {
+  return EXPERIENCES.map((experience) => ({
     experienceId: experience.id,
   }));
 }

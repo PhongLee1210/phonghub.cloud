@@ -5,22 +5,14 @@ import ProjectCard from "@/components/projects/project-card";
 import { ResponsiveTabs } from "@/components/ui/responsive-tabs";
 import { pagesConfig } from "@/config/pages";
 import { PROJECTS, type ProjectInterface } from "@/config/projects";
-import { getApiBaseUrl } from "@/lib/api";
 
 export const metadata: Metadata = {
   title: pagesConfig.projects.metadata.title,
   description: pagesConfig.projects.metadata.description,
 };
 
-export default async function ProjectsPage() {
-  const { projects } = await fetch(`${getApiBaseUrl()}/api/projects`, {
-    method: "GET",
-    headers: {
-      "Content-Type": "application/json",
-    },
-  })
-    .then((res) => res.json())
-    .catch(() => ({ projects: PROJECTS }));
+export default function ProjectsPage() {
+  const projects = PROJECTS;
 
   const tabItems = [
     {
