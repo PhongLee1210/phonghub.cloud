@@ -99,6 +99,8 @@ export type DoneEvent = {
   suggestions?: string[];
   highlight?: AgentEntityId;
   navigate?: InternalRoute;
+  /** Every resource the assistant surfaced this turn via a search/highlight tool call. */
+  citations?: AgentCitation[];
 };
 
 export type ChatStreamEvent =

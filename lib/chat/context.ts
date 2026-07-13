@@ -7,7 +7,7 @@ import { SKILLS } from "@/config/skills";
 import { siteConfig } from "@/config/site";
 import { listPublishedPosts } from "@/lib/blog/service";
 import { buildPersona, GUARDRAILS } from "./prompt";
-import { buildEntityId, RESPONSE_FORMAT_INSTRUCTIONS } from "./protocol";
+import { buildEntityId } from "./protocol";
 import { assembleSystemPrompt, SystemPromptData } from "./token-budget";
 
 const CONTENT_DIR = "content/blog";
@@ -41,7 +41,7 @@ export async function buildSystemPrompt(): Promise<{
 
   const data: SystemPromptData = {
     persona,
-    guardrails: `${GUARDRAILS}\n\n${RESPONSE_FORMAT_INSTRUCTIONS}`,
+    guardrails: GUARDRAILS,
     projects: PROJECTS.map((p) => ({
       agentId: buildEntityId("project", p.id),
       companyName: p.organization.name,

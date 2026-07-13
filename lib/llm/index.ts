@@ -46,8 +46,13 @@ export async function* streamLLM(
     let firstTokenAt: number | undefined;
     let receivedAnyChunk = false;
 
+    // Tools are stripped for providers without mature tool-calling support
+    // (see LLMProvider.supportsTools) — those candidates always run the
+    // plain text-only path, never a broken/ignored tool request.
+    const providerReq = provider.supportsTools ? req : { ...req, tools: undefined };
+
     try {
-      for await (const chunk of provider.stream(model, req)) {
+      for await (const chunk of provider.stream(model, providerReq)) {
         receivedAnyChunk = true;
         if (chunk.type === "text" && firstTokenAt === undefined) {
           firstTokenAt = Date.now();

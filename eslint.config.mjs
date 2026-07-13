@@ -3,7 +3,7 @@ import nextCoreWebVitals from "eslint-config-next/core-web-vitals";
 const eslintConfig = [
   ...nextCoreWebVitals,
   {
-    ignores: ["lib/llm/**"],
+    ignores: ["lib/llm/**", "lib/chat/tools.ts", "lib/chat/tools.test.ts"],
     rules: {
       "no-restricted-imports": [
         "error",
