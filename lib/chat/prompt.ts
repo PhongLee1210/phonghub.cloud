@@ -17,6 +17,20 @@ export const ALLOWED_ROUTES = [
   "/list100",
 ] as const;
 
+/**
+ * Builds a single regex from ALLOWED_ROUTES so the tool validator and the
+ * prompt-visible list can never drift. Converts `<id>`/`<slug>` placeholders
+ * into segment matchers. Computed once at module load.
+ */
+const ALLOWED_ROUTE_RE = new RegExp(
+  `^(?:${ALLOWED_ROUTES.map((route) => route.replace(/<(?:id|slug)>/g, "[^/]+")).join("|")})$`
+);
+
+/** True iff `route` matches an allowed route with any ids/slugs filled in. */
+export function isAllowedRoute(route: string): boolean {
+  return ALLOWED_ROUTE_RE.test(route);
+}
+
 /** Tags wrapping the JSON data block in the rendered system prompt. */
 export const DATA_BLOCK_OPEN = "<data>";
 export const DATA_BLOCK_CLOSE = "</data>";

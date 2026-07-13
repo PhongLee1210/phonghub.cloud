@@ -16,17 +16,22 @@ type Script =
 
 /** Scriptable fake implementing LLMProvider — no network, no real SDKs. */
 class FakeProvider implements LLMProvider {
+  /** Captures the request streamLLM actually forwarded, for gating assertions. */
+  receivedReqs: LLMRequest[] = [];
+
   constructor(
     public id: ProviderId,
     private script: Script,
-    private configured = true
+    private configured = true,
+    public supportsTools = false
   ) {}
 
   isConfigured(): boolean {
     return this.configured;
   }
 
-  async *stream(): AsyncIterable<LLMStreamChunk> {
+  async *stream(_model: string, req: LLMRequest): AsyncIterable<LLMStreamChunk> {
+    this.receivedReqs.push(req);
     if (this.script.kind === "chunks") {
       for (const chunk of this.script.chunks) yield chunk;
       return;
@@ -174,5 +179,48 @@ describe("streamLLM", () => {
     await expect(collect(streamLLM("cheap", req))).rejects.toMatchObject({
       provider: "groq",
     });
+  });
+});
+
+describe("streamLLM — tool gating", () => {
+  const fakeTools = { some_tool: {} } as unknown as LLMRequest["tools"];
+
+  test("no tools requested — text-only path is unaffected regardless of supportsTools", async () => {
+    const provider = new FakeProvider(
+      "anthropic",
+      { kind: "chunks", chunks: [{ type: "text", text: "hi" }, DONE_CHUNK] },
+      true,
+      false
+    );
+    setFakeProviders([provider]);
+
+    await collect(streamLLM("chat", req));
+    expect(provider.receivedReqs[0].tools).toBeUndefined();
+  });
+
+  test("supportsTools: true — tools are forwarded to stream()", async () => {
+    const provider = new FakeProvider(
+      "anthropic",
+      { kind: "chunks", chunks: [DONE_CHUNK] },
+      true,
+      true
+    );
+    setFakeProviders([provider]);
+
+    await collect(streamLLM("chat", { ...req, tools: fakeTools }));
+    expect(provider.receivedReqs[0].tools).toBe(fakeTools);
+  });
+
+  test("supportsTools: false — tools are stripped before calling stream()", async () => {
+    const provider = new FakeProvider(
+      "anthropic",
+      { kind: "chunks", chunks: [DONE_CHUNK] },
+      true,
+      false
+    );
+    setFakeProviders([provider]);
+
+    await collect(streamLLM("chat", { ...req, tools: fakeTools }));
+    expect(provider.receivedReqs[0].tools).toBeUndefined();
   });
 });

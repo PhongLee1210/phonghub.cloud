@@ -1,7 +1,7 @@
 import "server-only";
 
 import { groq } from "@ai-sdk/groq";
-import { streamText } from "ai";
+import { stepCountIs, streamText } from "ai";
 
 import { toLLMError } from "../errors";
 import { LLMProvider, LLMRequest, LLMStreamChunk } from "../types";
@@ -21,6 +21,8 @@ async function* run(
       maxOutputTokens: req.maxTokens,
       temperature: req.temperature,
       abortSignal: req.signal,
+      tools: req.tools,
+      stopWhen: req.tools ? stepCountIs(3) : undefined,
     });
 
     for await (const part of result.fullStream) {
@@ -33,6 +35,14 @@ async function* run(
             type: "tool_call",
             name: part.toolName,
             args: part.input,
+            id: part.toolCallId,
+          };
+          break;
+        case "tool-result":
+          yield {
+            type: "tool_result",
+            name: part.toolName,
+            result: part.output,
             id: part.toolCallId,
           };
           break;
@@ -83,5 +93,9 @@ function mapFinishReason(
 export const groqProvider: LLMProvider = {
   id: "groq",
   isConfigured: () => Boolean(process.env[envKeyForProvider("groq")]),
+  // Groq's Llama 3.1/3.3 models (this repo's "cheap" alias + fallback
+  // candidates) support native tool-calling through Groq's OpenAI-compatible
+  // API — confirmed via Groq's own function-calling docs.
+  supportsTools: true,
   stream: run,
 };

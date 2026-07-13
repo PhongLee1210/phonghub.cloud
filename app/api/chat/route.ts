@@ -3,27 +3,28 @@ import { NextRequest } from "next/server";
 import { chatConfig } from "@/config/chat";
 import { acquireConcurrencySlot } from "@/lib/chat/concurrency-limiter";
 import { buildSystemPrompt } from "@/lib/chat/context";
-import {
-  createCommandSplitter,
-  encodeEvent,
-  parseCommandStream,
-} from "@/lib/chat/protocol";
+import { encodeEvent } from "@/lib/chat/protocol";
 import { checkRateLimit } from "@/lib/chat/rate-limit";
 import { getRedisClient } from "@/lib/chat/redis";
+import { resolveCitation, CitationTarget } from "@/lib/chat/resources";
 import {
   checkCombinedBudget,
   trimHistoryToBudget,
 } from "@/lib/chat/token-budget";
+import { CHAT_TOOLS } from "@/lib/chat/tools";
 import { checkTokenQuota, recordTokenUsage } from "@/lib/chat/token-quota";
-import { isNonEmptyString, isObject, isUndefined } from "@/lib/guards";
+import { isNonEmptyString, isObject } from "@/lib/guards";
 import { effectiveContextBudget, streamLLM } from "@/lib/llm";
 import { LLMError, LLMMessage, LLMStreamChunk } from "@/lib/llm/types";
 import {
+  AgentCitation,
+  AgentEntityId,
   ChatErrorCode,
   ChatEventType,
   ChatMessageAction,
   ChatRequestBody,
   ChatStreamEvent,
+  InternalRoute,
 } from "@/types/chat";
 
 export const runtime = "nodejs";
@@ -32,10 +33,10 @@ export const maxDuration = 60;
 /**
  * Conservative, regex-based detection for an explicit "I want to support /
  * star the project" intent in the visitor's latest message. Deliberately
- * not routed through the LLM (no tool-calling wired up yet — see
- * `// tool_call chunks are phase 2` below) — this only needs to catch a
- * clear, narrow phrase, and a false negative just means the visitor uses
- * the always-visible header button instead.
+ * not routed through the LLM/tool layer — a separate, narrow stopgap left
+ * untouched by the tool-calling planner (see plan). This only needs to
+ * catch a clear, narrow phrase; a false negative just means the visitor
+ * uses the always-visible header button instead.
  */
 const STAR_INTENT_PATTERN =
   /\b(star|support)\b[\s\w'-]{0,40}\b(repo|repository|project|github)\b/i;
@@ -78,6 +79,67 @@ function secondsUntilNextUtcMidnight(now: Date = new Date()): number {
     now.getUTCDate() + 1
   );
   return Math.max(1, Math.ceil((nextMidnight - now.getTime()) / 1000));
+}
+
+const SEARCH_TOOL_NAMES = new Set([
+  "search_projects",
+  "search_experiences",
+  "search_skills",
+  "search_resume",
+  "search_blog",
+]);
+
+/** Every search tool's execute() returns `{ agentId, title, summary }[]`. */
+function extractSearchAgentIds(result: unknown): CitationTarget[] {
+  if (!Array.isArray(result)) return [];
+  return result
+    .filter((item): item is { agentId: CitationTarget } =>
+      isObject(item) && isNonEmptyString(item.agentId)
+    )
+    .map((item) => item.agentId);
+}
+
+function extractHighlightTarget(result: unknown): CitationTarget | undefined {
+  if (!isObject(result) || result.ok !== true) return undefined;
+  return isNonEmptyString(result.target) ? (result.target as CitationTarget) : undefined;
+}
+
+function extractNavigateRoute(result: unknown): InternalRoute | undefined {
+  if (!isObject(result) || result.ok !== true) return undefined;
+  return isNonEmptyString(result.route) ? (result.route as InternalRoute) : undefined;
+}
+
+function extractSuggestions(result: unknown): string[] | undefined {
+  if (!isObject(result) || !Array.isArray(result.questions)) return undefined;
+  const cleaned = result.questions.filter(isNonEmptyString);
+  return cleaned.length > 0 ? cleaned : undefined;
+}
+
+/**
+ * Resolves every resource the model surfaced this turn (via a search tool
+ * or highlight_resource) into a citation chip. A hallucinated/stale id from
+ * the model is a real possibility (tool-call args aren't schema-guaranteed
+ * to reference something that still exists), so a failed lookup is skipped
+ * rather than failing the whole turn.
+ */
+async function resolveCitations(
+  targets: Set<CitationTarget>
+): Promise<AgentCitation[] | undefined> {
+  if (targets.size === 0) return undefined;
+
+  const resolved = await Promise.all(
+    Array.from(targets).map(async (target) => {
+      try {
+        return await resolveCitation(target);
+      } catch (err) {
+        console.warn("[chat/route] resolveCitation failed:", err);
+        return undefined;
+      }
+    })
+  );
+
+  const citations = resolved.filter((c): c is AgentCitation => c !== undefined);
+  return citations.length > 0 ? citations : undefined;
 }
 
 function validateBody(body: unknown): ChatRequestBody | undefined {
@@ -193,7 +255,10 @@ export async function POST(req: NextRequest) {
         controller.enqueue(encoder.encode(encodeEvent(event)));
       };
 
-      const splitter = createCommandSplitter();
+      const citationTargets = new Set<CitationTarget>();
+      let highlightTarget: AgentEntityId | undefined;
+      let navigateRoute: InternalRoute | undefined;
+      let suggestions: string[] | undefined;
 
       try {
         // 1. Signal "preparing" — system prompt construction is next.
@@ -242,28 +307,39 @@ export async function POST(req: NextRequest) {
           maxTokens: chatConfig.limits.maxOutputTokens,
           temperature: chatConfig.limits.temperature,
           signal: abortController.signal,
+          tools: CHAT_TOOLS,
         })[Symbol.asyncIterator]();
 
         // 6. Pull chunks and stream them. A throw here (pre-token or
         //    mid-stream) falls through to the unified catch below.
-        const emit = (chunk: LLMStreamChunk) => {
+        // tool_call/tool_result chunks arrive as structured stream parts
+        // (native tool-calling) — no text-tail to split out anymore.
+        const emit = async (chunk: LLMStreamChunk) => {
           if (chunk.type === "text") {
-            const visible = splitter.push(chunk.text);
-            if (visible) {
-              send({ type: ChatEventType.Token, text: visible });
+            if (chunk.text) send({ type: ChatEventType.Token, text: chunk.text });
+          } else if (chunk.type === "tool_call") {
+            send({ type: ChatEventType.Thinking, step: chunk.name });
+          } else if (chunk.type === "tool_result") {
+            if (SEARCH_TOOL_NAMES.has(chunk.name)) {
+              for (const agentId of extractSearchAgentIds(chunk.result)) {
+                citationTargets.add(agentId);
+              }
+            } else if (chunk.name === "highlight_resource") {
+              const target = extractHighlightTarget(chunk.result);
+              if (target) {
+                citationTargets.add(target);
+                if (target !== "resume") highlightTarget = target;
+              }
+            } else if (chunk.name === "navigate_to") {
+              navigateRoute = extractNavigateRoute(chunk.result) ?? navigateRoute;
+            } else if (chunk.name === "suggest_followups") {
+              suggestions = extractSuggestions(chunk.result) ?? suggestions;
             }
           } else if (chunk.type === "done") {
             void recordTokenUsage(ip, redis, chunk.usage.outputTokens).catch(
               (err) =>
                 console.error("[chat/route] recordTokenUsage failed:", err)
             );
-
-            const { remainder, raw } = splitter.finish();
-            if (remainder) {
-              send({ type: ChatEventType.Token, text: remainder });
-            }
-
-            const parsed = !isUndefined(raw) ? parseCommandStream(raw) : {};
 
             if (starIntentDetected) {
               send({
@@ -272,29 +348,30 @@ export async function POST(req: NextRequest) {
               });
             }
 
+            const citations = await resolveCitations(citationTargets);
+
             send({
               type: ChatEventType.Done,
-              suggestions: parsed.suggest,
-              highlight: parsed.highlight,
-              navigate: parsed.navigate,
+              suggestions,
+              highlight: highlightTarget,
+              navigate: navigateRoute,
+              citations,
             });
           }
-          // tool_call chunks are phase 2 (card/navigate events) — ignored for now.
         };
 
         let first = await iterator.next();
-        if (!first.done) emit(first.value);
+        if (!first.done) await emit(first.value);
         while (true) {
           const next = await iterator.next();
           if (next.done) break;
-          emit(next.value);
+          await emit(next.value);
         }
       } catch (err) {
         // Unified error handler — covers both pre-token failures (no
         // fallback configured / exhausted) and mid-stream failures.
         // Rate-limited errors from the provider are surfaced distinctly;
         // everything else is a generic upstream error.
-        splitter.finish();
         const code: ChatErrorCode =
           err instanceof LLMError && err.code === "rate_limited"
             ? ChatErrorCode.RateLimited

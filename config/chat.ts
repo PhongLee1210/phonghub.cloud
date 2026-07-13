@@ -108,6 +108,14 @@ export const chatConfig = {
 export const THINKING_STEP_LABELS: Record<string, string> = {
   preparing: "Preparing",
   thinking: "Reading the portfolio",
+  search_projects: "Searching projects",
+  search_experiences: "Searching experience",
+  search_skills: "Searching skills",
+  search_resume: "Checking the resume",
+  search_blog: "Searching blog posts",
+  highlight_resource: "Highlighting",
+  navigate_to: "Preparing navigation",
+  suggest_followups: "Drafting follow-ups",
 };
 
 /** How long an agent highlight ring stays lit before auto-clearing.
