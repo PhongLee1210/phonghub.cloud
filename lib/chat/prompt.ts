@@ -1,4 +1,10 @@
-/** Routes the assistant is ever allowed to suggest navigating to. */
+/**
+ * Routes the assistant is ever allowed to suggest navigating to. Kept in
+ * sync with `routesConfig.mainNav` (config/routes.ts) — every public nav
+ * destination belongs here too, even ones outside the four grounded data
+ * topics (e.g. /list100), since navigation is about real site pages, not
+ * just what the persona can answer questions about.
+ */
 export const ALLOWED_ROUTES = [
   "/skills",
   "/projects",
@@ -8,6 +14,7 @@ export const ALLOWED_ROUTES = [
   "/contact",
   "/blogs",
   "/blogs/<slug>",
+  "/list100",
 ] as const;
 
 /** Tags wrapping the JSON data block in the rendered system prompt. */
