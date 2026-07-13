@@ -11,11 +11,26 @@ export type InternalRoute =
   | "/resume"
   | "/contact"
   | "/blogs"
+  | "/list100"
   | `/projects/${string}`
   | `/blogs/${string}`;
 
 export type EntityKind = "project" | "skill" | "experience" | "blog";
 export type AgentEntityId = `${EntityKind}:${string}`;
+
+/**
+ * Broader than EntityKind: resume is a citable resource but not an
+ * addressable entity (no id space of its own, so it has no AgentEntityId).
+ */
+export type CitationKind = EntityKind | "resume";
+
+/** Per plan §"Citation Data Model" — what every agent response cites. */
+export interface AgentCitation {
+  id: string;
+  type: CitationKind;
+  title: string;
+  href: string;
+}
 
 export interface ProjectCardPayload {
   projectId: string;
