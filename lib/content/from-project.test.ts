@@ -38,8 +38,7 @@ describe("resolveSkillTag", () => {
 
 const baseProject: ProjectInterface = {
   id: "sample-project",
-  type: "Personal",
-  companyName: "Sample Project",
+  organization: { name: "Sample Project", type: "personal" },
   category: ["Web Dev"],
   shortDescription: "A sample project for testing.",
   techStack: ["Next.js", "React"],

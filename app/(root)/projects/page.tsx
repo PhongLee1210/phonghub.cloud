@@ -40,7 +40,10 @@ export default async function ProjectsPage() {
       content: (
         <div className="mx-auto my-4 grid justify-center gap-4 sm:grid-cols-2 lg:grid-cols-3 static">
           {projects
-            .filter((project: ProjectInterface) => project.type === "Personal")
+            .filter(
+              (project: ProjectInterface) =>
+                project.organization.type === "personal"
+            )
             .map((project: ProjectInterface) => (
               <ProjectCard project={project} key={project.id} />
             ))}
@@ -54,7 +57,8 @@ export default async function ProjectsPage() {
         <div className="mx-auto my-4 grid justify-center gap-4 sm:grid-cols-2 lg:grid-cols-3 static">
           {projects
             .filter(
-              (project: ProjectInterface) => project.type === "Professional"
+              (project: ProjectInterface) =>
+                project.organization.type === "professional"
             )
             .map((project: ProjectInterface) => (
               <ProjectCard project={project} key={project.id} />

@@ -9,7 +9,7 @@ export type ValidCategory =
   | "Mobile Dev"
   | "3D Modeling";
 
-export type ValidExpType = "Personal" | "Professional";
+export type ValidExpType = "personal" | "professional";
 
 export type ValidPages =
   | "home"

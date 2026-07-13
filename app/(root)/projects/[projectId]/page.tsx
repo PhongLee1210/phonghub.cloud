@@ -56,15 +56,8 @@ export default async function ProjectPage({ params }: ProjectPageProps) {
           {formatDate(project.startDate)}
         </time>
         <h1 className="flex items-center justify-between mt-2 font-heading text-4xl leading-tight lg:text-5xl">
-          {project.companyName}
+          {project.organization.name}
           <div className="flex items-center">
-            {project.githubLink && (
-              <CustomTooltip text="Link to the source code.">
-                <Link href={project.githubLink} target="_blank">
-                  <Icons.gitHub className="w-6 ml-4 text-muted-foreground hover:text-foreground" />
-                </Link>
-              </CustomTooltip>
-            )}
             {project.websiteLink && (
               <CustomTooltip text="Please note that some project links may be temporarily unavailable.">
                 <Link href={project.websiteLink} target="_blank">
@@ -100,7 +93,7 @@ export default async function ProjectPage({ params }: ProjectPageProps) {
 
       <AdaptiveImage
         src={project.companyLogoImg}
-        alt={project.companyName}
+        alt={project.organization.name}
         containerClassName="mx-auto my-4"
       />
 

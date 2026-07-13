@@ -44,7 +44,7 @@ export async function buildSystemPrompt(): Promise<{
     guardrails: `${GUARDRAILS}\n\n${RESPONSE_FORMAT_INSTRUCTIONS}`,
     projects: PROJECTS.map((p) => ({
       agentId: buildEntityId("project", p.id),
-      companyName: p.companyName,
+      companyName: p.organization.name,
       shortDescription: p.shortDescription,
       descriptionPreview: p.descriptionDetails?.paragraphs?.[0],
       techStack: p.techStack,

@@ -37,7 +37,7 @@ export const EXPERIENCES: ExperienceInterface[] = [
       "Introduced Docker-based CI/CD pipelines (GitHub Actions) and containerized deployments to staging/production, shortening release lead time and enabling safe rollbacks.",
     ],
     skills: [
-      "Typescript",
+      "TypeScript",
       "Node.js",
       "FastAPI",
       "GraphQL",
@@ -80,7 +80,7 @@ export const EXPERIENCES: ExperienceInterface[] = [
     skills: [
       "Vue.js",
       "Node.js",
-      "Typescript",
+      "TypeScript",
       "MongoDB",
       "AWS",
       "Docker",
@@ -114,12 +114,7 @@ export const EXPERIENCES: ExperienceInterface[] = [
       "Gained hands-on experience in sales and advertising within the telecom industry.",
       "Built foundation for professional career through practical internship experience.",
     ],
-    skills: [
-      "Sales",
-      "Advertising Sales",
-      "Customer Service",
-      "Technical Support",
-    ],
+    skills: ["Sales", "Customer Service"],
     companyUrl: "https://fpt.vn",
     logo: "/experience/fpt-telecom-logo.webp",
   },
