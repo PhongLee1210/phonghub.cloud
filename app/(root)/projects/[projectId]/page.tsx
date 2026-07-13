@@ -10,7 +10,6 @@ import ChipContainer from "@/components/ui/chip-container";
 import CustomTooltip from "@/components/ui/custom-tooltip";
 import { PROJECTS } from "@/config/projects";
 import { siteConfig } from "@/config/site";
-import { getApiBaseUrl } from "@/lib/api";
 import { cn, formatDate } from "@/lib/utils";
 
 interface ProjectPageProps {
@@ -19,17 +18,8 @@ interface ProjectPageProps {
   }>;
 }
 
-export async function generateStaticParams() {
-  const { projects } = await fetch(`${getApiBaseUrl()}/api/projects`, {
-    method: "GET",
-    headers: {
-      "Content-Type": "application/json",
-    },
-  })
-    .then((res) => res.json())
-    .catch(() => ({ projects: PROJECTS }));
-
-  return projects.map((project: { id: string }) => ({
+export function generateStaticParams() {
+  return PROJECTS.map((project) => ({
     projectId: project.id,
   }));
 }

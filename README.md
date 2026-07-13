@@ -59,7 +59,6 @@ cp .env.example .env.local
 
 | Variable | Purpose |
 |---|---|
-| `NEXT_PUBLIC_APP_URL` | Base URL used to call this app's own API routes (`/api/projects`, `/api/skills`, etc.) during build-time prerendering. Must be a reachable URL (e.g. your deployed URL) since no local server runs during `next build`. |
 | `NEXT_PUBLIC_GOOGLE_MEASUREMENT_ID` | Google Analytics measurement ID. |
 | `NEXT_PUBLIC_GOOGLE_VERIFICATION` | Google Search Console site verification token. |
 | `NEXT_PUBLIC_RESUME_LINK` | Link used by the résumé page/download action. |

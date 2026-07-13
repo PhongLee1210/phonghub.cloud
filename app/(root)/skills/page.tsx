@@ -9,7 +9,6 @@ import {
   SkillCategoryEnum,
   SKILLS,
 } from "@/config/skills";
-import { getApiBaseUrl } from "@/lib/api";
 
 export const metadata: Metadata = {
   title: pagesConfig.skills.metadata.title,
@@ -83,18 +82,11 @@ const CATEGORY_SECTIONS: {
   },
 ];
 
-export default async function SkillsPage() {
-  const { skills } = await fetch(`${getApiBaseUrl()}/api/skills`, {
-    method: "GET",
-    headers: { "Content-Type": "application/json" },
-  })
-    .then((res) => res.json())
-    .catch(() => ({ skills: SKILLS }));
-
+export default function SkillsPage() {
   const categories: SkillCategory[] = CATEGORY_SECTIONS.map((section) => ({
     title: section.title,
     description: section.description,
-    skills: skills.filter(
+    skills: SKILLS.filter(
       (skill: ISkill) => skill.category === section.category
     ),
   })).filter((section) => section.skills.length > 0);
