@@ -99,7 +99,8 @@ const MessageRow = memo(function MessageRow({
             isUser
               ? "whitespace-pre-wrap rounded-br-sm border-2 border-chat-bubble-user-border bg-chat-bubble-user text-foreground dark:text-muted-foreground"
               : "rounded-tl-sm border border-chat-border bg-chat-bubble-ai text-foreground dark:text-muted-foreground",
-            message.error && "border-destructive/50"
+            message.error && isUser && "border-destructive/70",
+            message.error && !isUser && "border-destructive/50"
           )}
         >
           {isUser ? (
@@ -132,7 +133,14 @@ const MessageRow = memo(function MessageRow({
         )}
         {message.action === "star_repo" && <StarButton variant="inline" />}
         <span className="px-1 text-[0.65rem] text-muted-foreground">
-          {relativeTime(message.createdAt)}
+          {isUser && message.error ? (
+            <span className="flex items-center gap-1 text-destructive">
+              <Icons.warning className="h-3 w-3" />
+              Not sent
+            </span>
+          ) : (
+            relativeTime(message.createdAt)
+          )}
         </span>
       </div>
     </motion.div>

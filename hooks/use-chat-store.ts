@@ -349,11 +349,22 @@ export const useChatStore = create<ChatStoreState>((set, get) => ({
           tokenBuffer = "";
 
           set((state) => {
-            const newMessages = state.messages.map((m) =>
-              m.id === assistantMessage.id
-                ? { ...m, content: partialContent, error: true }
-                : m
-            );
+            let newMessages: ChatMessage[];
+            if (!partialContent) {
+              // No content streamed — drop empty assistant bubble, mark user message as failed
+              newMessages = state.messages
+                .filter((m) => m.id !== assistantMessage.id)
+                .map((m) =>
+                  m.id === userMessage.id ? { ...m, error: true } : m
+                );
+            } else {
+              // Partial content streamed — keep assistant bubble with error styling
+              newMessages = state.messages.map((m) =>
+                m.id === assistantMessage.id
+                  ? { ...m, content: partialContent, error: true }
+                  : m
+              );
+            }
             const newConversations = state.conversations.map((c) =>
               c.id === activeConversationId
                 ? { ...c, messages: newMessages }

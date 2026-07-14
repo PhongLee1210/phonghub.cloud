@@ -1,6 +1,6 @@
 "use client";
 
-import { motion, Variants } from "framer-motion";
+import { AnimatePresence, motion, Variants } from "framer-motion";
 import { useTheme } from "next-themes";
 import Image from "next/image";
 import Link from "next/link";
@@ -8,7 +8,7 @@ import { usePathname, useSelectedLayoutSegment } from "next/navigation";
 import * as React from "react";
 
 import { Icons } from "@/components/common/icons";
-import { MobileNav } from "@/components/common/mobile-nav";
+import { MobileNavSheet } from "@/components/common/mobile-nav-sheet";
 import { siteConfig } from "@/config/site";
 import { cn } from "@/lib/utils";
 
@@ -23,9 +23,11 @@ const navItemVariants: Variants = {
     opacity: 1,
     y: 0,
     transition: {
+      type: "spring",
+      damping: 28,
+      stiffness: 200,
+      mass: 0.8,
       delay: 0.1 * i,
-      duration: 0.45,
-      ease: [0.22, 1, 0.36, 1],
     },
   }),
 };
@@ -94,9 +96,7 @@ export function MainNav({ items, children }: MainNavProps) {
             ? "text-foreground"
             : "text-foreground/60",
           item.disabled && "cursor-not-allowed opacity-80",
-          item.href === "/list100" && [
-            "animate-pulse text-gradient-animated",
-          ]
+          item.href === "/list100" && ["animate-pulse text-gradient-animated"]
         )}
       >
         {item.title}
@@ -111,69 +111,96 @@ export function MainNav({ items, children }: MainNavProps) {
   );
 
   return (
-    <nav className="absolute left-[40px] right-[40px] top-[24px] z-[100] flex items-center justify-between">
-      {/* Desktop: left nav items */}
-      <nav className="hidden gap-6 md:flex">
-        {leftItems.map((item, index) => renderItem(item, index))}
-      </nav>
-
-      {/* Desktop: centered logo */}
-      <motion.div
-        initial={{ opacity: 0, scale: 0.9 }}
-        animate={{ opacity: 1, scale: 1 }}
-        transition={{ duration: 0.45 }}
-        className="absolute left-1/2 hidden -translate-x-1/2 md:block"
+    <>
+      <nav
+        className="fixed left-0 right-0 top-0 z-[100] px-4 pb-2 pt-[max(12px,var(--safe-top,12px))]"
       >
-        <Link href="/" className="flex items-center space-x-2">
-          <Image
-            src={logoSrc}
-            alt={siteConfig.authorName}
-            width={120}
-            height={40}
-            className="h-8 w-auto"
-            priority
-          />
-        </Link>
-      </motion.div>
+        <div
+          className={cn(
+            "nav-material",
+            "flex items-center justify-between",
+            "rounded-2xl border border-white/[0.12]",
+            "bg-background/60 px-4 py-2.5",
+            "backdrop-blur-xl backdrop-saturate-[180%]",
+            "shadow-[0_1px_0_rgba(255,255,255,0.08)_inset,0_1px_8px_rgba(0,0,0,0.06)]",
+            "dark:border-white/[0.06] dark:bg-background/50"
+          )}
+        >
+          {/* Desktop: left nav items */}
+          <nav className="hidden gap-6 md:flex">
+            {leftItems.map((item, index) => renderItem(item, index))}
+          </nav>
 
-      {/* Desktop: right nav items + ModeToggle */}
-      <nav className="hidden items-center gap-5 md:flex">
-        {rightItems.map((item, index) => renderItem(item, index))}
-        {children}
+          {/* Desktop: centered logo */}
+          <motion.div
+            initial={{ opacity: 0, scale: 0.9 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ type: "spring", damping: 28, stiffness: 200 }}
+            className="absolute left-1/2 hidden -translate-x-1/2 md:block"
+          >
+            <Link href="/" className="flex items-center space-x-2">
+              <Image
+                src={logoSrc}
+                alt={siteConfig.authorName}
+                width={120}
+                height={40}
+                className="h-8 w-auto"
+                priority
+              />
+            </Link>
+          </motion.div>
+
+          {/* Desktop: right nav items + ModeToggle */}
+          <nav className="hidden items-center gap-5 md:flex">
+            {rightItems.map((item, index) => renderItem(item, index))}
+            {children}
+          </nav>
+
+          {/* Mobile: logo left + hamburger right */}
+          <div className="flex w-full items-center justify-between md:hidden">
+            <motion.div
+              initial={{ opacity: 0, scale: 0.9 }}
+              animate={{ opacity: 1, scale: 1 }}
+              transition={{ type: "spring", damping: 28, stiffness: 200 }}
+            >
+              <Link href="/" className="flex items-center space-x-2">
+                <Image
+                  src={logoSrc}
+                  alt={siteConfig.authorName}
+                  width={120}
+                  height={40}
+                  className="h-8 w-auto"
+                  priority
+                />
+              </Link>
+            </motion.div>
+            <div className="flex items-center gap-3">
+              {children}
+              <motion.button
+                className="flex min-h-[44px] min-w-[44px] items-center justify-center -mr-2"
+                onClick={() => setShowMobileMenu(!showMobileMenu)}
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+                aria-label={showMobileMenu ? "Close menu" : "Open menu"}
+                aria-expanded={showMobileMenu}
+              >
+                {showMobileMenu ? <Icons.close /> : <Icons.menu />}
+              </motion.button>
+            </div>
+          </div>
+        </div>
       </nav>
 
-      {/* Mobile: logo left + hamburger right */}
-      <div className="flex w-full items-center justify-between md:hidden">
-        <motion.div
-          initial={{ opacity: 0, scale: 0.9 }}
-          animate={{ opacity: 1, scale: 1 }}
-          transition={{ duration: 0.45 }}
-        >
-          <Link href="/" className="flex items-center space-x-2">
-            <Image
-              src={logoSrc}
-              alt={siteConfig.authorName}
-              width={120}
-              height={40}
-              className="h-8 w-auto"
-              priority
-            />
-          </Link>
-        </motion.div>
-        <div className="flex items-center gap-3">
-          {children}
-          <motion.button
-            className="flex items-center space-x-2"
-            onClick={() => setShowMobileMenu(!showMobileMenu)}
-            whileHover={{ scale: 1.05 }}
-            whileTap={{ scale: 0.95 }}
+      <AnimatePresence>
+        {showMobileMenu && (
+          <MobileNavSheet
+            items={items}
+            onClose={() => setShowMobileMenu(false)}
           >
-            {showMobileMenu ? <Icons.close /> : <Icons.menu />}
-          </motion.button>
-        </div>
-      </div>
-
-      {showMobileMenu && <MobileNav items={items}>{children}</MobileNav>}
-    </nav>
+            {children}
+          </MobileNavSheet>
+        )}
+      </AnimatePresence>
+    </>
   );
 }

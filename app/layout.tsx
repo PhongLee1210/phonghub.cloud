@@ -5,10 +5,11 @@ import { Inter as FontSans, Karla, Miniver } from "next/font/google";
 import localFont from "next/font/local";
 
 import { Analytics } from "@/components/common/analytics";
-import { GlobalChatWidget } from "@/components/chat/global-chat-widget";
 import { ThemeProvider } from "@/components/common/theme-provider";
+import { GlobalChatWidgetLoader } from "@/components/chat/global-chat-widget-loader";
 import { Toaster } from "@/components/ui/toaster";
 import { siteConfig } from "@/config/site";
+import { getDeviceHint } from "@/lib/device";
 import { cn } from "@/lib/utils";
 import { ModalProvider } from "@/providers/modal-provider";
 
@@ -38,6 +39,16 @@ const fontMiniver = Miniver({
 interface RootLayoutProps {
   children: React.ReactNode;
 }
+
+export const viewport = {
+  width: "device-width",
+  initialScale: 1,
+  viewportFit: "cover",
+  themeColor: [
+    { media: "(prefers-color-scheme: light)", color: "#f7f6f3" },
+    { media: "(prefers-color-scheme: dark)", color: "#060a14" },
+  ],
+};
 
 export const metadata = {
   metadataBase: new URL(siteConfig.url),
@@ -108,8 +119,9 @@ export const metadata = {
   },
 };
 
-export default function RootLayout({ children }: RootLayoutProps) {
+export default async function RootLayout({ children }: RootLayoutProps) {
   const GA_ID = process.env.NEXT_PUBLIC_GOOGLE_MEASUREMENT_ID;
+  const { isMobile } = await getDeviceHint();
 
   return (
     <html lang="en" suppressHydrationWarning>
@@ -134,7 +146,7 @@ export default function RootLayout({ children }: RootLayoutProps) {
           <Analytics />
           <Toaster />
           <ModalProvider />
-          <GlobalChatWidget />
+          <GlobalChatWidgetLoader isMobile={isMobile} />
         </ThemeProvider>
       </body>
       {GA_ID && <GoogleAnalytics gaId={GA_ID} />}

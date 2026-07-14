@@ -11,7 +11,11 @@ import { useChatStore } from "@/hooks/use-chat-store";
 
 const HINT_DELAY_MS = 5000;
 
-export const HeroAssistant = () => {
+interface HeroAssistantProps {
+  isMobile?: boolean;
+}
+
+export const HeroAssistant = ({ isMobile }: HeroAssistantProps) => {
   const [isMounted, setIsMounted] = useState(false);
   const [isWidgetOpen, setIsWidgetOpen] = useState(false);
   const [showHint, setShowHint] = useState(false);
@@ -52,12 +56,13 @@ export const HeroAssistant = () => {
           isOpen={isOpen}
           onClose={() => setOpen(false)}
           launcherRef={launcherRef}
+          isMobile={isMobile}
         />
       </div>
 
       {/* Desktop: circle FAB toggles the widget */}
       {!isWidgetOpen && (
-        <div className="fixed bottom-[42px] right-[48px] z-30 hidden items-center gap-3 md:flex">
+        <div className="fixed bottom-[max(42px,calc(var(--safe-bottom,0px)+24px))] right-[48px] z-30 hidden items-center gap-3 md:flex">
           <AnimatePresence>
             {showHint && (
               <motion.button
@@ -69,10 +74,11 @@ export const HeroAssistant = () => {
                 initial={{ opacity: 0, x: -20 }}
                 animate={{ opacity: 1, x: 0 }}
                 exit={{ opacity: 0, x: -20 }}
-                transition={{
-                  duration: reducedMotion ? 0 : 0.4,
-                  ease: "easeOut",
-                }}
+                transition={
+                  reducedMotion
+                    ? { duration: 0 }
+                    : { type: "spring", damping: 28, stiffness: 200, mass: 0.8 }
+                }
                 className="cursor-pointer whitespace-nowrap rounded-full bg-card px-4 py-2 text-sm font-medium text-foreground shadow-md"
               >
                 Ask me anything
@@ -88,8 +94,12 @@ export const HeroAssistant = () => {
             }}
             initial={{ opacity: 0, scale: 0.8 }}
             animate={{ opacity: 1, scale: 1 }}
-            transition={{ duration: reducedMotion ? 0 : 0.3 }}
-            className="flex h-14 w-14 shrink-0 items-center justify-center rounded-full bg-chat-launcher text-foreground shadow-lavender-glow transition-transform hover:scale-[1.05] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+            transition={
+              reducedMotion
+                ? { duration: 0 }
+                : { type: "spring", damping: 28, stiffness: 200, mass: 0.8 }
+            }
+            className="flex h-14 w-14 shrink-0 items-center justify-center rounded-full bg-chat-launcher text-foreground shadow-lavender-glow transition-transform active:scale-[0.94] hover:scale-[1.05] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
           >
             <span className="relative flex h-5 w-5 items-center justify-center">
               <Icons.chatBubble className="h-5 w-5" />
@@ -104,10 +114,11 @@ export const HeroAssistant = () => {
         <motion.div
           initial={{ opacity: 0, y: 16 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{
-            duration: reducedMotion ? 0 : 0.45,
-            ease: [0.22, 1, 0.36, 1],
-          }}
+          transition={
+            reducedMotion
+              ? { duration: 0 }
+              : { type: "spring", damping: 28, stiffness: 200, mass: 0.8 }
+          }
           className="fixed right-[60px] top-[80px] z-20 hidden w-[380px] md:block"
         >
           <div className="relative flex h-[calc(100dvh-120px)] max-h-[640px] min-h-[440px] flex-col overflow-hidden rounded-[28px] bg-chat-bg shadow-large">

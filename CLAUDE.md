@@ -12,6 +12,7 @@ Always review:
 
 - [README.md](README.md): Project structure, stack, and onboarding
 - [docs/GIT_WORKFLOW.md](docs/GIT_WORKFLOW.md): Branch, commit, and PR workflow
+- [docs/MOBILE_FIRST.md](docs/MOBILE_FIRST.md): Mobile-first patterns
 
 ## Verification & Testing
 
@@ -79,6 +80,7 @@ bun install                     # deps are NOT installed automatically
 - IF the same set of Tailwind utility classes is repeated across 3+ usages, extract it into a reusable component or a `cva`/`class-variance-authority` variant instead of copy-pasting the class string.
 
 ### Runtime Type Guards (`lib/guards.ts`)
+
 Always use `lib/guards.ts` for runtime type checks.
 
 ### Tailwind CSS Design System

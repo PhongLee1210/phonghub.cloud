@@ -7,7 +7,11 @@ import { ChatPanel } from "@/components/chat/chat-panel";
 import { useAgentBridge } from "@/hooks/use-agent-bridge";
 import { useChatStore } from "@/hooks/use-chat-store";
 
-export const ChatWidget = () => {
+interface ChatWidgetProps {
+  isMobile?: boolean;
+}
+
+export const ChatWidget = ({ isMobile }: ChatWidgetProps) => {
   const [isMounted, setIsMounted] = useState(false);
   const launcherRef = useRef<HTMLButtonElement>(null);
   const { isOpen, setOpen, hydrate } = useChatStore();
@@ -33,6 +37,7 @@ export const ChatWidget = () => {
         isOpen={isOpen}
         onClose={() => setOpen(false)}
         launcherRef={launcherRef}
+        isMobile={isMobile}
       />
     </>
   );
