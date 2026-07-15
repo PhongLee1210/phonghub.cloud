@@ -37,9 +37,7 @@ export const ScrollToExplore = () => {
         {heroCopy.scrollHint}
       </span>
       <Icons.arrowDown
-        className={`h-4 w-4 text-muted-foreground ${
-          reducedMotion ? "" : "animate-bounce"
-        }`}
+        className="h-4 w-4 text-muted-foreground animate-bounce"
       />
     </motion.div>
   );

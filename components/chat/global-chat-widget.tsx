@@ -4,8 +4,12 @@ import { usePathname } from "next/navigation";
 
 import { ChatWidget } from "@/components/chat/chat-widget";
 
-export const GlobalChatWidget = () => {
+interface GlobalChatWidgetProps {
+  isMobile?: boolean;
+}
+
+export const GlobalChatWidget = ({ isMobile }: GlobalChatWidgetProps) => {
   const pathname = usePathname();
   if (pathname === "/") return null;
-  return <ChatWidget />;
+  return <ChatWidget isMobile={isMobile} />;
 };

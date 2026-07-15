@@ -31,7 +31,7 @@ export const ChatLauncher = forwardRef<HTMLButtonElement, ChatLauncherProps>(
     }, [isOpen]);
 
     return (
-      <div className="fixed bottom-6 right-6 z-[60] flex items-center gap-3">
+      <div className="fixed bottom-[calc(var(--safe-bottom,0px)+5rem)] right-4 z-[60] flex items-center gap-3 md:bottom-[max(1.5rem,calc(var(--safe-bottom,0px)+0.75rem))] md:right-6">
         <AnimatePresence>
           {showHint && !isOpen && (
             <motion.button
@@ -40,10 +40,11 @@ export const ChatLauncher = forwardRef<HTMLButtonElement, ChatLauncherProps>(
               initial={{ opacity: 0, x: -20 }}
               animate={{ opacity: 1, x: 0 }}
               exit={{ opacity: 0, x: -20 }}
-              transition={{
-                duration: reducedMotion ? 0 : 0.4,
-                ease: "easeOut",
-              }}
+              transition={
+                reducedMotion
+                  ? { duration: 0 }
+                  : { type: "spring", damping: 28, stiffness: 200, mass: 0.8 }
+              }
               className="cursor-pointer whitespace-nowrap rounded-full bg-card px-4 py-2 text-sm font-medium text-foreground shadow-md"
             >
               Ask me anything
@@ -60,7 +61,7 @@ export const ChatLauncher = forwardRef<HTMLButtonElement, ChatLauncherProps>(
             "relative flex h-14 w-14 shrink-0 items-center justify-center rounded-full",
             "bg-chat-launcher text-foreground",
             "shadow-[0_4px_16px_hsl(var(--foreground)/0.10)]",
-            "transition-transform hover:scale-[1.05]",
+            "transition-transform active:scale-[0.94] hover:scale-[1.05]",
             isOpen && "max-[480px]:hidden"
           )}
         >

@@ -1,3 +1,4 @@
+import { BottomTabBar } from "@/components/common/bottom-tab-bar";
 import { MainNav } from "@/components/common/main-nav";
 import { ModeToggle } from "@/components/common/mode-toggle";
 import { SiteFooter } from "@/components/common/site-footer";
@@ -13,7 +14,10 @@ export default function MarketingLayout({ children }: MarketingLayoutProps) {
       <MainNav items={routesConfig.mainNav}>
         <ModeToggle />
       </MainNav>
-      <main className="flex-1">{children}</main>
+      <main className="flex-1 pb-[calc(var(--safe-bottom,0px)+4rem)] md:pb-0">
+        {children}
+      </main>
+      <BottomTabBar />
       <SiteFooter />
     </div>
   );

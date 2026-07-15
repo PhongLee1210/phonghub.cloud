@@ -15,7 +15,7 @@ export default function PageContainer({
 }: PageContainerProps) {
   return (
     <ClientPageWrapper>
-      <main className="container mx-auto p-4">
+      <main className="container mx-auto px-4 pb-4 pt-[calc(var(--safe-top,0px)+4.5rem)]">
         {description ? (
           <>
             <PageHeader title={title} description={description} />
