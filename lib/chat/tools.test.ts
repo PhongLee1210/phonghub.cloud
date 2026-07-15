@@ -128,6 +128,56 @@ describe("navigate_to", () => {
   });
 });
 
+describe("focus", () => {
+  test("accepts a well-formed entity id", async () => {
+    const result = await execute("focus", {
+      target: `skill:${PROJECTS[0].techStack[0]}`,
+    });
+    expect(result).toMatchObject({ ok: true });
+  });
+
+  test("rejects a malformed id", async () => {
+    const result = await execute("focus", { target: "not-an-id" });
+    expect(result).toEqual({
+      ok: false,
+      target: "not-an-id",
+      reason: "unrecognized agentId format",
+    });
+  });
+});
+
+describe("open_modal", () => {
+  test("accepts a well-formed entity id", async () => {
+    const result = await execute("open_modal", {
+      target: `project:${PROJECTS[0].id}`,
+    });
+    expect(result).toEqual({ ok: true, target: `project:${PROJECTS[0].id}` });
+  });
+
+  test("accepts 'resume'", async () => {
+    const result = await execute("open_modal", { target: "resume" });
+    expect(result).toEqual({ ok: true, target: "resume" });
+  });
+
+  test("rejects a malformed id", async () => {
+    const result = await execute("open_modal", { target: "not-an-id" });
+    expect(result).toEqual({
+      ok: false,
+      target: "not-an-id",
+      reason: "unrecognized agentId format",
+    });
+  });
+});
+
+describe("expand_section", () => {
+  test("accepts a well-formed entity id", async () => {
+    const result = await execute("expand_section", {
+      target: `project:${PROJECTS[0].id}`,
+    });
+    expect(result).toEqual({ ok: true, target: `project:${PROJECTS[0].id}` });
+  });
+});
+
 describe("suggest_followups", () => {
   test("echoes back the questions", async () => {
     const result = await execute("suggest_followups", {

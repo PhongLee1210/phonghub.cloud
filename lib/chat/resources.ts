@@ -6,13 +6,11 @@ import { PROJECTS } from "@/config/projects";
 import { SKILLS } from "@/config/skills";
 import { getPostBySlug } from "@/lib/blog/service";
 import { parseEntityId } from "@/lib/chat/protocol";
-import { AgentCitation, AgentEntityId } from "@/types/chat";
+import { AgentCitation, CitationTarget } from "@/types/chat";
 
 const CONTENT_DIR = "content/blog";
 
-/** resolveCitation's input — every addressable entity id, plus the resume
- * singleton, which has no id space of its own (see CitationKind). */
-export type CitationTarget = AgentEntityId | "resume";
+export type { CitationTarget };
 
 /**
  * Resolves any citable resource to the shape the client renders as a
@@ -28,6 +26,7 @@ export async function resolveCitation(
       id: "resume",
       type: "resume",
       title: RESUME_RESOURCE.title,
+      description: RESUME_RESOURCE.description,
       href: RESUME_RESOURCE.href,
     };
   }
@@ -47,6 +46,7 @@ export async function resolveCitation(
         id: project.id,
         type: "project",
         title: project.organization.name,
+        description: project.shortDescription,
         href: `/projects/${project.id}`,
       };
     }
@@ -62,6 +62,7 @@ export async function resolveCitation(
         id: experience.id,
         type: "experience",
         title: experience.company,
+        description: experience.description[0] ?? "",
         href: `/experience/${experience.id}`,
       };
     }
@@ -76,6 +77,7 @@ export async function resolveCitation(
         id: skill.key,
         type: "skill",
         title: skill.name,
+        description: skill.description,
         href: "/skills",
       };
     }
@@ -89,6 +91,7 @@ export async function resolveCitation(
         id: post.slug,
         type: "blog",
         title: post.frontmatter.title,
+        description: post.frontmatter.summary,
         href: `/blogs/${post.slug}`,
       };
     }

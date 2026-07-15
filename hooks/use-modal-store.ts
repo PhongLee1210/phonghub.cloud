@@ -1,20 +1,20 @@
+import type { ComponentType } from "react";
 import { create } from "zustand";
+
+/** Every entry in components/common/icons.tsx's Icons map fits this shape. */
+export type ModalIcon = ComponentType<{ className?: string }>;
 
 interface ModalDataProps {
   title: string;
   description: string;
-  icon: any;
-  // link?: {
-  //     label: string;
-  //     link: string;
-  // }
+  icon: ModalIcon | null;
 }
 
 interface ModalStoreProps {
   isOpen: boolean;
   title: string;
   description: string;
-  icon: any;
+  icon: ModalIcon | null;
   onOpen: (data: ModalDataProps) => void;
   onClose: () => void;
 }
@@ -24,7 +24,7 @@ export const useModalStore = create<ModalStoreProps>((set) => ({
   title: "",
   description: "",
   icon: null,
-  onOpen: (data: any) =>
+  onOpen: (data: ModalDataProps) =>
     set({
       isOpen: true,
       title: data.title,

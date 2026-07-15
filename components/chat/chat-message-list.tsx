@@ -4,6 +4,7 @@ import { motion, useReducedMotion } from "framer-motion";
 import { memo, useEffect, useMemo, useRef } from "react";
 
 import { MessageMarkdown } from "@/components/chat/message-markdown";
+import { ResourceCitationChips } from "@/components/chat/resource-citation-chips";
 import { StarButton } from "@/components/chat/star-button";
 import { SuggestionChips } from "@/components/chat/suggestion-chips";
 import { SuggestionList } from "@/components/chat/suggestion-list";
@@ -124,6 +125,9 @@ const MessageRow = memo(function MessageRow({
             />
           )}
         </div>
+        {!isUser && message.citations && message.citations.length > 0 && (
+          <ResourceCitationChips citations={message.citations} className="mt-1" />
+        )}
         {showSuggestions && message.suggestions && onSuggestionSelect && (
           <SuggestionChips
             suggestions={message.suggestions}
