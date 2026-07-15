@@ -1,5 +1,5 @@
 import { parseEntityId } from "@/lib/chat/protocol";
-import type { AgentEntityId } from "@/types/chat";
+import type { AgentCitation, AgentEntityId, CitationTarget } from "@/types/chat";
 
 /**
  * Resolves an agent entity id to its DOM node via data-agent-id.
@@ -16,4 +16,21 @@ export function resolveEntity(agentId: AgentEntityId): HTMLElement | null {
   return document.querySelector<HTMLElement>(
     `[data-agent-id="${agentId}"]`
   );
+}
+
+/**
+ * Matches a `CitationTarget` (e.g. from `DoneEvent.openModal`) against the
+ * server-resolved `AgentCitation[]` from the same turn, for open_modal /
+ * expand_section content — the client never re-derives title/description
+ * itself, it just picks the citation the server already resolved.
+ */
+export function findCitation(
+  citations: AgentCitation[] | undefined,
+  target: CitationTarget | undefined
+): AgentCitation | undefined {
+  if (!citations || !target) return undefined;
+  if (target === "resume") return citations.find((c) => c.type === "resume");
+  const parsed = parseEntityId(target);
+  if (!parsed) return undefined;
+  return citations.find((c) => c.type === parsed.kind && c.id === parsed.id);
 }

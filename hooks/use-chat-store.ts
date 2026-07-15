@@ -1,9 +1,11 @@
 import { create } from "zustand";
 
 import { chatConfig } from "@/config/chat";
+import { findCitation } from "@/lib/chat/entity-dom";
 import { streamChat } from "@/lib/chat/client";
 import { pickRandom } from "@/lib/utils";
 import {
+  AgentCitation,
   AgentEntityId,
   ChatMessage,
   ChatRole,
@@ -35,6 +37,9 @@ interface ChatStoreState {
   pendingNavigate?: InternalRoute;
   pendingHighlight?: AgentEntityId;
   activeHighlight?: AgentEntityId;
+  pendingFocus?: AgentEntityId;
+  activeFocus?: AgentEntityId;
+  pendingOpenModal?: AgentCitation;
   hydrated: boolean;
   errorMessage?: string;
   activeAbort?: () => void;
@@ -45,6 +50,9 @@ interface ChatStoreState {
   clearNavigate: () => void;
   clearHighlight: () => void;
   setActiveHighlight: (id: AgentEntityId | undefined) => void;
+  clearFocus: () => void;
+  setActiveFocus: (id: AgentEntityId | undefined) => void;
+  clearOpenModal: () => void;
   sendMessage: (text: string) => void;
   stopStreaming: () => void;
   reset: () => void;
@@ -145,6 +153,9 @@ export const useChatStore = create<ChatStoreState>((set, get) => ({
   pendingNavigate: undefined,
   pendingHighlight: undefined,
   activeHighlight: undefined,
+  pendingFocus: undefined,
+  activeFocus: undefined,
+  pendingOpenModal: undefined,
   hydrated: false,
 
   hydrate: () => {
@@ -202,6 +213,18 @@ export const useChatStore = create<ChatStoreState>((set, get) => ({
     set({ activeHighlight: id });
   },
 
+  clearFocus: () => {
+    set({ pendingFocus: undefined, activeFocus: undefined });
+  },
+
+  setActiveFocus: (id: AgentEntityId | undefined) => {
+    set({ activeFocus: id });
+  },
+
+  clearOpenModal: () => {
+    set({ pendingOpenModal: undefined });
+  },
+
   sendMessage: (text: string) => {
     const trimmed = text.trim().slice(0, chatConfig.limits.maxInputChars);
     if (!trimmed || get().status === ChatStatus.Streaming) return;
@@ -247,6 +270,9 @@ export const useChatStore = create<ChatStoreState>((set, get) => ({
       draft: "",
       pendingHighlight: undefined,
       activeHighlight: undefined,
+      pendingFocus: undefined,
+      activeFocus: undefined,
+      pendingOpenModal: undefined,
       errorMessage: undefined,
     });
     persist(updatedConversations, activeConversationId);
@@ -315,11 +341,19 @@ export const useChatStore = create<ChatStoreState>((set, get) => ({
 
           const resolved =
             done.suggestions ?? pickRandom(chatConfig.seedSuggestions, 3);
-          const hasCommand = Boolean(done.highlight || done.navigate);
+          const openModalCitation = findCitation(done.citations, done.openModal);
+          const hasCommand = Boolean(
+            done.highlight || done.focus || openModalCitation || done.navigate
+          );
           set((state) => {
             const messages = state.messages.map((m) =>
               m.id === assistantMessage.id
-                ? { ...m, content: finalContent, suggestions: resolved }
+                ? {
+                    ...m,
+                    content: finalContent,
+                    suggestions: resolved,
+                    citations: done.citations,
+                  }
                 : m
             );
             const newConversations = state.conversations.map((c) =>
@@ -336,6 +370,8 @@ export const useChatStore = create<ChatStoreState>((set, get) => ({
               messages,
               conversations: newConversations,
               pendingHighlight: done.highlight,
+              pendingFocus: done.focus,
+              pendingOpenModal: openModalCitation,
               pendingNavigate: done.navigate ?? state.pendingNavigate,
             };
           });
@@ -430,6 +466,9 @@ export const useChatStore = create<ChatStoreState>((set, get) => ({
       pendingNavigate: undefined,
       pendingHighlight: undefined,
       activeHighlight: undefined,
+      pendingFocus: undefined,
+      activeFocus: undefined,
+      pendingOpenModal: undefined,
       errorMessage: undefined,
       activeAbort: undefined,
     });
@@ -451,6 +490,9 @@ export const useChatStore = create<ChatStoreState>((set, get) => ({
       pendingNavigate: undefined,
       pendingHighlight: undefined,
       activeHighlight: undefined,
+      pendingFocus: undefined,
+      activeFocus: undefined,
+      pendingOpenModal: undefined,
       errorMessage: undefined,
       activeAbort: undefined,
     }));
@@ -472,6 +514,9 @@ export const useChatStore = create<ChatStoreState>((set, get) => ({
       pendingNavigate: undefined,
       pendingHighlight: undefined,
       activeHighlight: undefined,
+      pendingFocus: undefined,
+      activeFocus: undefined,
+      pendingOpenModal: undefined,
       errorMessage: undefined,
       activeAbort: undefined,
     });
