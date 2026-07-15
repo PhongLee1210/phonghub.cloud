@@ -7,7 +7,7 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint .",
-    "test": "bun test --conditions react-server"
+    "test": "bun test --conditions react-server --path-ignore-patterns '**/worktrees/**'"
   },
   "dependencies": {
     "@ai-sdk/anthropic": "^4.0.8",

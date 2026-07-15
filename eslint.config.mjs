@@ -1,6 +1,12 @@
 import nextCoreWebVitals from "eslint-config-next/core-web-vitals";
 
 const eslintConfig = [
+  // Global ignore — a config object with *only* `ignores` skips these files
+  // entirely (unlike the rules-scoped `ignores` below, which only opts files
+  // out of that one rule). Sibling git worktrees live on disk under the repo
+  // root but are separate checkouts (often on older/stale branches) — never
+  // part of this checkout's own lint.
+  { ignores: ["worktrees/**"] },
   ...nextCoreWebVitals,
   {
     ignores: ["lib/llm/**", "lib/chat/tools.ts", "lib/chat/tools.test.ts"],
