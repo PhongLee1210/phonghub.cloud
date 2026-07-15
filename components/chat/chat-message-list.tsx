@@ -69,7 +69,7 @@ const MessageRow = memo(function MessageRow({
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: reducedMotion ? 0 : 0.22, ease: "easeOut" }}
       className={cn(
-        "flex items-end gap-2",
+        "flex min-w-0 items-end gap-2",
         isUser ? "self-end flex-row-reverse" : "self-start"
       )}
     >
@@ -187,7 +187,7 @@ export const ChatMessageList = ({
     <div
       ref={containerRef}
       onScroll={onScroll}
-      className="flex flex-1 flex-col gap-[12px] overflow-y-auto p-[16px] pb-[8px]"
+      className="flex flex-1 flex-col gap-[12px] overflow-x-hidden overflow-y-auto p-[16px] pb-[8px]"
       role="log"
       aria-live="polite"
       aria-relevant="additions"

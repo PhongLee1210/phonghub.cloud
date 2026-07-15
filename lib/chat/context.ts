@@ -63,8 +63,9 @@ export async function buildSystemPrompt(): Promise<{
       company: e.company,
       startDate: e.startDate,
       endDate: e.endDate,
-      description: e.description,
-      achievements: e.achievements,
+      // Cap to first 2 items — model synthesizes; full arrays inflate context unnecessarily.
+      description: e.description.slice(0, 2),
+      achievements: e.achievements?.slice(0, 3),
       skills: e.skills,
     })),
     // listPublishedPosts already sorts newest-first, which is exactly the

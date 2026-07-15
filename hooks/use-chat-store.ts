@@ -1,8 +1,8 @@
 import { create } from "zustand";
 
 import { chatConfig } from "@/config/chat";
-import { findCitation } from "@/lib/chat/entity-dom";
 import { streamChat } from "@/lib/chat/client";
+import { findCitation } from "@/lib/chat/entity-dom";
 import { pickRandom } from "@/lib/utils";
 import {
   AgentCitation,
@@ -246,7 +246,11 @@ export const useChatStore = create<ChatStoreState>((set, get) => ({
       createdAt: Date.now(),
     };
 
-    const updatedMessages = [...activeConv.messages, userMessage, assistantMessage];
+    const updatedMessages = [
+      ...activeConv.messages,
+      userMessage,
+      assistantMessage,
+    ];
     const shouldRetitle =
       activeConv.messages.length <= 1 &&
       (activeConv.title === NEW_CHAT_TITLE || !activeConv.title);
@@ -339,9 +343,11 @@ export const useChatStore = create<ChatStoreState>((set, get) => ({
           const finalContent = get().streamingContent + tokenBuffer;
           tokenBuffer = "";
 
-          const resolved =
-            done.suggestions ?? pickRandom(chatConfig.seedSuggestions, 3);
-          const openModalCitation = findCitation(done.citations, done.openModal);
+          const resolved = done.suggestions;
+          const openModalCitation = findCitation(
+            done.citations,
+            done.openModal
+          );
           const hasCommand = Boolean(
             done.highlight || done.focus || openModalCitation || done.navigate
           );
@@ -421,7 +427,12 @@ export const useChatStore = create<ChatStoreState>((set, get) => ({
       }
     );
 
-    set({ activeAbort: () => { cancelRaf(); abort(); } });
+    set({
+      activeAbort: () => {
+        cancelRaf();
+        abort();
+      },
+    });
   },
 
   stopStreaming: () => {

@@ -1,16 +1,23 @@
-import { describe, expect, test } from "bun:test";
 import type { ToolExecutionOptions } from "ai";
+import { describe, expect, test } from "bun:test";
 
 import { PROJECTS } from "@/config/projects";
 import { RESUME_RESOURCE } from "@/config/resume";
+import { CHAT_TOOLS } from "@/lib/chat/tools";
 import { findCurrentCompany } from "@/lib/data/experience";
 import { findMostRecentProject } from "@/lib/data/projects";
-import { CHAT_TOOLS } from "@/lib/chat/tools";
 
 // execute() requires ToolExecutionOptions, but nothing under test reads it.
-const OPTS = { toolCallId: "test", messages: [], context: undefined } as unknown as ToolExecutionOptions<never>;
+const OPTS = {
+  toolCallId: "test",
+  messages: [],
+  context: undefined,
+} as unknown as ToolExecutionOptions<never>;
 
-function execute(name: keyof typeof CHAT_TOOLS, input: Record<string, unknown>) {
+function execute(
+  name: keyof typeof CHAT_TOOLS,
+  input: Record<string, unknown>
+) {
   const tool = CHAT_TOOLS[name];
   if (!tool.execute) throw new Error(`${name} has no execute()`);
   return tool.execute(input as never, OPTS);
@@ -175,14 +182,5 @@ describe("expand_section", () => {
       target: `project:${PROJECTS[0].id}`,
     });
     expect(result).toEqual({ ok: true, target: `project:${PROJECTS[0].id}` });
-  });
-});
-
-describe("suggest_followups", () => {
-  test("echoes back the questions", async () => {
-    const result = await execute("suggest_followups", {
-      questions: ["What's his stack?"],
-    });
-    expect(result).toEqual({ questions: ["What's his stack?"] });
   });
 });

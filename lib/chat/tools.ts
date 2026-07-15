@@ -1,14 +1,17 @@
 import "server-only";
 
-import { tool, ToolSet } from "ai";
+import { ToolSet, tool } from "ai";
 import { z } from "zod";
 
 import { ValidCategory, ValidSkills } from "@/config/constants";
-import { EXPERIENCES, ExperienceInterface } from "@/config/experience";
-import { PROJECTS, ProjectInterface } from "@/config/projects";
+import { ExperienceInterface } from "@/config/experience";
+import { ProjectInterface } from "@/config/projects";
 import { RESUME_RESOURCE } from "@/config/resume";
 import { ISkill, SkillCategoryEnum } from "@/config/skills";
 import { listPublishedPosts } from "@/lib/blog/service";
+import { isAllowedRoute } from "@/lib/chat/prompt";
+import { buildEntityId, parseEntityId } from "@/lib/chat/protocol";
+import { CitationTarget } from "@/lib/chat/resources";
 import {
   findCurrentCompany,
   findMostRecentExperience,
@@ -21,9 +24,6 @@ import {
   findMostRecentProject,
 } from "@/lib/data/projects";
 import { filterSkillsByCategory, getStrongestSkills } from "@/lib/data/skills";
-import { isAllowedRoute } from "@/lib/chat/prompt";
-import { buildEntityId, parseEntityId } from "@/lib/chat/protocol";
-import { CitationTarget } from "@/lib/chat/resources";
 import { AgentEntityId } from "@/types/chat";
 
 const CONTENT_DIR = "content/blog";
@@ -74,15 +74,21 @@ const searchProjectsTool = tool({
     category: z
       .string()
       .optional()
-      .describe("Project category, e.g. 'Full Stack', 'Frontend', 'Mobile Dev'."),
+      .describe(
+        "Project category, e.g. 'Full Stack', 'Frontend', 'Mobile Dev'."
+      ),
     techStack: z
       .string()
       .optional()
-      .describe("A technology/skill name to filter projects by, e.g. 'React', 'FastAPI'."),
+      .describe(
+        "A technology/skill name to filter projects by, e.g. 'React', 'FastAPI'."
+      ),
     mostRecentOnly: z
       .boolean()
       .optional()
-      .describe("Set true to return only the single most recent (or ongoing) project."),
+      .describe(
+        "Set true to return only the single most recent (or ongoing) project."
+      ),
   }),
   execute: async ({ category, techStack, mostRecentOnly }) => {
     if (mostRecentOnly) return [toProjectSummary(findMostRecentProject())];
@@ -117,8 +123,11 @@ const searchExperiencesTool = tool({
       const current = findCurrentCompany();
       return current ? [toExperienceSummary(current)] : [];
     }
-    if (mostRecentOnly) return [toExperienceSummary(findMostRecentExperience())];
-    return getCareerTimeline().slice(0, MAX_SEARCH_RESULTS).map(toExperienceSummary);
+    if (mostRecentOnly)
+      return [toExperienceSummary(findMostRecentExperience())];
+    return getCareerTimeline()
+      .slice(0, MAX_SEARCH_RESULTS)
+      .map(toExperienceSummary);
   },
 });
 
@@ -129,7 +138,9 @@ const searchSkillsTool = tool({
     category: z
       .string()
       .optional()
-      .describe("Skill category key, e.g. 'languages', 'frameworks', 'ai-llm'."),
+      .describe(
+        "Skill category key, e.g. 'languages', 'frameworks', 'ai-llm'."
+      ),
   }),
   execute: async ({ category }) => {
     const results = category
@@ -155,14 +166,18 @@ const searchBlogTool = tool({
   description:
     "Search Phong's blog posts. Filter by category or tag, or omit both to list the most recent posts.",
   inputSchema: z.object({
-    category: z.string().optional().describe("Blog post category to filter by."),
+    category: z
+      .string()
+      .optional()
+      .describe("Blog post category to filter by."),
     tag: z.string().optional().describe("A tag to filter blog posts by."),
   }),
   execute: async ({ category, tag }) => {
     const posts = await listPublishedPosts(CONTENT_DIR);
     const filtered = posts.filter(
       (post) =>
-        (!category || post.category === category) && (!tag || post.tags.includes(tag))
+        (!category || post.category === category) &&
+        (!tag || post.tags.includes(tag))
     );
     return filtered.slice(0, MAX_SEARCH_RESULTS).map((post) => ({
       agentId: buildEntityId("blog", post.slug),
@@ -194,7 +209,9 @@ const navigateToTool = tool({
   description:
     "Navigate the visitor to a page on the site. Only use routes the site actually has, with any <id>/<slug> filled from real data (e.g. '/projects/enrollment-platform').",
   inputSchema: z.object({
-    route: z.string().describe("The destination route, e.g. '/projects/enrollment-platform'."),
+    route: z
+      .string()
+      .describe("The destination route, e.g. '/projects/enrollment-platform'."),
   }),
   execute: async ({ route }) => {
     return isAllowedRoute(route)
@@ -255,15 +272,6 @@ const expandSectionTool = tool({
   execute: executeModalTarget,
 });
 
-const suggestFollowupsTool = tool({
-  description:
-    "Offer 2-3 short follow-up questions the visitor might ask next, phrased in their voice (e.g. \"What's his stack?\"), not yours.",
-  inputSchema: z.object({
-    questions: z.array(z.string()).min(1).max(3),
-  }),
-  execute: async ({ questions }) => ({ questions }),
-});
-
 /** Every tool the "chat" alias's tool-capable models can call. */
 export const CHAT_TOOLS = {
   search_projects: searchProjectsTool,
@@ -276,5 +284,4 @@ export const CHAT_TOOLS = {
   focus: focusResourceTool,
   open_modal: openModalTool,
   expand_section: expandSectionTool,
-  suggest_followups: suggestFollowupsTool,
 } satisfies ToolSet;

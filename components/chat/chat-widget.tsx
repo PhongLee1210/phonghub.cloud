@@ -11,8 +11,9 @@ interface ChatWidgetProps {
   isMobile?: boolean;
 }
 
-export const ChatWidget = ({ isMobile }: ChatWidgetProps) => {
+export const ChatWidget = ({ isMobile: serverIsMobile }: ChatWidgetProps) => {
   const [isMounted, setIsMounted] = useState(false);
+  const [isMobile, setIsMobile] = useState(serverIsMobile ?? false);
   const launcherRef = useRef<HTMLButtonElement>(null);
   const { isOpen, setOpen, hydrate } = useChatStore();
 
@@ -21,6 +22,12 @@ export const ChatWidget = ({ isMobile }: ChatWidgetProps) => {
   useEffect(() => {
     setIsMounted(true);
     hydrate();
+
+    const mq = window.matchMedia("(max-width: 480px)");
+    setIsMobile(mq.matches);
+    const handler = (e: MediaQueryListEvent) => setIsMobile(e.matches);
+    mq.addEventListener("change", handler);
+    return () => mq.removeEventListener("change", handler);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 

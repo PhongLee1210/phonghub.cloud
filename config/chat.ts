@@ -17,18 +17,20 @@ export const chatConfig = {
   greeting:
     "Hi there 👋 I'm Phong's AI Portfolio Assistant. I can help you explore projects, skills, experience, and anything else you'd like to know about Phong.",
 
+  // Used as few-shot style examples in lib/chat/suggestion-worker.ts.
+  // Also shown as chips in initial/reset state (before the first AI response).
   seedSuggestions: [
-    "What has Phong built?",
-    "What's his tech stack?",
-    "How many years of experience does he have?",
-    "What frameworks does he use most?",
-    "Does he contribute to open source?",
-    "What kind of teams has he worked on?",
-    "Tell me some of his experiences.",
-    "Nearest experiences he has.",
-    "Tell me about his hobby?",
-    "What level of English does he have?",
-    "Has he worked on any overseas projects?",
+    "Phong's projects?",
+    "Tech stack?",
+    "Years of experience?",
+    "Main frameworks?",
+    "Open source work?",
+    "Team roles?",
+    "Work highlights?",
+    "Recent experiences?",
+    "Hobbies?",
+    "English level?",
+    "Overseas projects?",
   ],
 
   seedSuggestionCards: [
@@ -42,13 +44,13 @@ export const chatConfig = {
       title: "Projects",
       subtitle: "AI agents, dashboards, and more",
       icon: "gitRepoIcon",
-      prompt: "What has Phong built with AI?",
+      prompt: "What projects has Phong worked on?",
     },
     {
       title: "Skills",
       subtitle: "Languages, frameworks, and tools",
       icon: "settings",
-      prompt: "What are Phong's strongest skills?",
+      prompt: "What are Phong's most confident skills?",
     },
   ] satisfies SeedSuggestionCard[],
 
@@ -62,12 +64,12 @@ export const chatConfig = {
     /** Messages kept in localStorage, trimmed on every write. */
     maxPersistedMessages: 50,
     /** Sampling temperature — 0 for deterministic, factual, on-brand answers. */
-    temperature: 0,
+    temperature: 0.5,
     /** Max output tokens per reply — covers the visible answer (~100 tokens
      * for 2-4 sentences) + the command tail (marker + multi-key JSON for
      * suggest/highlight/navigate, ~80-120 tokens). Kept low to match the
      * concise-answer persona. */
-    maxOutputTokens: 1024,
+    maxOutputTokens: 960,
     /**
      * Cumulative output tokens allowed per IP per UTC day, across all
      * requests — separate from rateLimit.perDay (a request-count budget).
@@ -119,7 +121,6 @@ export const THINKING_STEP_LABELS: Record<string, string> = {
   focus: "Focusing",
   open_modal: "Opening details",
   expand_section: "Expanding details",
-  suggest_followups: "Drafting follow-ups",
 };
 
 /** How long an agent highlight ring stays lit before auto-clearing.

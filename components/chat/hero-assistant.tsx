@@ -110,22 +110,26 @@ export const HeroAssistant = ({ isMobile }: HeroAssistantProps) => {
       )}
 
       {/* Desktop: floating chat widget inside hero */}
-      {isWidgetOpen && (
-        <motion.div
-          initial={{ opacity: 0, y: 16 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={
-            reducedMotion
-              ? { duration: 0 }
-              : { type: "spring", damping: 28, stiffness: 200, mass: 0.8 }
-          }
-          className="fixed right-[60px] top-[80px] z-20 hidden w-[380px] md:block"
-        >
-          <div className="relative flex h-[calc(100dvh-120px)] max-h-[640px] min-h-[440px] flex-col overflow-hidden rounded-[28px] bg-chat-bg shadow-large">
-            <AssistantPanel onClose={() => setIsWidgetOpen(false)} />
-          </div>
-        </motion.div>
-      )}
+      <AnimatePresence>
+        {isWidgetOpen && (
+          <motion.div
+            style={{ transformOrigin: "bottom right" }}
+            initial={{ opacity: 0, scale: 0.06, borderRadius: "56px" }}
+            animate={{ opacity: 1, scale: 1, borderRadius: "28px" }}
+            exit={{ opacity: 0, scale: 0.06, borderRadius: "56px" }}
+            transition={
+              reducedMotion
+                ? { duration: 0 }
+                : { type: "spring", damping: 24, stiffness: 280, mass: 0.9 }
+            }
+            className="fixed bottom-[110px] right-[60px] z-20 hidden w-[380px] overflow-hidden bg-chat-bg shadow-large md:block"
+          >
+            <div className="relative flex h-[calc(100dvh-190px)] max-h-[640px] min-h-[440px] flex-col overflow-hidden">
+              <AssistantPanel onClose={() => setIsWidgetOpen(false)} />
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </>
   );
 };

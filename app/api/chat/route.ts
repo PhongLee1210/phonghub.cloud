@@ -7,6 +7,7 @@ import { encodeEvent } from "@/lib/chat/protocol";
 import { checkRateLimit } from "@/lib/chat/rate-limit";
 import { getRedisClient } from "@/lib/chat/redis";
 import { resolveCitation, CitationTarget } from "@/lib/chat/resources";
+import { getSuggestions } from "@/lib/chat/suggestion-worker";
 import {
   checkCombinedBudget,
   trimHistoryToBudget,
@@ -108,12 +109,6 @@ function extractTarget(result: unknown): CitationTarget | undefined {
 function extractNavigateRoute(result: unknown): InternalRoute | undefined {
   if (!isObject(result) || result.ok !== true) return undefined;
   return isNonEmptyString(result.route) ? (result.route as InternalRoute) : undefined;
-}
-
-function extractSuggestions(result: unknown): string[] | undefined {
-  if (!isObject(result) || !Array.isArray(result.questions)) return undefined;
-  const cleaned = result.questions.filter(isNonEmptyString);
-  return cleaned.length > 0 ? cleaned : undefined;
 }
 
 /**
@@ -261,7 +256,6 @@ export async function POST(req: NextRequest) {
       let focusTarget: AgentEntityId | undefined;
       let openModalTarget: CitationTarget | undefined;
       let navigateRoute: InternalRoute | undefined;
-      let suggestions: string[] | undefined;
 
       try {
         // 1. Signal "preparing" — system prompt construction is next.
@@ -296,7 +290,11 @@ export async function POST(req: NextRequest) {
         //    real latency wait (500ms–3s for the first token).
         send({ type: ChatEventType.Thinking, step: "thinking" });
 
-        // 5. Dispatch the LLM stream.
+        // 5a. Fire suggestion worker concurrently — uses conversation history
+        //     only, cheap/fast model, resolves while the main stream runs.
+        const suggestionsPromise = getSuggestions(trimmedHistory.messages);
+
+        // 5b. Dispatch the LLM stream.
         const llmMessages: LLMMessage[] = [
           { role: "system", content: systemPromptResult.prompt },
           ...trimmedHistory.messages,
@@ -347,8 +345,6 @@ export async function POST(req: NextRequest) {
               }
             } else if (chunk.name === "navigate_to") {
               navigateRoute = extractNavigateRoute(chunk.result) ?? navigateRoute;
-            } else if (chunk.name === "suggest_followups") {
-              suggestions = extractSuggestions(chunk.result) ?? suggestions;
             }
           } else if (chunk.type === "done") {
             void recordTokenUsage(ip, redis, chunk.usage.outputTokens).catch(
@@ -363,7 +359,10 @@ export async function POST(req: NextRequest) {
               });
             }
 
-            const citations = await resolveCitations(citationTargets);
+            const [citations, suggestions] = await Promise.all([
+              resolveCitations(citationTargets),
+              suggestionsPromise,
+            ]);
 
             send({
               type: ChatEventType.Done,
