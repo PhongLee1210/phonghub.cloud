@@ -32,6 +32,7 @@ export const AssistantPanel = ({
   const status = useChatStore((s) => s.status);
   const errorMessage = useChatStore((s) => s.errorMessage);
   const activeHighlight = useChatStore((s) => s.activeHighlight);
+  const activeFocus = useChatStore((s) => s.activeFocus);
   const sendMessage = useChatStore((s) => s.sendMessage);
   const setDraft = useChatStore((s) => s.setDraft);
   const stopStreaming = useChatStore((s) => s.stopStreaming);
@@ -109,7 +110,7 @@ export const AssistantPanel = ({
         </div>
       )}
 
-      {status === "acting" && activeHighlight && (
+      {status === "acting" && (activeHighlight || activeFocus) && (
         <div
           role="status"
           aria-live="polite"
@@ -117,9 +118,9 @@ export const AssistantPanel = ({
         >
           <Icons.aurora className="h-3 w-3 animate-pulse text-primary" />
           <span>
-            Highlighting a{" "}
+            {activeHighlight ? "Highlighting" : "Focusing"} a{" "}
             {ENTITY_HIGHLIGHT_LABELS[
-              parseEntityId(activeHighlight)?.kind ?? ""
+              parseEntityId(activeHighlight ?? activeFocus ?? "")?.kind ?? ""
             ] ?? "section"}{" "}
             on the page
           </span>

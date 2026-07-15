@@ -60,6 +60,8 @@ export interface ChatMessage {
   card?: ProjectCardPayload;
   action?: ChatMessageAction;
   suggestions?: string[];
+  /** Every resource the assistant cited in this reply, rendered as chips. */
+  citations?: AgentCitation[];
   createdAt: number;
   error?: boolean;
 }

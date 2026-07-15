@@ -1,4 +1,5 @@
 import { Icons } from "@/components/common/icons";
+import { CitationKind } from "@/types/chat";
 
 export interface SeedSuggestionCard {
   title: string;
@@ -124,3 +125,12 @@ export const THINKING_STEP_LABELS: Record<string, string> = {
 /** How long an agent highlight ring stays lit before auto-clearing.
  *  Matches the CSS `agent-highlight-pulse` (2 × 1.6s ≈ 3.2s) + a beat. */
 export const HIGHLIGHT_DURATION_MS = 4000;
+
+/** Icon shown in the chat-triggered open_modal/expand_section modal and in citation chips, per resource kind. */
+export const CITATION_KIND_ICON: Record<CitationKind, keyof typeof Icons> = {
+  project: "gitRepoIcon",
+  experience: "gitOrgBuilding",
+  skill: "settings",
+  blog: "post",
+  resume: "page",
+};
