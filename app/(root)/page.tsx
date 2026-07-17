@@ -5,6 +5,7 @@ import Script from "next/script";
 
 import { EXPERIENCES } from "@/config/experience";
 import { pagesConfig } from "@/config/pages";
+import { PROJECT_SNIPPETS } from "@/config/project-snippets";
 import { featuredProjects } from "@/config/projects";
 import { siteConfig } from "@/config/site";
 import { featuredSkills } from "@/config/skills";
@@ -13,14 +14,22 @@ import { AnimatedSection } from "@/components/common/animated-section";
 import { AnimatedText } from "@/components/common/animated-text";
 import { ClientPageWrapper } from "@/components/common/client-page-wrapper";
 import { Icons } from "@/components/common/icons";
+import { CareerLog } from "@/components/home/career-log";
 import { Hero } from "@/components/home/hero";
+import { StackDiagnostic } from "@/components/home/stack-diagnostic";
+import { WorkspaceIntro } from "@/components/home/workspace-intro";
 import { Button } from "@/components/ui/button";
 
-const ExperienceCard = dynamic(
-  () => import("@/components/experience/experience-card")
-);
 const ProjectCard = dynamic(() => import("@/components/projects/project-card"));
-const SkillsCard = dynamic(() => import("@/components/skills/skills-card"));
+const ProjectWorkspace = dynamic(
+  () => import("@/components/projects/project-workspace")
+);
+const AnimatedSkillsGrid = dynamic(
+  () => import("@/components/skills/animated-skills-grid")
+);
+const CareerTimeline = dynamic(
+  () => import("@/components/experience/career-timeline")
+);
 
 export const metadata: Metadata = {
   title: `${pagesConfig.home.metadata.title} | Le Thanh Phong - Software Engineer`,
@@ -94,7 +103,8 @@ export default function IndexPage() {
             {pagesConfig.skills.description}
           </AnimatedText>
         </div>
-        <SkillsCard skills={featuredSkills} />
+        <StackDiagnostic skillCount={featuredSkills.length} />
+        <AnimatedSkillsGrid skills={featuredSkills} />
         <AnimatedText delay={0.4} className="flex justify-start">
           <Link href="/skills" prefetch={false}>
             <Button variant={"outline"} className="rounded-xl">
@@ -123,14 +133,28 @@ export default function IndexPage() {
             {pagesConfig.projects.description}
           </AnimatedText>
         </div>
-        <div className="grid gap-4 md:w-full lg:grid-cols-3">
-          {featuredProjects.map((exp, index) => (
+        <WorkspaceIntro projectCount={featuredProjects.length} />
+
+        {/* Desktop: workspace split panels */}
+        <div className="hidden md:block space-y-10">
+          {featuredProjects.map((project) => (
+            <ProjectWorkspace
+              key={project.id}
+              project={project}
+              snippet={PROJECT_SNIPPETS.find((s) => s.projectId === project.id)}
+            />
+          ))}
+        </div>
+
+        {/* Mobile: standard cards */}
+        <div className="grid gap-4 md:hidden">
+          {featuredProjects.map((project, index) => (
             <AnimatedSection
-              key={exp.id}
+              key={project.id}
               delay={0.1 * (index + 1)}
               direction="up"
             >
-              <ProjectCard project={exp} />
+              <ProjectCard project={project} />
             </AnimatedSection>
           ))}
         </div>
@@ -162,17 +186,8 @@ export default function IndexPage() {
             {pagesConfig.experience.description}
           </AnimatedText>
         </div>
-        <div className="grid gap-4 md:w-full lg:grid-cols-3">
-          {EXPERIENCES.slice(0, 3).map((experience, index) => (
-            <AnimatedSection
-              key={experience.id}
-              delay={0.1 * (index + 1)}
-              direction="up"
-            >
-              <ExperienceCard experience={experience} />
-            </AnimatedSection>
-          ))}
-        </div>
+        <CareerLog experienceCount={EXPERIENCES.slice(0, 3).length} />
+        <CareerTimeline experiences={EXPERIENCES.slice(0, 3)} />
         <AnimatedText delay={0.4} className="flex justify-start">
           <Link href="/experience" prefetch={false}>
             <Button variant={"outline"} className="rounded-xl">

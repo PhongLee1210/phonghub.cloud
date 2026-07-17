@@ -443,6 +443,33 @@
   }
 }
 
+@keyframes cursor-blink {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0;
+  }
+}
+
+.code-cursor {
+  display: inline-block;
+  width: 8px;
+  height: 1.1em;
+  background: currentColor;
+  vertical-align: text-bottom;
+  animation: cursor-blink 1s step-end infinite;
+  margin-left: 1px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .code-cursor {
+    animation: none;
+    opacity: 1;
+  }
+}
+
 @keyframes gradientShift {
   0% {
     background-position: 0% 50%;
