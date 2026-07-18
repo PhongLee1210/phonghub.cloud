@@ -47,6 +47,7 @@ Every file in `lib/llm` and `lib/chat` imports the `server-only` package, which 
 - **`lib/llm` is guarded by `server-only`** — an accidental client import fails the build.
 - **Business logic (content loading, formatting, filtering) belongs in `lib/`** — UI components must not read the filesystem or parse Markdown directly; go through `lib/blog` and `lib/api.ts`.
 - **Server-only code (LLM keys, GitHub starring, email if ever added) belongs in `app/api/*` or `lib/llm` / `lib/github`.** Never prefix a secret env var with `NEXT_PUBLIC_`.
+- **Follow-up suggestions are not a tool call.** `suggest_followups` was removed from `lib/chat/tools.ts`; `lib/chat/suggestion-worker.ts` now fires a separate cheap/fast `streamLLM` call concurrently with the main chat stream (`Promise.all`'d with citation resolution in `app/api/chat/route.ts`) instead.
 
 ## Repository Structure
 ```
@@ -54,15 +55,15 @@ app/
   (root)/         # Public pages: home, experience, projects, skills, resume, contact, blogs, list100
   api/            # Route handlers: blog, chat (NDJSON stream), experiences, github, projects, skills
 components/        # UI grouped by feature (blog, chat, contact, experience, projects, skills, ui, ...)
-config/            # Static content/metadata: site, routes, pages, projects, experience, skills, socials, constants, chat
+config/            # Static content/metadata: site, routes, pages, projects, project-snippets, experience, skills, socials, constants, chat
 content/blog/      # Markdown posts
 lib/
   blog/            # Markdown parsing/service
   llm/             # Provider-agnostic LLM gateway (see lib/llm/README.md)
-  chat/            # System prompt, token budget/quota, concurrency limiter, rate limit, client stream reader
+  chat/            # System prompt, suggestion-worker (concurrent follow-up generation), token budget/quota, concurrency limiter, rate limit, client stream reader
   github/          # GitHub "star" client
   content/         # Content helpers
-  api.ts, utils.ts
+  code-tokenizer.ts, motion.ts, api.ts, utils.ts
 hooks/, providers/ # Shared hooks + context providers (incl. chat zustand store)
 types/             # Client-safe shared types (chat wire protocol)
 public/, assets/   # Static assets and fonts

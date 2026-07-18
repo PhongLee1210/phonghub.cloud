@@ -86,9 +86,9 @@ app/                  # Next.js App Router
 ├── api/               # Route handlers: projects, experiences, skills, blog/search, chat (NDJSON stream)
 ├── sitemap.ts, manifest.ts, layout.tsx, globals.css
 components/           # UI, grouped by feature (blog, contact, experience, projects, skills, list100, modals, chat, common, ui)
-config/               # Static site content and metadata (site, routes, pages, projects, experience, skills, socials, constants, chat)
+config/               # Static site content and metadata (site, routes, pages, projects, project-snippets, experience, skills, socials, constants, chat)
 content/blog/         # Markdown blog posts
-lib/                  # Business logic: lib/blog (Markdown parsing/service), lib/llm (LLM gateway), lib/chat (system prompt, rate limit, client stream reader), api.ts, utils.ts
+lib/                  # Business logic: lib/blog (Markdown parsing/service), lib/llm (LLM gateway), lib/chat (system prompt, suggestion worker, rate limit, client stream reader), code-tokenizer.ts, motion.ts, api.ts, utils.ts
 hooks/, providers/    # Shared React hooks and context providers (incl. chat store)
 types/                # Shared client-safe types (chat wire protocol)
 public/, assets/      # Static assets and fonts
