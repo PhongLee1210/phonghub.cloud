@@ -1,29 +1,33 @@
-import Image from "next/image";
 import Link from "next/link";
 
 import { Icons } from "@/components/common/icons";
 import { Button } from "@/components/ui/button";
 import ChipContainer from "@/components/ui/chip-container";
 import { ProjectInterface } from "@/config/projects";
+import PixelDissolveImage from "@/components/ui/pixel-dissolve-image";
 
 interface ProjectCardProps {
   project: ProjectInterface;
+  imageActive?: boolean;
 }
 
-export default function ProjectCard({ project }: ProjectCardProps) {
+export default function ProjectCard({
+  project,
+  imageActive,
+}: ProjectCardProps) {
   return (
     <div
       data-agent-id={`project:${project.id}`}
       className="relative p-6 max-w-sm bg-background border border-border rounded-lg"
     >
       <div className="relative w-full h-[200px]">
-        <Image
+        <PixelDissolveImage
           className="rounded-lg border border-border object-cover"
           src={project.companyLogoImg}
           alt={project.organization.name}
           fill
-          loading="lazy"
           sizes="(max-width: 640px) 100vw, 384px"
+          active={imageActive}
         />
       </div>
       <div className="pt-5 space-y-3">

@@ -55,7 +55,7 @@ export default function ProjectWorkspace({
         transition={SPRING_GENTLE}
         className="flex justify-start"
       >
-        <ProjectCard project={project} />
+        <ProjectCard project={project} imageActive={previewVisible} />
       </motion.div>
     </div>
   );

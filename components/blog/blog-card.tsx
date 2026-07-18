@@ -1,13 +1,14 @@
 import { BlogPostSummary } from "@/lib/blog/service";
 import { formatDate } from "@/lib/utils";
-import Image from "next/image";
 import Link from "next/link";
+import PixelDissolveImage from "@/components/ui/pixel-dissolve-image";
 
 interface BlogCardProps {
   post: BlogPostSummary;
+  imageActive?: boolean;
 }
 
-export default function BlogCard({ post }: BlogCardProps) {
+export default function BlogCard({ post, imageActive }: BlogCardProps) {
   return (
     <Link
       href={`/blogs/${post.slug}`}
@@ -16,15 +17,15 @@ export default function BlogCard({ post }: BlogCardProps) {
       aria-label={`Read blog post: ${post.title}`}
     >
       <div className="relative h-48 w-full overflow-hidden">
-        <Image
+        <PixelDissolveImage
           src={post.coverImage}
           alt={post.title}
           fill
           className="object-cover w-full h-full group-hover:scale-105 transition-transform duration-200"
           sizes="(min-width: 1024px) 33vw, (min-width: 640px) 50vw, 100vw"
-          priority={false}
+          active={imageActive}
         />
-        <span className="absolute top-4 left-4 inline-flex items-center rounded-full border border-border/80 bg-primary/80 px-3 py-1 text-xs font-medium text-primary-foreground shadow-sm">
+        <span className="absolute top-4 left-4 z-20 inline-flex items-center rounded-full border border-border/80 bg-primary/80 px-3 py-1 text-xs font-medium text-primary-foreground shadow-sm">
           {post.category}
         </span>
       </div>

@@ -2,6 +2,7 @@
 "use client";
 import { BlogPostSummary } from "@/lib/blog/service";
 import { useMemo, useState } from "react";
+import { motion, useReducedMotion } from "framer-motion";
 import BlogCard from "./blog-card";
 import BlogFilters from "./blog-filters";
 
@@ -16,11 +17,13 @@ interface BlogListProps {
  * BlogList component: displays a grid of blog posts with comprehensive filtering.
  */
 export default function BlogList({ posts }: BlogListProps) {
+  const prefersReducedMotion = useReducedMotion();
   const [filters, setFilters] = useState({
     category: "",
     tag: "",
     search: "",
   });
+  const [activeImages, setActiveImages] = useState<Record<string, boolean>>({});
 
   // Filter posts based on all filter criteria
   const filteredPosts = useMemo(() => {
@@ -40,9 +43,14 @@ export default function BlogList({ posts }: BlogListProps) {
     });
   }, [posts, filters]);
 
+  const handleFilterChange = (newFilters: typeof filters) => {
+    setFilters(newFilters);
+    setActiveImages({});
+  };
+
   return (
     <section>
-      <BlogFilters posts={posts} filters={filters} onChange={setFilters} />
+      <BlogFilters posts={posts} filters={filters} onChange={handleFilterChange} />
 
       {filteredPosts.length === 0 ? (
         <div className="flex flex-col items-center justify-center py-16">
@@ -60,8 +68,22 @@ export default function BlogList({ posts }: BlogListProps) {
         </div>
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
-          {filteredPosts.map((post) => (
-            <BlogCard key={post.slug} post={post} />
+          {filteredPosts.map((post, index) => (
+            <motion.div
+              key={post.slug}
+              initial={{ clipPath: "inset(0 100% 0 0 round 0.5rem)" }}
+              animate={{ clipPath: "inset(0 0% 0 0 round 0.5rem)" }}
+              transition={{
+                duration: 0.65,
+                ease: [0.16, 1, 0.3, 1],
+                delay: prefersReducedMotion ? 0 : index * 0.08,
+              }}
+              onAnimationComplete={() =>
+                setActiveImages((prev) => ({ ...prev, [post.slug]: true }))
+              }
+            >
+              <BlogCard post={post} imageActive={activeImages[post.slug]} />
+            </motion.div>
           ))}
         </div>
       )}
