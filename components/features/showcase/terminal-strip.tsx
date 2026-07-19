@@ -1,6 +1,10 @@
+"use client";
+
 import * as React from "react";
+import { motion } from "framer-motion";
 
 import type { TerminalLine, TerminalTone } from "@/config/showcase";
+import { fadeUpStagger, staggerContainer } from "@/lib/motion";
 import { cn } from "@/lib/utils";
 
 /**
@@ -15,12 +19,16 @@ import { cn } from "@/lib/utils";
  * Default content is sourced from `SHOWCASE_BUILD_LOG` (config/showcase.ts)
  * by the parent `BuilderShowcase`; this primitive just renders whatever
  * lines it's given.
+ *
+ * T2.2 wraps each line in `motion.li` keyed to `fadeUpStagger` so the
+ * parent cascade reveals them one-by-one. Variant-only — local
+ * `initial`/`animate` come from `BuilderShowcase`.
  */
 export interface TerminalStripProps {
   lines: readonly TerminalLine[];
   /**
-   * Number of lines currently visible. Used by T2.1's reveal; defaults
-   * to `lines.length` (all visible).
+   * Number of lines currently visible. Used by future streaming work
+   * (T5.6); defaults to `lines.length` (all visible).
    */
   visibleCount?: number;
   /**
@@ -60,8 +68,9 @@ export const TerminalStrip = React.forwardRef<
   const visible = lines.slice(0, count);
 
   return (
-    <div
+    <motion.div
       ref={ref}
+      variants={fadeUpStagger}
       role={live ? "status" : undefined}
       aria-live={live ? "polite" : undefined}
       aria-atomic={live ? false : undefined}
@@ -73,9 +82,13 @@ export const TerminalStrip = React.forwardRef<
       {visible.length === 0 ? (
         <div className="text-muted-foreground/50">&nbsp;</div>
       ) : (
-        <ul className="space-y-1">
+        <motion.ul variants={staggerContainer(0.08)} className="space-y-1">
           {visible.map((line, idx) => (
-            <li key={idx} className="flex items-start gap-2">
+            <motion.li
+              key={idx}
+              variants={fadeUpStagger}
+              className="flex items-start gap-2 will-change-[transform,opacity]"
+            >
               <span
                 aria-hidden
                 className={cn(
@@ -93,11 +106,11 @@ export const TerminalStrip = React.forwardRef<
               >
                 {line.text}
               </span>
-            </li>
+            </motion.li>
           ))}
-        </ul>
+        </motion.ul>
       )}
-    </div>
+    </motion.div>
   );
 });
 

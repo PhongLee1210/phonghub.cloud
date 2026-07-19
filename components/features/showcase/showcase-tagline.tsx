@@ -1,6 +1,10 @@
+"use client";
+
 import * as React from "react";
+import { motion } from "framer-motion";
 
 import { SHOWCASE_TAGLINE } from "@/config/showcase";
+import { fadeUpStagger, staggerContainer } from "@/lib/motion";
 import { cn } from "@/lib/utils";
 
 /**
@@ -11,8 +15,10 @@ import { cn } from "@/lib/utils";
  * (`@layer components` in `app/globals.css`) so the gradient resolves
  * through theme tokens and the keyframe respects `prefers-reduced-motion`.
  *
- * Server component — T2.2 wraps the words in a `motion.h2` for the
- * per-word stagger entrance.
+ * T2.2 wraps each word in a `motion.span` keyed to `fadeUpStagger` so the
+ * parent `BuilderShowcase` cascade (`staggerContainer`) propagates a
+ * per-word reveal. Local variants only — `initial`/`animate` come from
+ * the orchestrator so the tagline composes with sibling entrances.
  */
 export interface ShowcaseTaglineProps {
   /** Override the default `SHOWCASE_TAGLINE` from config. */
@@ -24,8 +30,11 @@ export function ShowcaseTagline({
   tagline = SHOWCASE_TAGLINE,
   className,
 }: ShowcaseTaglineProps) {
+  const words = React.useMemo(() => tagline.split(" "), [tagline]);
+
   return (
-    <h2
+    <motion.h2
+      variants={staggerContainer(0.06)}
       className={cn(
         "font-heading font-bold tracking-tight",
         "text-gradient-animated",
@@ -34,8 +43,17 @@ export function ShowcaseTagline({
         className,
       )}
     >
-      {tagline}
-    </h2>
+      {words.map((word, i) => (
+        <motion.span
+          key={`${word}-${i}`}
+          variants={fadeUpStagger}
+          className="inline-block will-change-[transform,opacity]"
+        >
+          {word}
+          {i < words.length - 1 ? "\u00A0" : ""}
+        </motion.span>
+      ))}
+    </motion.h2>
   );
 }
 
