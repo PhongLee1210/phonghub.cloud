@@ -373,6 +373,18 @@
 
     --d:                    700ms;
     --e:                    cubic-bezier(0.19, 1, 0.22, 1);
+
+    /**
+     * Syntax-highlight tokens — scoped to .showcase so the standalone
+     * code-terminal.tsx (which lives outside .showcase and uses palette
+     * classes) is unaffected. Used by .tok-* classes in @layer components.
+     * Sampled to read well against --card (222 50% 7% — near-black navy).
+     */
+    --code-keyword:         263 60% 70%;   /* bright purple — keywords */
+    --code-string:          152 60% 65%;   /* spring green — string literals */
+    --code-comment:         220 8% 50%;    /* mid grey — comments */
+    --code-number:          210 70% 65%;   /* sky blue — numbers */
+    --code-default:         210 40% 96%;   /* near-white — identifiers, punctuation */
   }
 }
 
@@ -431,6 +443,20 @@
     -webkit-text-fill-color: transparent;
     animation: gradientShift 3s ease infinite;
   }
+
+  /**
+   * Syntax-highlight tokens for the showcase composition's code editor.
+   * Scoped under .showcase so the .tok-* class names don't leak into
+   * other themes. The .tok-* prefix avoids collision with Tailwind's
+   * `text-*` utilities. Colors resolve via --code-* vars (defined in
+   * .showcase above) so each theme can override the syntax palette
+   * independently.
+   */
+  .showcase .tok-keyword { color: hsl(var(--code-keyword)); }
+  .showcase .tok-string  { color: hsl(var(--code-string)); }
+  .showcase .tok-comment { color: hsl(var(--code-comment)); font-style: italic; }
+  .showcase .tok-number  { color: hsl(var(--code-number)); }
+  .showcase .tok-default { color: hsl(var(--code-default)); }
 
   .agent-highlighted {
     outline: 2px solid hsl(var(--ring));
