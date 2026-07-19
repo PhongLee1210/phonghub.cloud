@@ -1,6 +1,8 @@
 "use client";
 
 import * as React from "react";
+import { useEffect, useRef, useState } from "react";
+import { useInView, useReducedMotion } from "framer-motion";
 
 import { cn } from "@/lib/utils";
 import { CodeListing, type CodeListingLanguage } from "./code-listing";
@@ -8,7 +10,7 @@ import { LanguageChip } from "./language-chip";
 import { WindowChrome } from "./window-chrome";
 
 /**
- * CodeEditorPanel — static composition of the showcase's editor pane.
+ * CodeEditorPanel — composition of the showcase's editor pane.
  *
  * Layout (Figma node `20:5`):
  *
@@ -21,26 +23,49 @@ import { WindowChrome } from "./window-chrome";
  *   │  ...                                          │
  *   └──────────────────────────────────────────────┘
  *
- * Phase 1 ships this as a pure composition (no motion, no AI wiring).
- * T2.1 adds the typewriter reveal (`visibleCount` driven by useInView);
- * T5.6 appends streamed deltas.
+ * Modes:
+ *   - `"static"` (default) — renders all lines instantly; `visibleCount`
+ *     and `compiled` are passed straight through. SSR-safe.
+ *   - `"reveal"` — types lines one-by-one on `useInView` (margin `-80px`),
+ *     shows a blinking cursor on the active line, flips `compiled` 200ms
+ *     after the last line, then fires `onComplete`. Behaviour ported from
+ *     `components/projects/code-terminal.tsx` (kept untouched — still used
+ *     by the standalone projects page).
+ *
+ * Accessibility:
+ *   - `useReducedMotion()` short-circuits the timer cascade — all lines
+ *     paint instantly, `compiled` is set, and `onComplete` fires once.
+ *   - The blinking cursor itself respects `prefers-reduced-motion` via
+ *     the `.code-cursor` CSS rule in `app/globals.css`.
  */
+export type CodeEditorMode = "static" | "reveal";
+
 export interface CodeEditorPanelProps {
   /** Filename shown in the window chrome title (e.g. "app/page.tsx"). */
   filename: string;
   language: CodeListingLanguage;
   lines: readonly string[];
   /**
-   * Number of lines currently visible. Forwarded to `CodeListing`. Used
-   * by T2.1's typewriter reveal; defaults to `lines.length` (all visible).
+   * Number of lines currently visible in `"static"` mode. Ignored when
+   * `mode === "reveal"` (panel drives its own count). Defaults to
+   * `lines.length` (all visible).
    */
   visibleCount?: number;
   /**
-   * When `true`, shows a "✓ compiled" status in the chrome's right slot
-   * next to the language chip. T2.1 flips this on after the typewriter
-   * finishes; T1.3 leaves it `false` by default.
+   * Shows the "✓ compiled" badge in the chrome right slot. In `"static"`
+   * mode this is the parent-controlled value; in `"reveal"` mode the
+   * prop is ignored and the badge appears 200ms after the last line.
    */
   compiled?: boolean;
+  /**
+   * `"static"` (default) renders instantly; `"reveal"` drives a
+   * typewriter cascade via `useInView`.
+   */
+  mode?: CodeEditorMode;
+  /** Fired exactly once when the reveal completes (last line + 200ms). */
+  onComplete?: () => void;
+  /** Per-line delay in ms (default 120). */
+  lineDelayMs?: number;
   className?: string;
 }
 
@@ -49,16 +74,81 @@ export function CodeEditorPanel({
   language,
   lines,
   visibleCount,
-  compiled = false,
+  compiled: compiledProp = false,
+  mode = "static",
+  onComplete,
+  lineDelayMs = 120,
   className,
 }: CodeEditorPanelProps) {
-  return (
+  const reveal = mode === "reveal";
+
+  const containerRef = useRef<HTMLDivElement>(null);
+  const inView = useInView(containerRef, { once: true, margin: "-80px" });
+  const prefersReducedMotion = useReducedMotion();
+
+  const [revealedCount, setRevealedCount] = useState(0);
+  const [started, setStarted] = useState(false);
+  const [compiledState, setCompiledState] = useState(false);
+
+  // Keep latest onComplete without retriggering the cascade effect.
+  const onCompleteRef = useRef(onComplete);
+  useEffect(() => {
+    onCompleteRef.current = onComplete;
+  }, [onComplete]);
+
+  useEffect(() => {
+    if (reveal && inView && !started) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect -- one-shot transition flag reacting to external scroll state from framer-motion's useInView
+      setStarted(true);
+    }
+  }, [reveal, inView, started]);
+
+  useEffect(() => {
+    if (reveal && prefersReducedMotion) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect -- reduced-motion short-circuit: paint final state once
+      setRevealedCount(lines.length);
+      setCompiledState(true);
+      onCompleteRef.current?.();
+      return;
+    }
+
+    if (!reveal || !started || prefersReducedMotion) return;
+
+    let count = 0;
+    const timers: ReturnType<typeof setTimeout>[] = [];
+
+    const revealNext = () => {
+      count += 1;
+      setRevealedCount(count);
+      if (count < lines.length) {
+        timers.push(setTimeout(revealNext, lineDelayMs));
+      } else {
+        timers.push(
+          setTimeout(() => {
+            setCompiledState(true);
+            onCompleteRef.current?.();
+          }, 200),
+        );
+      }
+    };
+
+    timers.push(setTimeout(revealNext, lineDelayMs));
+    return () => {
+      timers.forEach(clearTimeout);
+    };
+  }, [reveal, started, prefersReducedMotion, lines.length, lineDelayMs]);
+
+  const effectiveVisibleCount = reveal ? revealedCount : visibleCount;
+  const effectiveCompiled = reveal ? compiledState : compiledProp;
+  const cursorActive = reveal && !compiledState && revealedCount > 0;
+
+  const content = (
     <WindowChrome
       title={filename}
       className={cn("shadow-[var(--shadow-1)]", className)}
       right={
         <>
-          {compiled ? (
+          {effectiveCompiled ? (
             <span
               aria-label="Compiled successfully"
               className="inline-flex items-center gap-1 font-mono text-[11px] font-medium text-success"
@@ -74,10 +164,15 @@ export function CodeEditorPanel({
       <CodeListing
         lines={lines}
         language={language}
-        visibleCount={visibleCount}
+        visibleCount={effectiveVisibleCount}
+        cursorOnLastLine={cursorActive}
       />
     </WindowChrome>
   );
+
+  // The `useInView` ref has to sit on a stable parent in `"reveal"` mode
+  // so the cascade triggers as the panel scrolls into view.
+  return reveal ? <div ref={containerRef}>{content}</div> : content;
 }
 
 export default CodeEditorPanel;

@@ -13,11 +13,13 @@ export const metadata: Metadata = {
 };
 
 /**
- * SCRATCH ROUTE — Phase 1 integration checkpoint.
+ * SCRATCH ROUTE — Phase 1 + Phase 2 integration checkpoint.
  *
  * Renders the full `BuilderShowcase` composition with mock data so the
- * Figma design can be verified at 360 / 768 / 1024 / 1536 widths before
- * Phase 2 motion is layered in.
+ * Figma design can be verified at 360 / 768 / 1024 / 1536 widths.
+ *
+ * T2.1 uses this route to exercise `CodeEditorPanel mode="reveal"` —
+ * the typewriter cascade triggers on scroll-into-view.
  *
  * This route is deleted in T3.3 (SkillsSectionV2 cutover) — do NOT link
  * to it from production navigation.
@@ -33,7 +35,8 @@ export default function ShowcaseDevPage() {
             filename={snippet.filename}
             language={snippet.language}
             lines={snippet.rawLines}
-            compiled
+            mode="reveal"
+            lineDelayMs={140}
           />
         }
         preview={
@@ -43,9 +46,7 @@ export default function ShowcaseDevPage() {
             mode="screenshot"
           />
         }
-        terminal={
-          <TerminalStrip lines={SHOWCASE_BUILD_LOG} />
-        }
+        terminal={<TerminalStrip lines={SHOWCASE_BUILD_LOG} />}
       />
     </main>
   );

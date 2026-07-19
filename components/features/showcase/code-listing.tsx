@@ -29,6 +29,12 @@ export interface CodeListingProps {
    */
   visibleCount?: number;
   /**
+   * When `true`, appends a blinking cursor (`.code-cursor`) after the
+   * last visible line. Driven by `CodeEditorPanel` in `"reveal"` mode
+   * while the typewriter is mid-flight; ignored once `compiled`.
+   */
+  cursorOnLastLine?: boolean;
+  /**
    * Optional renderer invoked per token type. Defaults to a `<span>` with
    * the matching `.tok-*` class.
    */
@@ -51,7 +57,7 @@ export const CodeListing = React.forwardRef<
   HTMLDivElement,
   CodeListingProps
 >(function CodeListing(
-  { lines, language, visibleCount, renderToken, className },
+  { lines, language, visibleCount, cursorOnLastLine = false, renderToken, className },
   ref,
 ) {
   const count = Math.max(0, Math.min(visibleCount ?? lines.length, lines.length));
@@ -67,6 +73,7 @@ export const CodeListing = React.forwardRef<
       <div className="min-w-max px-4 py-3">
         {lines.slice(0, count).map((line, lineIdx) => {
           const tokens = tokenizeLine(line, language);
+          const isLastLine = lineIdx === count - 1;
           return (
             <div key={lineIdx} className="flex min-h-[1.6em]">
               <span
@@ -93,6 +100,9 @@ export const CodeListing = React.forwardRef<
                         </span>
                       );
                     })}
+                {cursorOnLastLine && isLastLine ? (
+                  <span className="code-cursor" aria-hidden />
+                ) : null}
               </code>
             </div>
           );
