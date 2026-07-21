@@ -18,7 +18,7 @@ export function BlogDispatch({ postCount }: BlogDispatchProps) {
       className="font-mono text-sm space-y-1"
     >
       <p className="text-muted-foreground/50">{`> cat content/blog/*.md | grep "^title" | head -${postCount}`}</p>
-      <p className="text-green-500/70">{`✓ ${postCount} posts indexed`}</p>
+      <p className="text-success">{`✓ ${postCount} posts indexed`}</p>
     </motion.div>
   );
 }

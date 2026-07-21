@@ -84,13 +84,13 @@ export default async function IndexPage() {
       <ProjectsSectionV2 />
       <AnimatedSection
         direction="left"
-        className="container space-y-6 py-10 my-14"
+        className="mx-auto w-full max-w-7xl space-y-8 px-4 py-16 md:px-6 md:py-24"
         id="experience"
       >
         <div className="flex max-w-[42rem] flex-col items-start space-y-4 text-left">
           <AnimatedText
             as="h2"
-            className="font-heading text-3xl leading-[1.1] sm:text-3xl md:text-5xl"
+            className="font-heading text-3xl leading-[1.1] md:text-5xl"
           >
             {pagesConfig.experience.title}
           </AnimatedText>
@@ -114,13 +114,13 @@ export default async function IndexPage() {
       </AnimatedSection>
       <AnimatedSection
         direction="up"
-        className="container space-y-6 bg-muted py-10 my-14"
+        className="mx-auto w-full max-w-7xl space-y-8 px-4 py-16 md:px-6 md:py-24"
         id="blog"
       >
         <div className="flex max-w-[42rem] flex-col items-start space-y-4 text-left">
           <AnimatedText
             as="h2"
-            className="font-heading text-3xl leading-[1.1] sm:text-3xl md:text-5xl"
+            className="font-heading text-3xl leading-[1.1] md:text-5xl"
           >
             {pagesConfig.blogs.title}
           </AnimatedText>

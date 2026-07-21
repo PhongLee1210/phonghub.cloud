@@ -46,15 +46,12 @@ export function ProjectsSectionV2({
   return (
     <section
       id="projects"
-      className={[
-        "showcase my-14 bg-background text-foreground",
-        className ?? "",
-      ].join(" ")}
+      className={["py-16 md:py-24", className ?? ""].join(" ")}
     >
       {hero ? <ProjectsShowcase project={hero} /> : null}
 
       {gridProjects.length > 0 ? (
-        <div className="mx-auto w-full max-w-7xl px-4 pb-12 md:px-6">
+        <div className="mx-auto w-full max-w-7xl px-4 pt-8 md:px-6">
           <header className="mb-6 mt-2">
             <h3 className="font-heading text-lg font-semibold tracking-tight text-foreground">
               More featured projects
@@ -71,7 +68,7 @@ export function ProjectsSectionV2({
         </div>
       ) : null}
 
-      <div className="mx-auto w-full max-w-7xl px-4 pb-6 md:px-6">
+      <div className="mx-auto w-full max-w-7xl px-4 pt-8 md:px-6">
         <Link href="/projects" prefetch={false}>
           <Button variant="outline" className="rounded-xl">
             <Icons.chevronDown className="mr-2 h-4 w-4" aria-hidden />

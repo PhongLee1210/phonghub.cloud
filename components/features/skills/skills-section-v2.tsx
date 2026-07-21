@@ -37,17 +37,11 @@ export function SkillsSectionV2({
   return (
     <section
       id="skills"
-      className={[
-        "showcase my-14 bg-background text-foreground",
-        className ?? "",
-      ].join(" ")}
+      className={["py-16 md:py-24", className ?? ""].join(" ")}
     >
       <SkillsShowcase skills={skills} />
 
-      {/* View All — kept on the navy surface so the transition from
-          showcase to button is seamless. Aligned to the showcase's
-          max-w-7xl inner container. */}
-      <div className="mx-auto w-full max-w-7xl px-4 pb-6 md:px-6">
+      <div className="mx-auto w-full max-w-7xl px-4 pt-8 md:px-6">
         <Link href="/skills" prefetch={false}>
           <Button variant="outline" className="rounded-xl">
             <Icons.chevronDown className="mr-2 h-4 w-4" aria-hidden />

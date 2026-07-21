@@ -18,7 +18,7 @@ export function CareerLog({ experienceCount }: CareerLogProps) {
       className="font-mono text-sm space-y-1"
     >
       <p className="text-muted-foreground/50">{`> git log --author "Le Thanh Phong" --oneline`}</p>
-      <p className="text-green-500/70">{`✓ ${experienceCount} commits loaded`}</p>
+      <p className="text-success">{`✓ ${experienceCount} commits loaded`}</p>
     </motion.div>
   );
 }

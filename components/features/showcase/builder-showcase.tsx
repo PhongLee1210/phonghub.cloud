@@ -53,7 +53,7 @@ export function BuilderShowcase({
           initial="hidden"
           animate="visible"
           variants={staggerContainer(0.12)}
-          className="mx-auto w-full max-w-7xl px-4 py-12 md:px-6 md:py-20"
+          className="mx-auto w-full max-w-7xl px-4 md:px-6"
         >
           <motion.div variants={fadeUpStagger}>
             <ShowcaseTagline tagline={tagline} className="text-center md:text-left" />
