@@ -26,9 +26,10 @@ import { ShowcaseTagline } from "./showcase-tagline";
  * home-page section (Skills/Projects) can swap its own bodies (e.g.
  * `<SkillPreviewBody>` instead of `<LivePreviewFrame>`).
  *
- * Wraps everything in `<div className="showcase">` so the navy theme
- * tokens (defined in `app/globals.css`) are locally scoped — does NOT
- * touch the global theme.
+ * Wraps everything in `<div className="showcase">` as a scoping marker
+ * for the `.tok-*` syntax-highlight classes (defined in globals.css).
+ * All color tokens are inherited from the active theme — the showcase
+ * adapts to light/dark/custom themes automatically.
  */
 export interface BuilderShowcaseProps {
   tagline?: string;
