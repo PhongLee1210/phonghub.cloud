@@ -1,7 +1,5 @@
 "use client";
 
-import { useCallback, useState } from "react";
-
 import { BuilderShowcase } from "@/components/features/showcase/builder-showcase";
 import { CodeEditorPanel } from "@/components/features/showcase/code-editor-panel";
 import { TerminalStrip } from "@/components/features/showcase/terminal-strip";
@@ -9,8 +7,6 @@ import { SHOWCASE_TAGLINE, SHOWCASE_BUILD_LOG } from "@/config/showcase";
 import { PROJECT_SNIPPETS } from "@/config/project-snippets";
 import { featuredProjects } from "@/config/projects";
 import type { ProjectInterface } from "@/config/projects";
-import type { TerminalLine } from "@/lib/showcase/commands";
-import { useShowcaseStream } from "@/lib/showcase/use-showcase-stream";
 
 import { ProjectPreviewBody } from "./project-preview-body";
 
@@ -41,32 +37,6 @@ export function ProjectsShowcase({
   snippet = DEFAULT_SNIPPET,
   className,
 }: ProjectsShowcaseProps) {
-  const [streamedCode, setStreamedCode] = useState("");
-  const [appendedTerminal, setAppendedTerminal] = useState<TerminalLine[]>([]);
-
-  const onCodeDelta = useCallback((text: string) => {
-    setStreamedCode((prev) => prev + text);
-  }, []);
-  const onTerminal = useCallback((line: TerminalLine) => {
-    setAppendedTerminal((prev) => [...prev, line]);
-  }, []);
-  const onError = useCallback((message: string) => {
-    setAppendedTerminal((prev) => [
-      ...prev,
-      { tone: "error", text: `error: ${message}` },
-    ]);
-  }, []);
-
-  const { activeAction, onSelect, isStreaming } = useShowcaseStream({
-    section: "projects",
-    subjectName: project.organization.name,
-    tags: project.techStack,
-    currentCode: snippet?.rawLines,
-    onCodeDelta,
-    onTerminal,
-    onError,
-  });
-
   const editor = snippet ? (
     <CodeEditorPanel
       filename={snippet.filename}
@@ -74,9 +44,6 @@ export function ProjectsShowcase({
       lines={snippet.rawLines}
       mode="reveal"
       lineDelayMs={140}
-      streamedCode={streamedCode}
-      streaming={isStreaming}
-      compiled={streamedCode.length > 0 ? !isStreaming : undefined}
     />
   ) : (
     <CodeEditorPanel
@@ -95,17 +62,9 @@ export function ProjectsShowcase({
     <BuilderShowcase
       tagline={SHOWCASE_TAGLINE}
       className={className}
-      activeCommandId={activeAction}
-      onCommandSelect={onSelect}
       editor={editor}
       preview={<ProjectPreviewBody project={project} />}
-      terminal={
-        <TerminalStrip
-          lines={SHOWCASE_BUILD_LOG}
-          appendedLines={appendedTerminal}
-          live={isStreaming}
-        />
-      }
+      terminal={<TerminalStrip lines={SHOWCASE_BUILD_LOG} />}
     />
   );
 }

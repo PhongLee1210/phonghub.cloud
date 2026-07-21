@@ -1,22 +1,21 @@
+"use client";
+
 import * as React from "react";
+import { motion } from "framer-motion";
 
 import { tokenizeLine } from "@/lib/code-tokenizer";
+import { fadeUpStagger, staggerContainer } from "@/lib/motion";
 import { cn } from "@/lib/utils";
 
 /**
- * CodeListing — static, token-driven code renderer used inside the
- * showcase's editor panel.
+ * CodeListing — token-driven code renderer used inside the showcase's
+ * editor panel.
  *
- * Replaces the ad-hoc palette classes (`text-purple-400` etc.) used by
- * `components/projects/code-terminal.tsx` with theme-token-driven classes
- * (`.tok-keyword`, `.tok-string`, ...) defined in `app/globals.css` under
- * `.showcase`. That keeps the standalone code-terminal.tsx untouched (it
- * still renders the projects page) while the showcase editor becomes
- * theme-aware.
- *
- * Pure / server-component safe — no hooks, no motion. The typewriter
- * reveal lives in T2.1's CodeEditorPanel; this primitive just renders
- * whatever lines it's given.
+ * Each line is a `motion.div` keyed to `fadeUpStagger` so a parent
+ * `motion.div` with `initial="hidden" whileInView="visible"` +
+ * `variants={staggerContainer}` drives a per-line stagger reveal
+ * WITHOUT React re-renders (framer-motion animates via RAF). If no
+ * ancestor sets a variant label, lines render statically.
  */
 export type CodeListingLanguage = "typescript" | "python";
 
@@ -24,20 +23,18 @@ export interface CodeListingProps {
   lines: readonly string[];
   language: CodeListingLanguage;
   /**
-   * Number of lines rendered so far (1-indexed count). Used by the
-   * typewriter reveal in T2.1 — defaults to `lines.length` (all lines).
+   * Number of lines rendered (1-indexed count). Defaults to
+   * `lines.length` (all lines). Ignored when `staggerReveal` is true —
+   * all lines always render so the stagger can animate each one.
    */
   visibleCount?: number;
   /**
    * When `true`, appends a blinking cursor (`.code-cursor`) after the
-   * last visible line. Driven by `CodeEditorPanel` in `"reveal"` mode
-   * while the typewriter is mid-flight; ignored once `compiled`.
+   * last line.
    */
   cursorOnLastLine?: boolean;
-  /**
-   * Optional renderer invoked per token type. Defaults to a `<span>` with
-   * the matching `.tok-*` class.
-   */
+  /** Per-line stagger delay in seconds (default 0.14). */
+  staggerDelay?: number;
   renderToken?: (
     token: { text: string; type: string },
     index: number,
@@ -57,14 +54,23 @@ export const CodeListing = React.forwardRef<
   HTMLDivElement,
   CodeListingProps
 >(function CodeListing(
-  { lines, language, visibleCount, cursorOnLastLine = false, renderToken, className },
+  {
+    lines,
+    language,
+    visibleCount,
+    cursorOnLastLine = false,
+    staggerDelay = 0.14,
+    renderToken,
+    className,
+  },
   ref,
 ) {
   const count = Math.max(0, Math.min(visibleCount ?? lines.length, lines.length));
 
   return (
-    <div
+    <motion.div
       ref={ref}
+      variants={staggerContainer(staggerDelay)}
       className={cn(
         "overflow-x-auto font-mono text-[13px] leading-[1.6]",
         className,
@@ -75,7 +81,11 @@ export const CodeListing = React.forwardRef<
           const tokens = tokenizeLine(line, language);
           const isLastLine = lineIdx === count - 1;
           return (
-            <div key={lineIdx} className="flex min-h-[1.6em]">
+            <motion.div
+              key={lineIdx}
+              variants={fadeUpStagger}
+              className="flex min-h-[1.6em]"
+            >
               <span
                 aria-hidden
                 className="w-8 shrink-0 select-none pr-4 text-right text-muted-foreground/60"
@@ -104,11 +114,11 @@ export const CodeListing = React.forwardRef<
                   <span className="code-cursor" aria-hidden />
                 ) : null}
               </code>
-            </div>
+            </motion.div>
           );
         })}
       </div>
-    </div>
+    </motion.div>
   );
 });
 
