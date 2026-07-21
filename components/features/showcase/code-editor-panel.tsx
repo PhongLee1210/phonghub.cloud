@@ -67,17 +67,14 @@ export interface CodeEditorPanelProps {
   /** Per-line delay in ms (default 120). */
   lineDelayMs?: number;
   /**
-   * AI-streamed code appended live (T5.6). Split into lines on `\n` and
-   * rendered after the snippet lines. Pass `""` or `undefined` to show
-   * no streamed content.
+   * AI-streamed code appended live. Split into lines on `\n` and
+   * rendered after the snippet lines.
    */
   streamedCode?: string;
   /**
-   * When `true`, force the panel into "streaming" view: show all snippet
-   * lines + streamedCode without driving the reveal cascade. Used by
-   * `useShowcaseStream` to short-circuit reveal mode while a stream is
-   * in flight so the streamed text shows up instantly alongside the
-   * snippet (the streaming itself is the typewriter effect).
+   * When `true`, short-circuit the reveal cascade and show all snippet
+   * lines + `streamedCode` instantly. Used while a stream is in flight
+   * so the streamed text shows up alongside the snippet.
    */
   streaming?: boolean;
   className?: string;
@@ -158,9 +155,7 @@ export function CodeEditorPanel({
   const effectiveCompiled = reveal ? compiledState : compiledProp;
   const cursorActive = reveal && !compiledState && revealedCount > 0;
 
-  // T5.6: append streamed code as additional lines when provided.
-  // Split on \n and drop the trailing empty (from a final newline) so the
-  // CodeListing layout stays tidy.
+  // Append streamed code as additional lines when provided.
   const streamedLines =
     streamedCode && streamedCode.length > 0
       ? streamedCode.split("\n")

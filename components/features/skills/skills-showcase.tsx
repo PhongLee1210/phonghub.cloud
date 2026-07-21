@@ -1,6 +1,5 @@
 "use client";
 
-import * as React from "react";
 import { useCallback, useState } from "react";
 
 import { BuilderShowcase } from "@/components/features/showcase/builder-showcase";
@@ -9,7 +8,7 @@ import { TerminalStrip } from "@/components/features/showcase/terminal-strip";
 import type { TerminalLine } from "@/lib/showcase/commands";
 import { useShowcaseStream } from "@/lib/showcase/use-showcase-stream";
 import { SKILL_SNIPPETS } from "@/config/skill-snippets";
-import { featuredSkills, SkillCategoryEnum, SKILLS } from "@/config/skills";
+import { featuredSkills, SKILLS } from "@/config/skills";
 import type { ISkill } from "@/config/skills";
 
 import { SkillPreviewBody } from "./skill-preview-body";
@@ -17,31 +16,15 @@ import { SkillPreviewBody } from "./skill-preview-body";
 /**
  * SkillsShowcase — wires `BuilderShowcase` to skills data.
  *
- * Editor  → TypeScript snippet (`SKILL_SNIPPETS[0]`) with the typewriter
- *           reveal driven by `CodeEditorPanel mode="reveal"`.
+ * Editor  → TypeScript snippet with typewriter reveal.
  * Preview → `<SkillPreviewBody>` over `featuredSkills` (top 6 by rating).
  * Terminal→ derived from `SKILLS` at module load — count + per-category
- *           averages for the four highest-rated categories. Recomputed only
- *           when `config/skills.ts` changes (Next.js bundler cache).
- *
- * The tagline is overridden with a skills-specific phrase; the Figma default
- * (`SHOWCASE_TAGLINE`) is reserved for the Projects hero in Phase 4.
- *
- * T5.5/T5.6 will wire `highlightedKeys` and editor snippet cycling via the
- * Zustand store; for now both are static.
+ *           averages for the highest-rated categories.
  */
 
 /** Skills-section tagline override (Figma default reserved for Projects). */
 const SKILLS_TAGLINE = "My technical toolkit";
 
-/**
- * Build the skills diagnostic terminal lines from the live config so they
- * stay accurate if `SKILLS` changes. Picks the four top-rated categories
- * (by average rating, then by count) and renders their summary line.
- *
- * Run once at module load — pure derivation, safe to cache for the bundle's
- * lifetime.
- */
 function buildSkillsDiagnosticLines(): readonly TerminalLine[] {
   const byCat = new Map<string, ISkill[]>();
   for (const skill of SKILLS) {
@@ -60,10 +43,7 @@ function buildSkillsDiagnosticLines(): readonly TerminalLine[] {
     .slice(0, 3);
 
   const lines: TerminalLine[] = [
-    {
-      tone: "info",
-      text: `scanning skills… ${SKILLS.length} found`,
-    },
+    { tone: "info", text: `scanning skills… ${SKILLS.length} found` },
     {
       tone: "success",
       text: `featured: ${featuredSkills.length} highlighted, top rating ${featuredSkills[0]?.rating ?? 5}★`,
@@ -83,15 +63,11 @@ function buildSkillsDiagnosticLines(): readonly TerminalLine[] {
 const SKILLS_DIAGNOSTIC_LINES: readonly TerminalLine[] =
   buildSkillsDiagnosticLines();
 
-/** Default editor snippet: TypeScript (top skill). */
 const DEFAULT_SKILL_SNIPPET = SKILL_SNIPPETS[0];
 
 export interface SkillsShowcaseProps {
-  /** Override featured skills (defaults to `featuredSkills` from config). */
   skills?: typeof featuredSkills;
-  /** AI-driven highlight (T5.6 wiring; undefined = no filter). */
   highlightedKeys?: string[];
-  /** Override the diagnostic snippet (default: TypeScript). */
   snippet?: (typeof SKILL_SNIPPETS)[number];
   className?: string;
 }
@@ -104,12 +80,6 @@ export function SkillsShowcase({
 }: SkillsShowcaseProps) {
   const [streamedCode, setStreamedCode] = useState("");
   const [appendedTerminal, setAppendedTerminal] = useState<TerminalLine[]>([]);
-
-  // Clear streamed state when the section re-mounts or the snippet changes.
-  React.useEffect(() => {
-    setStreamedCode("");
-    setAppendedTerminal([]);
-  }, [snippet]);
 
   const onCodeDelta = useCallback((text: string) => {
     setStreamedCode((prev) => prev + text);
@@ -149,7 +119,7 @@ export function SkillsShowcase({
           lineDelayMs={140}
           streamedCode={streamedCode}
           streaming={isStreaming}
-          compiled={streamedCode.length === 0 ? undefined : !isStreaming}
+          compiled={streamedCode.length > 0 ? !isStreaming : undefined}
         />
       }
       preview={
@@ -171,7 +141,3 @@ export function SkillsShowcase({
 }
 
 export default SkillsShowcase;
-
-// Re-export so callers don't need to import the enum separately if they want
-// to filter — kept here to keep SkillsShowcase's surface self-contained.
-export { SkillCategoryEnum };

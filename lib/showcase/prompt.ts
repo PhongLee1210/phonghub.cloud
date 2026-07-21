@@ -8,13 +8,10 @@ import type { AiCommandId, ShowcaseSection } from "./commands";
  * template serves both Skills and Projects sections and all six
  * `AiCommandId` actions.
  *
- * Output contract: the model MUST emit only NDJSON events matching the
- * `ShowcaseEvent` union in `lib/showcase/commands.ts`. No prose, no
- * markdown fences. The streamer (`lib/showcase/server/stream-patch.ts`,
- * T5.3) parses line-by-line and silently skips malformed events with a
- * warning log.
- *
- * Server-only: importing this file from client code fails the build.
+ * Output contract: the model emits only NDJSON events matching the
+ * `ShowcaseEvent` union in `lib/showcase/commands.ts`. The streamer
+ * (`lib/showcase/server/stream-patch.ts`) parses line-by-line and
+ * silently skips malformed events with a warning log.
  */
 
 export interface ShowcasePromptContext {

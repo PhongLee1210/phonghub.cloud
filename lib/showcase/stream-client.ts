@@ -1,12 +1,9 @@
 import type { ShowcaseEvent } from "./commands";
 
 /**
- * POSTs to `/api/showcase/patch`, incrementally parses the NDJSON
- * response, and dispatches events as they arrive. Returns an
- * AbortController the caller can use to cancel mid-stream.
- *
- * Mirrors the `lib/chat/client.ts` pattern: same NDJSON framing, same
- * `AbortController` surface, same defensive error normalisation.
+ * POSTs to /api/showcase/patch, incrementally parses the NDJSON response,
+ * and dispatches events as they arrive. Returns an AbortController the
+ * caller can use to cancel mid-stream.
  */
 export interface ShowcaseStreamHandlers {
   onCodeDelta?: (text: string) => void;
@@ -54,34 +51,9 @@ export function streamShowcasePatch(
       return;
     }
 
-    if (!response.ok) {
-      // 4xx/5xx with an NDJSON error event in the body — read the body
-      // and surface the message.
-      const text = await response.text();
-      let message = `Request failed (HTTP ${response.status}).`;
-      let code: string | undefined = `http_${response.status}`;
-      const firstLine = text.split("\n")[0];
-      try {
-        const parsed = JSON.parse(firstLine);
-        if (parsed && typeof parsed.message === "string") {
-          message = parsed.message;
-        }
-        if (parsed && typeof parsed.code === "string") {
-          code = parsed.code;
-        }
-      } catch {
-        // Fall through with defaults.
-      }
-      handlers.onError?.(message, code);
-      return;
-    }
-
     const reader = response.body?.getReader();
     if (!reader) {
-      handlers.onError?.(
-        "upstream_error",
-        "No response stream received.",
-      );
+      handlers.onError?.("upstream_error", "No response stream received.");
       return;
     }
 
@@ -94,26 +66,16 @@ export function streamShowcasePatch(
         if (done) break;
         buffer += decoder.decode(value, { stream: true });
 
-        let nlIdx: number;
-        while ((nlIdx = buffer.indexOf("\n")) !== -1) {
-          const line = buffer.slice(0, nlIdx).trim();
-          buffer = buffer.slice(nlIdx + 1);
+        let newlineIndex: number;
+        while ((newlineIndex = buffer.indexOf("\n")) !== -1) {
+          const line = buffer.slice(0, newlineIndex).trim();
+          buffer = buffer.slice(newlineIndex + 1);
           if (!line) continue;
-          try {
-            dispatch(JSON.parse(line) as ShowcaseEvent, handlers);
-          } catch {
-            // Skip malformed line — server should already defend, but be
-            // defensive here too so a single bad line doesn't kill the UI.
-          }
+          dispatch(JSON.parse(line) as ShowcaseEvent, handlers);
         }
       }
-      const tail = buffer.trim();
-      if (tail) {
-        try {
-          dispatch(JSON.parse(tail) as ShowcaseEvent, handlers);
-        } catch {
-          // ignore.
-        }
+      if (buffer.trim()) {
+        dispatch(JSON.parse(buffer.trim()) as ShowcaseEvent, handlers);
       }
     } catch {
       if (controller.signal.aborted) {

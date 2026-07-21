@@ -18,25 +18,19 @@ import type {
 
 /**
  * streamPatch — server-side bridge between the showcase AI commands and
- * the LLM gateway. Builds the prompt, calls `streamLLM` (cheap alias —
- * the showcase is illustrative, not heavy reasoning), parses the model's
- * NDJSON output into typed `ShowcaseEvent`s, and yields them defensively
- * (malformed lines are skipped with a warning log; the stream continues).
+ * the LLM gateway. Builds the prompt, calls `streamLLM` (cheap alias),
+ * parses the model's NDJSON output into typed `ShowcaseEvent`s, and
+ * yields them. Malformed lines are skipped with a warning log.
  *
- * Wire format (line-delimited JSON — see `lib/showcase/commands.ts`):
- *
+ * Wire format (one JSON object per line):
  *   {"type":"code-delta","text":"..."}
  *   {"type":"terminal","line":{"tone":"success","text":"..."}}
  *   {"type":"done","phase":"compiled"}
  *   {"type":"error","message":"...","code":"..."}
  *
- * Returns an `AsyncIterable<ShowcaseEvent>` so the route handler
- * (`app/api/showcase/patch/route.ts`, T5.4) can re-serialise each event
- * to NDJSON and stream it to the client.
- *
- * `reset` is a pure client action (per plan T5.5) — calling `streamPatch`
- * with `command === "reset"` throws a `ShowcasePatchError` so the route
- * handler can return a 400 without consulting the model.
+ * `reset` is a pure client action; calling `streamPatch` with
+ * `command === "reset"` throws `ShowcasePatchError` so the route handler
+ * can return 400 without consulting the model.
  */
 
 const MAX_TOKENS = 800;
@@ -58,11 +52,12 @@ export interface StreamPatchArgs {
 }
 
 export class ShowcasePatchError extends Error {
-  code: string;
-  constructor(code: string, message: string) {
+  constructor(
+    readonly code: string,
+    message: string,
+  ) {
     super(message);
     this.name = "ShowcasePatchError";
-    this.code = code;
   }
 }
 
@@ -73,9 +68,6 @@ export async function* streamPatch({
   signal,
 }: StreamPatchArgs): AsyncIterable<ShowcaseEvent> {
   if (command === "reset") {
-    // Per plan T5.5: reset is purely client-side. The route handler
-    // rejects before calling streamPatch, but defending here too keeps
-    // the function safe to call directly from tests.
     throw new ShowcasePatchError(
       "client_only",
       'The "reset" command is handled client-side; no server stream is required.',
@@ -106,8 +98,6 @@ export async function* streamPatch({
 
       buffer += text;
 
-      // NDJSON = newline-delimited. Process every complete line in the
-      // buffer; keep the trailing partial for the next chunk.
       let nlIdx: number;
       while ((nlIdx = buffer.indexOf("\n")) >= 0) {
         const line = buffer.slice(0, nlIdx).trim();
@@ -119,19 +109,13 @@ export async function* streamPatch({
           eventCount++;
           if (parsed.type === "done") sawDone = true;
           yield parsed;
-          if (parsed.type === "done") {
-            // The model said it's done — stop reading even if more text
-            // is buffered. Trailing prose after `done` is usually the
-            // model ignoring the contract; ignore it cleanly.
-            return;
-          }
+          if (parsed.type === "done") return;
         }
       }
     }
   } catch (err) {
-    // Flush any partial line the model emitted before failing — the
-    // user benefits from seeing the partial output even when the stream
-    // dies mid-event. Then yield the error event.
+    // Flush any partial line emitted before the failure so the user
+    // still sees the partial output, then surface the error.
     const tailOnError = buffer.trim();
     if (tailOnError) {
       const parsed = parseEvent(tailOnError);
@@ -141,18 +125,15 @@ export async function* streamPatch({
         yield parsed;
       }
     }
-    const message =
-      err instanceof Error ? err.message : "Unexpected error during stream.";
     yield {
       type: "error",
-      message,
+      message:
+        err instanceof Error ? err.message : "Unexpected error during stream.",
       code: err instanceof Error ? "stream_error" : "unknown",
     };
     return;
   }
 
-  // Flush any remaining buffered line (the model may have omitted the
-  // trailing newline on the final event).
   const tail = buffer.trim();
   if (tail) {
     const parsed = parseEvent(tail);
@@ -163,15 +144,10 @@ export async function* streamPatch({
     }
   }
 
-  // If the model produced no events OR forgot to emit `done`, emit a
-  // terminal warning + done so the client UI resolves cleanly.
   if (eventCount === 0) {
     yield {
       type: "terminal",
-      line: {
-        tone: "warning",
-        text: "no output from assistant — try again",
-      },
+      line: { tone: "warning", text: "no output from assistant — try again" },
     };
   }
   if (!sawDone) {
@@ -185,10 +161,9 @@ function extractText(chunk: LLMStreamChunk): string | undefined {
 }
 
 /**
- * Defensive NDJSON parser. Returns `undefined` (and logs a warning) for
- * any line that isn't valid JSON or doesn't satisfy the ShowcaseEvent
- * contract. The stream continues regardless — one bad line shouldn't
- * kill the user experience.
+ * Defensive NDJSON parser. Returns `undefined` for any line that isn't
+ * valid JSON or doesn't satisfy the ShowcaseEvent contract; the stream
+ * continues regardless.
  */
 function parseEvent(line: string): ShowcaseEvent | undefined {
   let obj: unknown;
@@ -201,13 +176,7 @@ function parseEvent(line: string): ShowcaseEvent | undefined {
     return undefined;
   }
 
-  if (!isObject(obj)) {
-    console.warn(
-      "[showcase/stream-patch] skipping non-object NDJSON line:",
-      line.slice(0, 120),
-    );
-    return undefined;
-  }
+  if (!isObject(obj)) return undefined;
 
   const type = (obj as { type?: unknown }).type;
 
@@ -241,7 +210,6 @@ function parseEvent(line: string): ShowcaseEvent | undefined {
     case "done": {
       const phase = (obj as { phase?: unknown }).phase;
       if (phase !== "compiled" && phase !== "preview" && phase !== "idle") {
-        // Default to compiled if the model forgot or sent something weird.
         return { type: "done", phase: "compiled" };
       }
       return { type: "done", phase };
@@ -264,5 +232,3 @@ function parseEvent(line: string): ShowcaseEvent | undefined {
 function isObject(value: unknown): value is Record<string, unknown> {
   return typeof value === "object" && value !== null;
 }
-
-export { ShowcasePatchError as ShowcaseStreamError };

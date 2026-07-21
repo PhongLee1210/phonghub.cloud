@@ -19,26 +19,12 @@ export const maxDuration = 30;
  *   {
  *     "section":  "skills" | "projects",
  *     "command":  "modify" | "theme" | "feature" | "layout" | "analytics" | "reset",
- *     "context":  {
- *       "subjectName": string,
- *       "tags"?:        string[],
- *       "currentCode"?: string[],
- *       "hint"?:        string
- *     }
+ *     "context":  { "subjectName": string, "tags"?: string[], "currentCode"?: string[], "hint"?: string }
  *   }
  *
- * Each event from `streamPatch` is serialised as one NDJSON line. The
- * client (`AiCommandToolbar`, T5.5) reads the stream and pushes events
- * into the Zustand store (`useShowcaseStore`, T5.6).
- *
- * Rate limiting reuses `lib/chat/rate-limit.ts` (per AGENTS.md) — same
- * dev/prod split behavior: in development without Upstash the request
- * passes with a console warning; in production without Upstash it is
- * rejected. The showcase shares the chat quota; if usage diverges we
- * can split prefixes later.
- *
- * `reset` is a pure client action (per plan T5.5) — calling it here
- * returns 400 so the client knows not to fetch.
+ * Each event from `streamPatch` is serialised as one NDJSON line. Rate
+ * limiting reuses `lib/chat/rate-limit.ts` (same dev/prod split behavior
+ * as `/api/chat`). `reset` returns 400 — it is a pure client action.
  */
 
 const VALID_SECTIONS: readonly ShowcaseSection[] = ["skills", "projects"];
@@ -139,9 +125,9 @@ function validateBody(body: unknown): ParsedBody | undefined {
     command: command as AiCommandId,
     context: {
       subjectName,
-      ...(tags ? { tags: tags as string[] } : {}),
-      ...(currentCode ? { currentCode: currentCode as string[] } : {}),
-      ...(hint ? { hint } : {}),
+      tags: tags as string[] | undefined,
+      currentCode: currentCode as string[] | undefined,
+      hint: hint as string | undefined,
     },
   };
 }
@@ -164,7 +150,6 @@ export async function POST(req: NextRequest) {
   }
 
   if (parsed.command === "reset") {
-    // Per plan T5.5: reset is handled entirely client-side.
     return jsonError(
       400,
       "client_only",
@@ -204,9 +189,6 @@ export async function POST(req: NextRequest) {
           enqueue(event);
         }
       } catch (err) {
-        // streamPatch normalises errors to ShowcaseEvent, so a throw here
-        // is unexpected (ShowcasePatchError for `reset` is unreachable
-        // because of the early return above). Surface a clean event anyway.
         const message =
           err instanceof Error ? err.message : "Unexpected route error.";
         const code =

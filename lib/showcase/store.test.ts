@@ -4,12 +4,9 @@ import { useShowcaseStore } from "./store";
 import type { ShowcaseStoreState } from "./store";
 
 /**
- * Unit tests for `useShowcaseStore`. Covers the actions the streaming
- * wire-up (T5.5 / T5.6) depends on: phase transitions, active action
- * tracking, highlight state, and reset semantics (preserve `section`).
- *
- * Uses Zustand's vanilla API directly (`getState` / `setState`) — no React
- * render needed, no `@testing-library/react` dependency.
+ * Unit tests for `useShowcaseStore`. Covers phase transitions, active
+ * action tracking, and reset semantics. Uses Zustand's vanilla API
+ * directly (`getState` / `setState`) — no React render needed.
  */
 
 function snapshot(): ShowcaseStoreState {
@@ -17,46 +14,18 @@ function snapshot(): ShowcaseStoreState {
 }
 
 beforeEach(() => {
-  // Reset to factory defaults before every test.
-  useShowcaseStore.setState({
-    section: "skills",
-    phase: "idle",
-    activeAction: null,
-    highlightLines: [],
-    highlightedSkillKeys: [],
-  });
+  useShowcaseStore.setState({ phase: "idle", activeAction: null });
 });
 
 afterEach(() => {
-  useShowcaseStore.setState({
-    section: "skills",
-    phase: "idle",
-    activeAction: null,
-    highlightLines: [],
-    highlightedSkillKeys: [],
-  });
+  useShowcaseStore.setState({ phase: "idle", activeAction: null });
 });
 
 describe("useShowcaseStore", () => {
-  test("initial state is the idle skills showcase", () => {
+  test("initial state is idle with no active action", () => {
     const s = snapshot();
-    expect(s.section).toBe("skills");
     expect(s.phase).toBe("idle");
     expect(s.activeAction).toBeNull();
-    expect(s.highlightLines).toEqual([]);
-    expect(s.highlightedSkillKeys).toEqual([]);
-  });
-
-  test("setSection switches section without disturbing other state", () => {
-    useShowcaseStore.getState().setActiveAction("feature");
-    useShowcaseStore.getState().setPhase("coding");
-
-    useShowcaseStore.getState().setSection("projects");
-
-    const s = snapshot();
-    expect(s.section).toBe("projects");
-    expect(s.activeAction).toBe("feature");
-    expect(s.phase).toBe("coding");
   });
 
   test("setPhase transitions through the lifecycle", () => {
@@ -78,34 +47,15 @@ describe("useShowcaseStore", () => {
     expect(snapshot().activeAction).toBeNull();
   });
 
-  test("setHighlightLines replaces the highlight array", () => {
-    useShowcaseStore.getState().setHighlightLines([1, 2, 3]);
-    expect(snapshot().highlightLines).toEqual([1, 2, 3]);
-
-    useShowcaseStore.getState().setHighlightLines([5]);
-    expect(snapshot().highlightLines).toEqual([5]);
-  });
-
-  test("setHighlightedSkillKeys updates the chip filter set", () => {
-    useShowcaseStore.getState().setHighlightedSkillKeys(["react", "nextjs"]);
-    expect(snapshot().highlightedSkillKeys).toEqual(["react", "nextjs"]);
-  });
-
-  test("reset returns to idle but preserves section", () => {
-    useShowcaseStore.getState().setSection("projects");
+  test("reset returns to idle", () => {
     useShowcaseStore.getState().setActiveAction("feature");
     useShowcaseStore.getState().setPhase("coding");
-    useShowcaseStore.getState().setHighlightLines([2, 4]);
-    useShowcaseStore.getState().setHighlightedSkillKeys(["typescript"]);
 
     useShowcaseStore.getState().reset();
 
     const s = snapshot();
-    expect(s.section).toBe("projects"); // preserved
     expect(s.phase).toBe("idle");
     expect(s.activeAction).toBeNull();
-    expect(s.highlightLines).toEqual([]);
-    expect(s.highlightedSkillKeys).toEqual([]);
   });
 
   test("multiple subscribers are decoupled via Zustand selectors", () => {
@@ -126,10 +76,6 @@ describe("useShowcaseStore", () => {
     unsubPhase();
     unsubAction();
 
-    // Each listener fired for every state change (Zustand's default
-    // subscriber fires on every set, not just selected-slice changes).
-    // This test documents that behaviour so future refactors notice
-    // if the store moves to a selector-based subscription.
     expect(phaseReads.length).toBeGreaterThan(0);
     expect(actionReads.length).toBeGreaterThan(0);
     expect(phaseReads[phaseReads.length - 1]).toBe("compiled");

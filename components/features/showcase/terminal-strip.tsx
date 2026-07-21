@@ -16,32 +16,15 @@ import { cn } from "@/lib/utils";
  *   warning !  ...
  *   error   ✗  ...
  *
- * Default content is sourced from `SHOWCASE_BUILD_LOG` (config/showcase.ts)
- * by the parent `BuilderShowcase`; this primitive just renders whatever
- * lines it's given.
- *
- * T2.2 wraps each line in `motion.li` keyed to `fadeUpStagger` so the
- * parent cascade reveals them one-by-one. Variant-only — local
- * `initial`/`animate` come from `BuilderShowcase`.
+ * Default content is sourced from `SHOWCASE_BUILD_LOG` by the parent
+ * `BuilderShowcase`; this primitive just renders whatever lines it's
+ * given. T2.2 wraps each line in `motion.li` keyed to `fadeUpStagger`
+ * so the parent cascade reveals them one-by-one.
  */
 export interface TerminalStripProps {
   lines: readonly TerminalLine[];
-  /**
-   * Number of lines currently visible. Used by future streaming work
-   * (T5.6); defaults to `lines.length` (all visible).
-   */
   visibleCount?: number;
-  /**
-   * When `true`, renders an `aria-live="polite"` region so streamed
-   * terminal output (T5.6) is announced. Off by default to keep the
-   * initial SSR paint quiet for screen-reader users.
-   */
   live?: boolean;
-  /**
-   * T5.6: AI-streamed lines appended after the base `lines`. Renders a
-   * subtle divider between the static build-log and the live output so
-   * the user can tell which is which. Pass `undefined` or `[]` for none.
-   */
   appendedLines?: readonly TerminalLine[];
   className?: string;
 }
@@ -59,6 +42,33 @@ const TONE_TEXT: Record<TerminalTone, string> = {
   warning: "text-warning",
   error: "text-destructive",
 };
+
+function TerminalRow({ line }: { line: TerminalLine }) {
+  return (
+    <motion.li
+      variants={fadeUpStagger}
+      className="flex items-start gap-2 will-change-[transform,opacity]"
+    >
+      <span
+        aria-hidden
+        className={cn(
+          "w-3 flex-shrink-0 select-none text-center",
+          TONE_TEXT[line.tone],
+        )}
+      >
+        {GLYPH[line.tone]}
+      </span>
+      <span
+        className={cn(
+          "flex-1 whitespace-pre-wrap break-words",
+          TONE_TEXT[line.tone],
+        )}
+      >
+        {line.text}
+      </span>
+    </motion.li>
+  );
+}
 
 export const TerminalStrip = React.forwardRef<
   HTMLDivElement,
@@ -91,58 +101,14 @@ export const TerminalStrip = React.forwardRef<
       ) : (
         <motion.ul variants={staggerContainer(0.08)} className="space-y-1">
           {visible.map((line, idx) => (
-            <motion.li
-              key={idx}
-              variants={fadeUpStagger}
-              className="flex items-start gap-2 will-change-[transform,opacity]"
-            >
-              <span
-                aria-hidden
-                className={cn(
-                  "w-3 flex-shrink-0 select-none text-center",
-                  TONE_TEXT[line.tone],
-                )}
-              >
-                {GLYPH[line.tone]}
-              </span>
-              <span
-                className={cn(
-                  "flex-1 whitespace-pre-wrap break-words",
-                  TONE_TEXT[line.tone],
-                )}
-              >
-                {line.text}
-              </span>
-            </motion.li>
+            <TerminalRow key={idx} line={line} />
           ))}
           {hasAppended ? (
             <li aria-hidden className="my-1 border-t border-border/40" />
           ) : null}
           {hasAppended
             ? appendedLines.map((line, idx) => (
-                <motion.li
-                  key={`appended-${idx}`}
-                  variants={fadeUpStagger}
-                  className="flex items-start gap-2 will-change-[transform,opacity]"
-                >
-                  <span
-                    aria-hidden
-                    className={cn(
-                      "w-3 flex-shrink-0 select-none text-center",
-                      TONE_TEXT[line.tone],
-                    )}
-                  >
-                    {GLYPH[line.tone]}
-                  </span>
-                  <span
-                    className={cn(
-                      "flex-1 whitespace-pre-wrap break-words",
-                      TONE_TEXT[line.tone],
-                    )}
-                  >
-                    {line.text}
-                  </span>
-                </motion.li>
+                <TerminalRow key={`appended-${idx}`} line={line} />
               ))
             : null}
         </motion.ul>
