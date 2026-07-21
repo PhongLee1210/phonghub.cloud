@@ -14,32 +14,21 @@ import {
  *
  * Source: Figma file `vzSKdqNFnYFrHBiI7GeqAn`, node `20:5`.
  *
- * NOTE: Type definitions live inline here for now to keep T0.4
- * dependency-free. T5.1 will lift them into `lib/showcase/commands.ts`
- * and re-export from here so callers keep a single import surface.
+ * Type definitions live in `lib/showcase/commands.ts` (lifted in T5.1 so
+ * the Zustand store and server streamer can share them without a config
+ * import). They're re-exported below to preserve the existing import
+ * surface — callers can keep using `@/config/showcase`.
  */
-export type AiCommandId =
-  | "modify"
-  | "theme"
-  | "feature"
-  | "layout"
-  | "analytics"
-  | "reset";
-
-export interface AiCommand {
-  id: AiCommandId;
-  label: string;
-  icon: LucideIcon;
-}
-
-export type TerminalTone = "info" | "success" | "warning" | "error";
-
-export interface TerminalLine {
-  tone: TerminalTone;
-  text: string;
-}
-
-export type ShowcaseSection = "skills" | "projects";
+export type {
+  AiCommand,
+  AiCommandId,
+  ShowcaseEvent,
+  ShowcasePhase,
+  ShowcaseSection,
+  TerminalLine,
+  TerminalTone,
+} from "@/lib/showcase/commands";
+import type { AiCommand, TerminalLine } from "@/lib/showcase/commands";
 
 /**
  * Hero tagline above the showcase composition.
