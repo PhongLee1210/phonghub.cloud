@@ -314,6 +314,78 @@
     --d: 700ms;
     --e: cubic-bezier(0.19, 1, 0.22, 1);
   }
+
+  /**
+   * Showcase composition theme — locally scoped navy palette sampled from
+   * Figma node `20:5`. Applied via `className="showcase"` on the wrapping
+   * div of each home-page section (#skills, #projects).
+   *
+   * All chat-* tokens intentionally fall through to :root so any chat widget
+   * that ends up rendered inside .showcase keeps its own palette.
+   */
+  .showcase {
+    --background:           222 67% 4%;      /* #00040C */
+    --foreground:           210 40% 98%;
+
+    --muted:                222 35% 12%;
+    --muted-foreground:     220 8% 42%;      /* #5B626F */
+
+    --accent:               222 30% 14%;
+    --accent-foreground:    210 40% 98%;
+
+    --popover:              222 60% 6%;      /* #040A16 */
+    --popover-foreground:   210 40% 98%;
+
+    --border:               222 30% 16%;
+    --input:                222 30% 14%;
+
+    --card:                 222 50% 7%;      /* #060C17 */
+    --card-2:               222 47% 8%;      /* #070D18 — nested surface */
+    --card-foreground:      210 40% 98%;
+
+    --primary:              263 60% 56%;     /* keyword purple */
+    --primary-foreground:   210 40% 98%;
+
+    --secondary:            210 60% 40%;     /* JSX tag blue */
+    --secondary-foreground: 210 40% 98%;
+
+    --destructive:          0 70% 55%;
+    --destructive-foreground: 210 40% 98%;
+
+    --ring:                 158 60% 42%;     /* terminal-green focus */
+
+    --lavender:             263 60% 66%;
+    --lavender-foreground:  222 67% 4%;
+    --lavender-soft:        263 30% 18%;
+    --lavender-soft-foreground: 263 50% 88%;
+
+    --success:              130 70% 26%;     /* #185C2F */
+    --success-foreground:   130 60% 96%;
+    --warning:              43 90% 60%;
+    --warning-foreground:   26 83% 14%;
+
+    --radius:               0.5rem;
+    --line:                 222 30% 16%;
+
+    --shadow-1:             0 8px 24px hsl(222 67% 4% / 0.4);
+    --shadow-2:             0 24px 60px -20px hsl(222 67% 4% / 0.9);
+    --shadow-3:             0 40px 100px -10px hsl(222 67% 4% / 0.95);
+
+    --d:                    700ms;
+    --e:                    cubic-bezier(0.19, 1, 0.22, 1);
+
+    /**
+     * Syntax-highlight tokens — scoped to .showcase so the standalone
+     * code-terminal.tsx (which lives outside .showcase and uses palette
+     * classes) is unaffected. Used by .tok-* classes in @layer components.
+     * Sampled to read well against --card (222 50% 7% — near-black navy).
+     */
+    --code-keyword:         263 60% 70%;   /* bright purple — keywords */
+    --code-string:          152 60% 65%;   /* spring green — string literals */
+    --code-comment:         220 8% 50%;    /* mid grey — comments */
+    --code-number:          210 70% 65%;   /* sky blue — numbers */
+    --code-default:         210 40% 96%;   /* near-white — identifiers, punctuation */
+  }
 }
 
 @layer base {
@@ -371,6 +443,20 @@
     -webkit-text-fill-color: transparent;
     animation: gradientShift 3s ease infinite;
   }
+
+  /**
+   * Syntax-highlight tokens for the showcase composition's code editor.
+   * Scoped under .showcase so the .tok-* class names don't leak into
+   * other themes. The .tok-* prefix avoids collision with Tailwind's
+   * `text-*` utilities. Colors resolve via --code-* vars (defined in
+   * .showcase above) so each theme can override the syntax palette
+   * independently.
+   */
+  .showcase .tok-keyword { color: hsl(var(--code-keyword)); }
+  .showcase .tok-string  { color: hsl(var(--code-string)); }
+  .showcase .tok-comment { color: hsl(var(--code-comment)); font-style: italic; }
+  .showcase .tok-number  { color: hsl(var(--code-number)); }
+  .showcase .tok-default { color: hsl(var(--code-default)); }
 
   .agent-highlighted {
     outline: 2px solid hsl(var(--ring));
