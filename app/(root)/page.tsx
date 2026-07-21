@@ -8,27 +8,23 @@ import { pagesConfig } from "@/config/pages";
 import { PROJECT_SNIPPETS } from "@/config/project-snippets";
 import { featuredProjects } from "@/config/projects";
 import { siteConfig } from "@/config/site";
-import { featuredSkills } from "@/config/skills";
 import { listPublishedPosts } from "@/lib/blog/service";
 
 import { AnimatedSection } from "@/components/common/animated-section";
 import { AnimatedText } from "@/components/common/animated-text";
 import { ClientPageWrapper } from "@/components/common/client-page-wrapper";
 import { Icons } from "@/components/common/icons";
+import { SkillsSectionV2 } from "@/components/features/skills/skills-section-v2";
+import { AnimatedMobileProjectCard } from "@/components/home/animated-mobile-project-card";
+import { BlogDispatch } from "@/components/home/blog-dispatch";
 import { CareerLog } from "@/components/home/career-log";
 import { Hero } from "@/components/home/hero";
-import { StackDiagnostic } from "@/components/home/stack-diagnostic";
 import { WorkspaceIntro } from "@/components/home/workspace-intro";
-import { BlogDispatch } from "@/components/home/blog-dispatch";
-import { AnimatedMobileProjectCard } from "@/components/home/animated-mobile-project-card";
 import { Button } from "@/components/ui/button";
 
 const ProjectCard = dynamic(() => import("@/components/projects/project-card"));
 const ProjectWorkspace = dynamic(
   () => import("@/components/projects/project-workspace")
-);
-const AnimatedSkillsGrid = dynamic(
-  () => import("@/components/skills/animated-skills-grid")
 );
 const CareerTimeline = dynamic(
   () => import("@/components/experience/career-timeline")
@@ -91,35 +87,7 @@ export default async function IndexPage() {
       />
 
       <Hero />
-      <AnimatedSection
-        className="container space-y-6 bg-muted py-10 my-14"
-        id="skills"
-      >
-        <div className="flex max-w-[42rem] flex-col items-start space-y-4 text-left">
-          <AnimatedText
-            as="h2"
-            className="font-heading text-3xl leading-[1.1] sm:text-3xl md:text-5xl"
-          >
-            {pagesConfig.skills.title}
-          </AnimatedText>
-          <AnimatedText
-            as="p"
-            delay={0.2}
-            className="leading-normal text-muted-foreground sm:text-lg sm:leading-7"
-          >
-            {pagesConfig.skills.description}
-          </AnimatedText>
-        </div>
-        <StackDiagnostic skillCount={featuredSkills.length} />
-        <AnimatedSkillsGrid skills={featuredSkills} />
-        <AnimatedText delay={0.4} className="flex justify-start">
-          <Link href="/skills" prefetch={false}>
-            <Button variant={"outline"} className="rounded-xl">
-              <Icons.chevronDown className="mr-2 h-4 w-4" /> View All
-            </Button>
-          </Link>
-        </AnimatedText>
-      </AnimatedSection>
+      <SkillsSectionV2 />
       <AnimatedSection
         direction="right"
         className="container space-y-6 py-10 my-14"
