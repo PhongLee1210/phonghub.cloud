@@ -1,11 +1,13 @@
 "use client";
 
 import * as React from "react";
+import { useCallback, useState } from "react";
 
 import { BuilderShowcase } from "@/components/features/showcase/builder-showcase";
 import { CodeEditorPanel } from "@/components/features/showcase/code-editor-panel";
 import { TerminalStrip } from "@/components/features/showcase/terminal-strip";
-import type { TerminalLine } from "@/config/showcase";
+import type { TerminalLine } from "@/lib/showcase/commands";
+import { useShowcaseStream } from "@/lib/showcase/use-showcase-stream";
 import { SKILL_SNIPPETS } from "@/config/skill-snippets";
 import { featuredSkills, SkillCategoryEnum, SKILLS } from "@/config/skills";
 import type { ISkill } from "@/config/skills";
@@ -100,10 +102,44 @@ export function SkillsShowcase({
   snippet = DEFAULT_SKILL_SNIPPET,
   className,
 }: SkillsShowcaseProps) {
+  const [streamedCode, setStreamedCode] = useState("");
+  const [appendedTerminal, setAppendedTerminal] = useState<TerminalLine[]>([]);
+
+  // Clear streamed state when the section re-mounts or the snippet changes.
+  React.useEffect(() => {
+    setStreamedCode("");
+    setAppendedTerminal([]);
+  }, [snippet]);
+
+  const onCodeDelta = useCallback((text: string) => {
+    setStreamedCode((prev) => prev + text);
+  }, []);
+  const onTerminal = useCallback((line: TerminalLine) => {
+    setAppendedTerminal((prev) => [...prev, line]);
+  }, []);
+  const onError = useCallback((message: string) => {
+    setAppendedTerminal((prev) => [
+      ...prev,
+      { tone: "error", text: `error: ${message}` },
+    ]);
+  }, []);
+
+  const { activeAction, onSelect, isStreaming } = useShowcaseStream({
+    section: "skills",
+    subjectName: snippet.skillKey,
+    tags: highlightedKeys,
+    currentCode: snippet.rawLines,
+    onCodeDelta,
+    onTerminal,
+    onError,
+  });
+
   return (
     <BuilderShowcase
       tagline={SKILLS_TAGLINE}
       className={className}
+      activeCommandId={activeAction}
+      onCommandSelect={onSelect}
       editor={
         <CodeEditorPanel
           filename={snippet.filename}
@@ -111,6 +147,9 @@ export function SkillsShowcase({
           lines={snippet.rawLines}
           mode="reveal"
           lineDelayMs={140}
+          streamedCode={streamedCode}
+          streaming={isStreaming}
+          compiled={streamedCode.length === 0 ? undefined : !isStreaming}
         />
       }
       preview={
@@ -120,7 +159,13 @@ export function SkillsShowcase({
           limit={8}
         />
       }
-      terminal={<TerminalStrip lines={SKILLS_DIAGNOSTIC_LINES} />}
+      terminal={
+        <TerminalStrip
+          lines={SKILLS_DIAGNOSTIC_LINES}
+          appendedLines={appendedTerminal}
+          live={isStreaming}
+        />
+      }
     />
   );
 }

@@ -37,6 +37,12 @@ export interface TerminalStripProps {
    * initial SSR paint quiet for screen-reader users.
    */
   live?: boolean;
+  /**
+   * T5.6: AI-streamed lines appended after the base `lines`. Renders a
+   * subtle divider between the static build-log and the live output so
+   * the user can tell which is which. Pass `undefined` or `[]` for none.
+   */
+  appendedLines?: readonly TerminalLine[];
   className?: string;
 }
 
@@ -58,7 +64,7 @@ export const TerminalStrip = React.forwardRef<
   HTMLDivElement,
   TerminalStripProps
 >(function TerminalStrip(
-  { lines, visibleCount, live = false, className },
+  { lines, visibleCount, live = false, appendedLines, className },
   ref,
 ) {
   const count = Math.max(
@@ -66,6 +72,7 @@ export const TerminalStrip = React.forwardRef<
     Math.min(visibleCount ?? lines.length, lines.length),
   );
   const visible = lines.slice(0, count);
+  const hasAppended = appendedLines && appendedLines.length > 0;
 
   return (
     <motion.div
@@ -79,7 +86,7 @@ export const TerminalStrip = React.forwardRef<
         className,
       )}
     >
-      {visible.length === 0 ? (
+      {visible.length === 0 && !hasAppended ? (
         <div className="text-muted-foreground/50">&nbsp;</div>
       ) : (
         <motion.ul variants={staggerContainer(0.08)} className="space-y-1">
@@ -108,6 +115,36 @@ export const TerminalStrip = React.forwardRef<
               </span>
             </motion.li>
           ))}
+          {hasAppended ? (
+            <li aria-hidden className="my-1 border-t border-border/40" />
+          ) : null}
+          {hasAppended
+            ? appendedLines.map((line, idx) => (
+                <motion.li
+                  key={`appended-${idx}`}
+                  variants={fadeUpStagger}
+                  className="flex items-start gap-2 will-change-[transform,opacity]"
+                >
+                  <span
+                    aria-hidden
+                    className={cn(
+                      "w-3 flex-shrink-0 select-none text-center",
+                      TONE_TEXT[line.tone],
+                    )}
+                  >
+                    {GLYPH[line.tone]}
+                  </span>
+                  <span
+                    className={cn(
+                      "flex-1 whitespace-pre-wrap break-words",
+                      TONE_TEXT[line.tone],
+                    )}
+                  >
+                    {line.text}
+                  </span>
+                </motion.li>
+              ))
+            : null}
         </motion.ul>
       )}
     </motion.div>

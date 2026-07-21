@@ -66,6 +66,20 @@ export interface CodeEditorPanelProps {
   onComplete?: () => void;
   /** Per-line delay in ms (default 120). */
   lineDelayMs?: number;
+  /**
+   * AI-streamed code appended live (T5.6). Split into lines on `\n` and
+   * rendered after the snippet lines. Pass `""` or `undefined` to show
+   * no streamed content.
+   */
+  streamedCode?: string;
+  /**
+   * When `true`, force the panel into "streaming" view: show all snippet
+   * lines + streamedCode without driving the reveal cascade. Used by
+   * `useShowcaseStream` to short-circuit reveal mode while a stream is
+   * in flight so the streamed text shows up instantly alongside the
+   * snippet (the streaming itself is the typewriter effect).
+   */
+  streaming?: boolean;
   className?: string;
 }
 
@@ -78,9 +92,11 @@ export function CodeEditorPanel({
   mode = "static",
   onComplete,
   lineDelayMs = 120,
+  streamedCode,
+  streaming = false,
   className,
 }: CodeEditorPanelProps) {
-  const reveal = mode === "reveal";
+  const reveal = mode === "reveal" && !streaming;
 
   const containerRef = useRef<HTMLDivElement>(null);
   const inView = useInView(containerRef, { once: true, margin: "-80px" });
@@ -142,6 +158,20 @@ export function CodeEditorPanel({
   const effectiveCompiled = reveal ? compiledState : compiledProp;
   const cursorActive = reveal && !compiledState && revealedCount > 0;
 
+  // T5.6: append streamed code as additional lines when provided.
+  // Split on \n and drop the trailing empty (from a final newline) so the
+  // CodeListing layout stays tidy.
+  const streamedLines =
+    streamedCode && streamedCode.length > 0
+      ? streamedCode.split("\n")
+      : [];
+  const allLines =
+    streamedLines.length > 0 ? [...lines, ...streamedLines] : lines;
+  const allVisibleCount =
+    streaming || streamedLines.length > 0
+      ? allLines.length
+      : effectiveVisibleCount;
+
   const content = (
     <WindowChrome
       title={filename}
@@ -162,10 +192,10 @@ export function CodeEditorPanel({
       }
     >
       <CodeListing
-        lines={lines}
+        lines={allLines}
         language={language}
-        visibleCount={effectiveVisibleCount}
-        cursorOnLastLine={cursorActive}
+        visibleCount={allVisibleCount}
+        cursorOnLastLine={cursorActive || streaming}
       />
     </WindowChrome>
   );
