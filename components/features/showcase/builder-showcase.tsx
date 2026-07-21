@@ -3,11 +3,9 @@
 import * as React from "react";
 import { motion, MotionConfig } from "framer-motion";
 
-import type { AiCommandId } from "@/config/showcase";
 import { fadeUpStagger, scaleIn, staggerContainer } from "@/lib/motion";
 import { cn } from "@/lib/utils";
 
-import { AiCommandToolbar } from "./ai-command-toolbar";
 import { ShowcaseTagline } from "./showcase-tagline";
 
 /**
@@ -23,37 +21,20 @@ import { ShowcaseTagline } from "./showcase-tagline";
  *   │   │   Terminal strip                         │   │  ← terminal
  *   │   └──────────────────────────────────────────┘   │
  *   └─────────────────────────────────────────────────┘
- *                                          ╭──────────╮
- *                                          │ AI pill  │  ← floating toolbar (fixed, z-60)
- *                                          ╰──────────╯
  *
- * `editor` / `preview` / `terminal` are passed in as ReactNodes so Phase 3/4
- * sections (Skills/Projects) can swap their own bodies (e.g.
- * `<SkillPreviewBody>` instead of `<LivePreviewFrame>`). The toolbar
- * defaults to `<AiCommandToolbar>`.
+ * `editor` / `preview` / `terminal` are passed in as ReactNodes so each
+ * home-page section (Skills/Projects) can swap its own bodies (e.g.
+ * `<SkillPreviewBody>` instead of `<LivePreviewFrame>`).
  *
  * Wraps everything in `<div className="showcase">` so the navy theme
  * tokens (defined in `app/globals.css`) are locally scoped — does NOT
  * touch the global theme.
- *
- * T2.2 adds the entrance cascade: top-level `motion.div` with
- * `staggerContainer(0.12)` drives variant-keyed children
- * (`fadeUpStagger`/`scaleIn`) — every showcase sub-component is variant-only
- * so the orchestrator owns `initial`/`animate`. `<MotionConfig
- * reducedMotion="user">` makes the whole composition auto-respect the OS
- * setting without per-component `useReducedMotion()` checks.
  */
 export interface BuilderShowcaseProps {
   tagline?: string;
   editor: React.ReactNode;
   preview: React.ReactNode;
   terminal: React.ReactNode;
-  /** Override the default `<AiCommandToolbar>`. */
-  toolbar?: React.ReactNode;
-  /** Passed to the default AiCommandToolbar when `toolbar` is not provided. */
-  activeCommandId?: AiCommandId | null;
-  /** Passed to the default AiCommandToolbar when `toolbar` is not provided. */
-  onCommandSelect?: (id: AiCommandId) => void;
   className?: string;
 }
 
@@ -62,9 +43,6 @@ export function BuilderShowcase({
   editor,
   preview,
   terminal,
-  toolbar,
-  activeCommandId,
-  onCommandSelect,
   className,
 }: BuilderShowcaseProps) {
   return (
@@ -99,24 +77,6 @@ export function BuilderShowcase({
           ) : null}
         </motion.div>
       </MotionConfig>
-
-      {/* Floating AI toolbar — outside the stagger container so its own
-          FAB/expand animation (T2.2) is decoupled from the entrance cascade. */}
-      <div
-        className={cn(
-          "pointer-events-none fixed z-[60]",
-          // Mobile: FAB pinned bottom-right per docs/MOBILE_FIRST.md §10
-          "bottom-[calc(var(--safe-bottom,0px)+1.5rem)] right-4",
-          // Desktop: pill pinned bottom-right
-          "md:bottom-6 md:right-6",
-        )}
-      >
-        <div className="pointer-events-auto">
-          {toolbar ?? (
-            <AiCommandToolbar activeId={activeCommandId} onSelect={onCommandSelect} />
-          )}
-        </div>
-      </div>
     </div>
   );
 }

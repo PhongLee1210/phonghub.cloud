@@ -24,8 +24,6 @@ import { cn } from "@/lib/utils";
 export interface TerminalStripProps {
   lines: readonly TerminalLine[];
   visibleCount?: number;
-  live?: boolean;
-  appendedLines?: readonly TerminalLine[];
   className?: string;
 }
 
@@ -74,7 +72,7 @@ export const TerminalStrip = React.forwardRef<
   HTMLDivElement,
   TerminalStripProps
 >(function TerminalStrip(
-  { lines, visibleCount, live = false, appendedLines, className },
+  { lines, visibleCount, className },
   ref,
 ) {
   const count = Math.max(
@@ -82,35 +80,23 @@ export const TerminalStrip = React.forwardRef<
     Math.min(visibleCount ?? lines.length, lines.length),
   );
   const visible = lines.slice(0, count);
-  const hasAppended = appendedLines && appendedLines.length > 0;
 
   return (
     <motion.div
       ref={ref}
       variants={fadeUpStagger}
-      role={live ? "status" : undefined}
-      aria-live={live ? "polite" : undefined}
-      aria-atomic={live ? false : undefined}
       className={cn(
         "rounded-xl bg-popover px-4 py-3 font-mono text-xs text-popover-foreground shadow-[var(--shadow-1)]",
         className,
       )}
     >
-      {visible.length === 0 && !hasAppended ? (
+      {visible.length === 0 ? (
         <div className="text-muted-foreground/50">&nbsp;</div>
       ) : (
         <motion.ul variants={staggerContainer(0.08)} className="space-y-1">
           {visible.map((line, idx) => (
             <TerminalRow key={idx} line={line} />
           ))}
-          {hasAppended ? (
-            <li aria-hidden className="my-1 border-t border-border/40" />
-          ) : null}
-          {hasAppended
-            ? appendedLines.map((line, idx) => (
-                <TerminalRow key={`appended-${idx}`} line={line} />
-              ))
-            : null}
         </motion.ul>
       )}
     </motion.div>
