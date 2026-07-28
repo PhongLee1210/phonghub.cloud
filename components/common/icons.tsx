@@ -43,6 +43,8 @@ import {
   User,
   X,
   Zap,
+  ZoomIn,
+  ZoomOut,
 } from "lucide-react";
 import { AiFillStar, AiOutlineStar } from "react-icons/ai";
 import { BiLaugh, BiSolidUser } from "react-icons/bi";
@@ -234,6 +236,8 @@ export const Icons = {
   chatBubble: MessageCircle,
   send: Send,
   reset: RotateCcw,
+  zoomIn: ZoomIn,
+  zoomOut: ZoomOut,
   mic: Mic,
   paperclip: Paperclip,
   smile: Smile,
