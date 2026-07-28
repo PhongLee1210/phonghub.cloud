@@ -13,7 +13,11 @@ import {
   Conversation,
   InternalRoute,
   PersistedChat,
+  ToolEffectEvent,
 } from "@/types/chat";
+
+/** Every field ToolEffectEvent/DoneEvent can deliver a UI effect for. */
+type ToolEffectField = keyof Omit<ToolEffectEvent, "type">;
 
 export type GraphCategoryFilter = SkillCategoryEnum | "all";
 
@@ -327,9 +331,7 @@ export const useChatStore = create<ChatStoreState>((set, get) => ({
 
     let tokenBuffer = "";
     let rafId: number | null = null;
-    const deliveredEffects = new Set<
-      "highlight" | "focus" | "openModal" | "navigate" | "skillSelect"
-    >();
+    const deliveredEffects = new Set<ToolEffectField>();
 
     const cancelRaf = () => {
       if (rafId !== null) {
