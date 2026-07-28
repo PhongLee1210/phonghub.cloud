@@ -1,6 +1,7 @@
 import { create } from "zustand";
 
 import { chatConfig } from "@/config/chat";
+import { SKILLS, SkillCategoryEnum } from "@/config/skills";
 import { streamChat } from "@/lib/chat/client";
 import { findCitation } from "@/lib/chat/entity-dom";
 import { pickRandom } from "@/lib/utils";
@@ -13,6 +14,16 @@ import {
   InternalRoute,
   PersistedChat,
 } from "@/types/chat";
+
+export type GraphCategoryFilter = SkillCategoryEnum | "all";
+
+function firstSkillKeyInCategory(category: GraphCategoryFilter): string | null {
+  const pool =
+    category === "all"
+      ? SKILLS
+      : SKILLS.filter((skill) => skill.category === category);
+  return pool[0]?.key ?? null;
+}
 
 export const ChatStatus = {
   Idle: "idle",
@@ -40,6 +51,10 @@ interface ChatStoreState {
   pendingFocus?: AgentEntityId;
   activeFocus?: AgentEntityId;
   pendingOpenModal?: AgentCitation;
+  /** Skills graph selection — persistent UI state, not reset on chat reset/newChat. */
+  graphActiveCategory: GraphCategoryFilter;
+  graphCenterSkillKey: string | null;
+  pendingSkillSelect?: AgentEntityId;
   hydrated: boolean;
   errorMessage?: string;
   activeAbort?: () => void;
@@ -53,6 +68,9 @@ interface ChatStoreState {
   clearFocus: () => void;
   setActiveFocus: (id: AgentEntityId | undefined) => void;
   clearOpenModal: () => void;
+  setGraphCategory: (category: GraphCategoryFilter) => void;
+  setGraphCenterSkill: (key: string, category?: SkillCategoryEnum) => void;
+  clearSkillSelect: () => void;
   sendMessage: (text: string) => void;
   stopStreaming: () => void;
   reset: () => void;
@@ -156,6 +174,9 @@ export const useChatStore = create<ChatStoreState>((set, get) => ({
   pendingFocus: undefined,
   activeFocus: undefined,
   pendingOpenModal: undefined,
+  graphActiveCategory: "all",
+  graphCenterSkillKey: null,
+  pendingSkillSelect: undefined,
   hydrated: false,
 
   hydrate: () => {
@@ -225,6 +246,24 @@ export const useChatStore = create<ChatStoreState>((set, get) => ({
     set({ pendingOpenModal: undefined });
   },
 
+  setGraphCategory: (category: GraphCategoryFilter) => {
+    set({
+      graphActiveCategory: category,
+      graphCenterSkillKey: firstSkillKeyInCategory(category),
+    });
+  },
+
+  setGraphCenterSkill: (key: string, category?: SkillCategoryEnum) => {
+    set((state) => ({
+      graphCenterSkillKey: key,
+      graphActiveCategory: category ?? state.graphActiveCategory,
+    }));
+  },
+
+  clearSkillSelect: () => {
+    set({ pendingSkillSelect: undefined });
+  },
+
   sendMessage: (text: string) => {
     const trimmed = text.trim().slice(0, chatConfig.limits.maxInputChars);
     if (!trimmed || get().status === ChatStatus.Streaming) return;
@@ -277,6 +316,7 @@ export const useChatStore = create<ChatStoreState>((set, get) => ({
       pendingFocus: undefined,
       activeFocus: undefined,
       pendingOpenModal: undefined,
+      pendingSkillSelect: undefined,
       errorMessage: undefined,
     });
     persist(updatedConversations, activeConversationId);
@@ -349,7 +389,11 @@ export const useChatStore = create<ChatStoreState>((set, get) => ({
             done.openModal
           );
           const hasCommand = Boolean(
-            done.highlight || done.focus || openModalCitation || done.navigate
+            done.highlight ||
+              done.focus ||
+              openModalCitation ||
+              done.navigate ||
+              done.skillSelect
           );
           set((state) => {
             const messages = state.messages.map((m) =>
@@ -379,6 +423,7 @@ export const useChatStore = create<ChatStoreState>((set, get) => ({
               pendingFocus: done.focus,
               pendingOpenModal: openModalCitation,
               pendingNavigate: done.navigate ?? state.pendingNavigate,
+              pendingSkillSelect: done.skillSelect,
             };
           });
           persist(get().conversations, get().activeConversationId);

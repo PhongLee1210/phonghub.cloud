@@ -265,6 +265,23 @@ const openModalTool = tool({
   execute: executeModalTarget,
 });
 
+const selectSkillTool = tool({
+  description:
+    "Recenter the interactive skills graph on the home page on a specific skill, switching its category tab if needed, so the visitor sees that skill's detail (proficiency, description, related projects). Use this instead of focus/highlight when discussing a skill so the visitor can see it selected in the graph. Use the exact agentId from a search_skills result, e.g. 'skill:react'.",
+  inputSchema: z.object({
+    target: z
+      .string()
+      .describe("The skill agentId to center the graph on, e.g. 'skill:react'."),
+  }),
+  execute: async ({ target }) => {
+    const parsed = parseEntityId(target);
+    const valid = Boolean(parsed && parsed.kind === "skill");
+    return valid
+      ? { ok: true as const, target: target as AgentEntityId }
+      : { ok: false as const, target, reason: "target must be a skill agentId" };
+  },
+});
+
 const expandSectionTool = tool({
   description:
     "Expand full detail for a single resource inline. Functionally identical to open_modal — use whichever phrasing best matches the visitor's request.",
@@ -282,6 +299,7 @@ export const CHAT_TOOLS = {
   highlight_resource: highlightResourceTool,
   navigate_to: navigateToTool,
   focus: focusResourceTool,
+  select_skill: selectSkillTool,
   open_modal: openModalTool,
   expand_section: expandSectionTool,
 } satisfies ToolSet;

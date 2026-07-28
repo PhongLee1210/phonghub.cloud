@@ -2,54 +2,84 @@ import Link from "next/link";
 
 import { Icons } from "@/components/common/icons";
 import { Button } from "@/components/ui/button";
-import { featuredSkills } from "@/config/skills";
+import { AnimatedSection } from "@/components/common/animated-section";
+import { AnimatedText } from "@/components/common/animated-text";
+import { ValidSkills } from "@/config/constants";
+import { SKILLS } from "@/config/skills";
+import { pagesConfig } from "@/config/pages";
+import { filterProjectsByTechStack } from "@/lib/data/projects";
 
-import { SkillsShowcase } from "./skills-showcase";
+import { RelatedProject, SkillsGraph } from "./skills-graph";
+
+function buildProjectsBySkill(): Record<string, RelatedProject[]> {
+  const entries = SKILLS.map((skill) => {
+    const projects = filterProjectsByTechStack(skill.name as ValidSkills)
+      .sort((a, b) => b.startDate.getTime() - a.startDate.getTime())
+      .map((project) => ({
+        id: project.id,
+        title: project.organization.name,
+        date: project.startDate.toLocaleDateString("en-US", {
+          month: "short",
+          year: "numeric",
+        }),
+      }));
+    return [skill.name, projects] as const;
+  });
+  return Object.fromEntries(entries);
+}
 
 /**
- * SkillsSectionV2 — Phase 3 cutover replacement for the home page's
- * `<AnimatedSection id="skills">`. Wraps `<SkillsShowcase>` plus the
- * "View All → /skills" link in a section scoped with `.showcase` so the
- * navy theme covers both the composition and the link affordance.
+ * SkillsSectionV2 — home page skills section. Renders `<SkillsGraph>`, an
+ * interactive constellation of connected skill nodes (click a node to
+ * recenter the graph and see its detail + related projects), plus the
+ * "View All → /skills" link.
  *
- * Server component — no client hooks. `SkillsShowcase` (client) owns all
- * motion. The outer `<section>` just provides `id="skills"` for hash
- * navigation and the View All link.
- *
- * Replaces (T3.3):
- *   - `<StackDiagnostic>` (home page)
- *   - `<AnimatedSkillsGrid>` (home page)
- *   - Manual `<AnimatedSection>` block on `app/(root)/page.tsx`
- *
- * Standalone `/skills` route is unchanged — still uses the legacy
- * `<SkillsSection>` card grid.
+ * Server component — precomputes the skill→project lookup so the client
+ * graph never needs the full `PROJECTS` dataset.
  */
 export interface SkillsSectionV2Props {
-  /** Override featured skills (defaults to `featuredSkills`). */
-  skills?: typeof featuredSkills;
   className?: string;
 }
 
-export function SkillsSectionV2({
-  skills = featuredSkills,
-  className,
-}: SkillsSectionV2Props) {
-  return (
-    <section
-      id="skills"
-      className={["py-16 md:py-24", className ?? ""].join(" ")}
-    >
-      <SkillsShowcase skills={skills} />
+export function SkillsSectionV2({ className }: SkillsSectionV2Props) {
+  const projectsBySkill = buildProjectsBySkill();
 
-      <div className="mx-auto w-full max-w-7xl px-4 pt-8 md:px-6">
+  return (
+    <AnimatedSection
+      direction="right"
+      className={[
+        "mx-auto w-full max-w-7xl space-y-8 px-4 py-16 md:px-6 md:py-24",
+        className ?? "",
+      ].join(" ")}
+      id="skills"
+    >
+      <div className="flex max-w-[42rem] flex-col items-start space-y-4 text-left">
+        <AnimatedText
+          as="h2"
+          className="font-heading text-3xl leading-[1.1] md:text-5xl"
+        >
+          {pagesConfig.skills.title}
+        </AnimatedText>
+        <AnimatedText
+          as="p"
+          delay={0.2}
+          className="leading-normal text-muted-foreground sm:text-lg sm:leading-7"
+        >
+          {pagesConfig.skills.description}
+        </AnimatedText>
+      </div>
+
+      <SkillsGraph skills={SKILLS} projectsBySkill={projectsBySkill} />
+
+      <AnimatedText delay={0.4} className="flex justify-start">
         <Link href="/skills" prefetch={false}>
           <Button variant="outline" className="rounded-xl">
             <Icons.chevronDown className="mr-2 h-4 w-4" aria-hidden />
             <span>View All</span>
           </Button>
         </Link>
-      </div>
-    </section>
+      </AnimatedText>
+    </AnimatedSection>
   );
 }
 

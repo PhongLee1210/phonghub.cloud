@@ -112,6 +112,8 @@ export type DoneEvent = {
   /** Set by `open_modal`/`expand_section` — the resource to show in the modal. */
   openModal?: CitationTarget;
   navigate?: InternalRoute;
+  /** Set by `select_skill` — recenters the home page skills graph on this skill. */
+  skillSelect?: AgentEntityId;
   /** Every resource the assistant surfaced this turn via a search/highlight tool call. */
   citations?: AgentCitation[];
 };

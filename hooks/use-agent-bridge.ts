@@ -6,9 +6,11 @@ import { useReducedMotion } from "framer-motion";
 
 import { Icons } from "@/components/common/icons";
 import { CITATION_KIND_ICON, HIGHLIGHT_DURATION_MS } from "@/config/chat";
+import { SKILLS } from "@/config/skills";
 import { useChatStore } from "@/hooks/use-chat-store";
 import { useModalStore } from "@/hooks/use-modal-store";
 import { resolveEntity } from "@/lib/chat/entity-dom";
+import { parseEntityId } from "@/lib/chat/protocol";
 import { AgentEntityId } from "@/types/chat";
 
 /**
@@ -84,6 +86,10 @@ export function useAgentBridge() {
   const clearOpenModal = useChatStore((s) => s.clearOpenModal);
   const modalOnOpen = useModalStore((s) => s.onOpen);
 
+  const pendingSkillSelect = useChatStore((s) => s.pendingSkillSelect);
+  const clearSkillSelect = useChatStore((s) => s.clearSkillSelect);
+  const setGraphCenterSkill = useChatStore((s) => s.setGraphCenterSkill);
+
   useEffect(() => {
     if (!pendingNavigate) return;
     router.push(pendingNavigate);
@@ -115,6 +121,17 @@ export function useAgentBridge() {
     });
     clearOpenModal();
   }, [pendingOpenModal, modalOnOpen, clearOpenModal]);
+
+  useEffect(() => {
+    if (!pendingSkillSelect) return;
+    const parsed = parseEntityId(pendingSkillSelect);
+    const skill =
+      parsed?.kind === "skill"
+        ? SKILLS.find((s) => s.key === parsed.id)
+        : undefined;
+    if (skill) setGraphCenterSkill(skill.key, skill.category);
+    clearSkillSelect();
+  }, [pendingSkillSelect, setGraphCenterSkill, clearSkillSelect]);
 
   return { pendingNavigate, pendingHighlight, status };
 }

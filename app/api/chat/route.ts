@@ -254,6 +254,7 @@ export async function POST(req: NextRequest) {
       const citationTargets = new Set<CitationTarget>();
       let highlightTarget: AgentEntityId | undefined;
       let focusTarget: AgentEntityId | undefined;
+      let skillSelectTarget: AgentEntityId | undefined;
       let openModalTarget: CitationTarget | undefined;
       let navigateRoute: InternalRoute | undefined;
 
@@ -337,6 +338,12 @@ export async function POST(req: NextRequest) {
                 citationTargets.add(target);
                 if (target !== "resume") focusTarget = target;
               }
+            } else if (chunk.name === "select_skill") {
+              const target = extractTarget(chunk.result);
+              if (target) {
+                citationTargets.add(target);
+                if (target !== "resume") skillSelectTarget = target;
+              }
             } else if (chunk.name === "open_modal" || chunk.name === "expand_section") {
               const target = extractTarget(chunk.result);
               if (target) {
@@ -369,6 +376,7 @@ export async function POST(req: NextRequest) {
               suggestions,
               highlight: highlightTarget,
               focus: focusTarget,
+              skillSelect: skillSelectTarget,
               openModal: openModalTarget,
               navigate: navigateRoute,
               citations,
