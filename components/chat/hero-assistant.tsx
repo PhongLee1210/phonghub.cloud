@@ -7,6 +7,7 @@ import { AssistantPanel } from "@/components/chat/assistant-panel";
 import { ChatLauncher } from "@/components/chat/chat-launcher";
 import { ChatPanel } from "@/components/chat/chat-panel";
 import { Icons } from "@/components/common/icons";
+import { useAgentBridge } from "@/hooks/use-agent-bridge";
 import { useChatStore } from "@/hooks/use-chat-store";
 
 const HINT_DELAY_MS = 5000;
@@ -23,6 +24,8 @@ export const HeroAssistant = ({ isMobile }: HeroAssistantProps) => {
   const launcherRef = useRef<HTMLButtonElement>(null);
   const { isOpen, setOpen, hydrate } = useChatStore();
   const reducedMotion = useReducedMotion();
+
+  useAgentBridge();
 
   useEffect(() => {
     setIsMounted(true);

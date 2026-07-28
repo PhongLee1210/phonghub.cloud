@@ -184,3 +184,30 @@ describe("expand_section", () => {
     expect(result).toEqual({ ok: true, target: `project:${PROJECTS[0].id}` });
   });
 });
+
+describe("select_skill", () => {
+  test("accepts a well-formed skill agentId", async () => {
+    const result = await execute("select_skill", { target: "skill:react" });
+    expect(result).toEqual({ ok: true, target: "skill:react" });
+  });
+
+  test("rejects a non-skill agentId", async () => {
+    const result = await execute("select_skill", {
+      target: `project:${PROJECTS[0].id}`,
+    });
+    expect(result).toEqual({
+      ok: false,
+      target: `project:${PROJECTS[0].id}`,
+      reason: "target must be a skill agentId",
+    });
+  });
+
+  test("rejects a malformed id", async () => {
+    const result = await execute("select_skill", { target: "not-an-id" });
+    expect(result).toEqual({
+      ok: false,
+      target: "not-an-id",
+      reason: "target must be a skill agentId",
+    });
+  });
+});

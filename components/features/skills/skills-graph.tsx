@@ -1,15 +1,19 @@
 "use client";
 
 import Link from "next/link";
-import { createElement, useMemo, useState } from "react";
+import { createElement, useMemo } from "react";
+import { motion, useReducedMotion } from "framer-motion";
 
 import {
   ISkill,
   SKILL_CATEGORY_LABELS,
   SkillCategoryEnum,
 } from "@/config/skills";
+import { useChatStore } from "@/hooks/use-chat-store";
 import { getSkillIcon } from "@/lib/get-skill-icon";
 import { cn } from "@/lib/utils";
+
+const SPRING_TRANSITION = { type: "spring", stiffness: 300, damping: 30 } as const;
 
 const SATELLITE_LIMIT = 6;
 const GRAPH_RADIUS_PERCENT = 40;
@@ -58,10 +62,11 @@ export function SkillsGraph({ skills, projectsBySkill }: SkillsGraphProps) {
     return Array.from(seen);
   }, [skills]);
 
-  const [activeCategory, setActiveCategory] = useState<
-    SkillCategoryEnum | "all"
-  >("all");
-  const [centerKey, setCenterKey] = useState<string>(skills[0]?.key ?? "");
+  const activeCategory = useChatStore((s) => s.graphActiveCategory);
+  const centerKey = useChatStore((s) => s.graphCenterSkillKey);
+  const setGraphCategory = useChatStore((s) => s.setGraphCategory);
+  const setGraphCenterSkill = useChatStore((s) => s.setGraphCenterSkill);
+  const reducedMotion = useReducedMotion();
 
   const pool = useMemo(
     () =>
@@ -93,15 +98,6 @@ export function SkillsGraph({ skills, projectsBySkill }: SkillsGraphProps) {
 
   const proficiency = Math.round((centerSkill.rating / 5) * 100);
 
-  function selectCategory(category: SkillCategoryEnum | "all") {
-    setActiveCategory(category);
-    const nextPool =
-      category === "all"
-        ? skills
-        : skills.filter((skill) => skill.category === category);
-    setCenterKey(nextPool[0]?.key ?? "");
-  }
-
   return (
     <div className="grid gap-6 lg:grid-cols-[1fr_20rem]">
       <div className="space-y-4 rounded-xl border bg-background p-4 sm:p-6">
@@ -109,7 +105,7 @@ export function SkillsGraph({ skills, projectsBySkill }: SkillsGraphProps) {
         <div className="flex flex-wrap gap-2">
           <button
             type="button"
-            onClick={() => selectCategory("all")}
+            onClick={() => setGraphCategory("all")}
             className={cn(
               "rounded-md px-3 py-1.5 text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
               activeCategory === "all"
@@ -123,7 +119,7 @@ export function SkillsGraph({ skills, projectsBySkill }: SkillsGraphProps) {
             <button
               key={category}
               type="button"
-              onClick={() => selectCategory(category)}
+              onClick={() => setGraphCategory(category)}
               className={cn(
                 "rounded-md px-3 py-1.5 text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
                 activeCategory === category
@@ -161,39 +157,56 @@ export function SkillsGraph({ skills, projectsBySkill }: SkillsGraphProps) {
             })}
           </svg>
 
-          {/* Center node */}
-          <div
-            data-agent-id={`skill:${centerSkill.key}`}
-            className="absolute left-1/2 top-1/2 flex -translate-x-1/2 -translate-y-1/2 flex-col items-center gap-1"
-          >
-            <div className="flex h-20 w-20 flex-col items-center justify-center gap-1 rounded-full border-2 border-primary bg-background shadow-lg shadow-primary/20 sm:h-24 sm:w-24">
-              <SkillIcon name={centerSkill.icon} size={28} className="text-primary" />
-              <span className="px-1 text-center text-[11px] font-semibold leading-tight text-foreground">
-                {centerSkill.name}
+          {/*
+            Position anchor (left/top + 50% offset) lives on a plain div —
+            the inner motion element owns `transform` for its layout/hover
+            animation, so the two can't fight over the same CSS property.
+          */}
+          <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2">
+            <motion.div
+              layoutId={`skill-node-${centerSkill.key}`}
+              layout
+              transition={reducedMotion ? { duration: 0 } : SPRING_TRANSITION}
+              data-agent-id={`skill:${centerSkill.key}`}
+              className="flex flex-col items-center gap-1"
+            >
+              <div className="flex h-20 w-20 flex-col items-center justify-center gap-1 rounded-full border-2 border-primary bg-background shadow-lg shadow-primary/20 sm:h-24 sm:w-24">
+                <SkillIcon name={centerSkill.icon} size={28} className="text-primary" />
+                <span className="px-1 text-center text-[11px] font-semibold leading-tight text-foreground">
+                  {centerSkill.name}
+                </span>
+              </div>
+              <span className="text-[10px] font-medium uppercase tracking-wide text-primary">
+                {proficiencyLabel(centerSkill.rating)}
               </span>
-            </div>
-            <span className="text-[10px] font-medium uppercase tracking-wide text-primary">
-              {proficiencyLabel(centerSkill.rating)}
-            </span>
+            </motion.div>
           </div>
 
           {/* Satellite nodes */}
           {satellites.map((skill, index) => {
             const { x, y } = satellitePosition(index, satellites.length);
             return (
-              <button
+              <div
                 key={skill.key}
-                type="button"
-                data-agent-id={`skill:${skill.key}`}
-                onClick={() => setCenterKey(skill.key)}
+                className="absolute -translate-x-1/2 -translate-y-1/2"
                 style={{ left: `${x}%`, top: `${y}%` }}
-                className="absolute flex -translate-x-1/2 -translate-y-1/2 flex-col items-center gap-1 rounded-full border bg-background p-2 shadow-sm transition-all hover:scale-105 hover:border-primary hover:shadow-md hover:shadow-primary/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring sm:p-3"
               >
-                <SkillIcon name={skill.icon} size={20} className="text-primary" />
-                <span className="max-w-[4.5rem] truncate text-[10px] font-medium text-foreground">
-                  {skill.name}
-                </span>
-              </button>
+                <motion.button
+                  layoutId={`skill-node-${skill.key}`}
+                  layout
+                  transition={reducedMotion ? { duration: 0 } : SPRING_TRANSITION}
+                  type="button"
+                  data-agent-id={`skill:${skill.key}`}
+                  onClick={() => setGraphCenterSkill(skill.key)}
+                  whileHover={reducedMotion ? undefined : { scale: 1.05 }}
+                  className="flex flex-col items-center gap-1 rounded-full border bg-background p-2 shadow-sm transition-colors hover:border-primary hover:shadow-md hover:shadow-primary/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring sm:p-3"
+                >
+                  <SkillIcon name={skill.icon} size={20} className="text-primary" />
+                  <span className="max-w-[4.5rem] truncate text-[10px] font-medium text-foreground">
+                    {skill.name}
+                  </span>
+                </motion.button>
+              </div>
             );
           })}
         </div>
