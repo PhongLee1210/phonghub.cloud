@@ -443,3 +443,18 @@ export const SKILLS: ISkill[] = [...skillsUnsorted].sort(
 );
 
 export const featuredSkills = SKILLS.slice(0, 6);
+
+export const SKILL_CATEGORY_LABELS: Record<SkillCategoryEnum, string> = {
+  [SkillCategoryEnum.LANGUAGES]: "Languages",
+  [SkillCategoryEnum.FRAMEWORKS]: "Frameworks",
+  [SkillCategoryEnum.FRONTEND]: "Frontend",
+  [SkillCategoryEnum.BACKEND]: "Backend",
+  [SkillCategoryEnum.DATABASES]: "Databases",
+  [SkillCategoryEnum.CLOUD]: "Cloud",
+  [SkillCategoryEnum.AI_LLM]: "AI / LLM",
+  [SkillCategoryEnum.DEVOPS]: "DevOps",
+  [SkillCategoryEnum.DEVELOPER_TOOLS]: "Developer Tools",
+  [SkillCategoryEnum.DESIGN]: "Design",
+  [SkillCategoryEnum.BUSINESS]: "Business",
+  [SkillCategoryEnum.SOFT_SKILLS]: "Soft Skills",
+};

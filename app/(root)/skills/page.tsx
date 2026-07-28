@@ -1,7 +1,7 @@
 import { Metadata } from "next";
 
 import PageContainer from "@/components/common/page-container";
-import SkillsSection from "@/components/skills/skills-section";
+import SkillsWorkspace from "@/components/features/skills/skills-workspace";
 import { pagesConfig } from "@/config/pages";
 import {
   ISkill,
@@ -96,7 +96,7 @@ export default function SkillsPage() {
       title={pagesConfig.skills.title}
       description={pagesConfig.skills.description}
     >
-      <SkillsSection categories={categories} />
+      <SkillsWorkspace categories={categories} />
     </PageContainer>
   );
 }
