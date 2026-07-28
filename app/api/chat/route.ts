@@ -330,28 +330,53 @@ export async function POST(req: NextRequest) {
               const target = extractTarget(chunk.result);
               if (target) {
                 citationTargets.add(target);
-                if (target !== "resume") highlightTarget = target;
+                if (target !== "resume") {
+                  highlightTarget = target;
+                  send({ type: ChatEventType.ToolEffect, highlight: target });
+                }
               }
             } else if (chunk.name === "focus") {
               const target = extractTarget(chunk.result);
               if (target) {
                 citationTargets.add(target);
-                if (target !== "resume") focusTarget = target;
+                if (target !== "resume") {
+                  focusTarget = target;
+                  send({ type: ChatEventType.ToolEffect, focus: target });
+                }
               }
             } else if (chunk.name === "select_skill") {
               const target = extractTarget(chunk.result);
               if (target) {
                 citationTargets.add(target);
-                if (target !== "resume") skillSelectTarget = target;
+                if (target !== "resume") {
+                  skillSelectTarget = target;
+                  send({ type: ChatEventType.ToolEffect, skillSelect: target });
+                }
               }
             } else if (chunk.name === "open_modal" || chunk.name === "expand_section") {
               const target = extractTarget(chunk.result);
               if (target) {
                 citationTargets.add(target);
                 openModalTarget = target;
+                try {
+                  const citation = await resolveCitation(target);
+                  send({ type: ChatEventType.ToolEffect, openModal: citation });
+                } catch (err) {
+                  // Hallucinated/stale target id — same failure mode
+                  // resolveCitations() already tolerates at end-of-turn;
+                  // just skip the early effect.
+                  console.warn(
+                    "[chat/route] resolveCitation (tool effect) failed:",
+                    err
+                  );
+                }
               }
             } else if (chunk.name === "navigate_to") {
-              navigateRoute = extractNavigateRoute(chunk.result) ?? navigateRoute;
+              const route = extractNavigateRoute(chunk.result);
+              if (route) {
+                navigateRoute = route;
+                send({ type: ChatEventType.ToolEffect, navigate: route });
+              }
             }
           } else if (chunk.type === "done") {
             void recordTokenUsage(ip, redis, chunk.usage.outputTokens).catch(

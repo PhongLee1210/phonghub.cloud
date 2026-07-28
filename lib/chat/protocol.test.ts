@@ -10,6 +10,11 @@ describe("encodeEvent", () => {
     expect(line).toBe('{"type":"token","text":"hi"}\n');
     expect(line.endsWith("\n")).toBe(true);
   });
+
+  test("encodes a tool_effect event", () => {
+    const line = encodeEvent({ type: "tool_effect", highlight: "project:foo" });
+    expect(line).toBe('{"type":"tool_effect","highlight":"project:foo"}\n');
+  });
 });
 
 // ── entity-id scheme (Task 4.0) ────────────────────────────────

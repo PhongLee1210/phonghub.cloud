@@ -327,6 +327,9 @@ export const useChatStore = create<ChatStoreState>((set, get) => ({
 
     let tokenBuffer = "";
     let rafId: number | null = null;
+    const deliveredEffects = new Set<
+      "highlight" | "focus" | "openModal" | "navigate" | "skillSelect"
+    >();
 
     const cancelRaf = () => {
       if (rafId !== null) {
@@ -376,6 +379,34 @@ export const useChatStore = create<ChatStoreState>((set, get) => ({
             return { messages: newMessages, conversations: newConversations };
           });
         },
+        onToolEffect: (effect) => {
+          if (get().status !== ChatStatus.Streaming) return;
+
+          set(() => {
+            const patch: Partial<ChatStoreState> = {};
+            if (effect.highlight !== undefined) {
+              deliveredEffects.add("highlight");
+              patch.pendingHighlight = effect.highlight;
+            }
+            if (effect.focus !== undefined) {
+              deliveredEffects.add("focus");
+              patch.pendingFocus = effect.focus;
+            }
+            if (effect.openModal !== undefined) {
+              deliveredEffects.add("openModal");
+              patch.pendingOpenModal = effect.openModal;
+            }
+            if (effect.navigate !== undefined) {
+              deliveredEffects.add("navigate");
+              patch.pendingNavigate = effect.navigate;
+            }
+            if (effect.skillSelect !== undefined) {
+              deliveredEffects.add("skillSelect");
+              patch.pendingSkillSelect = effect.skillSelect;
+            }
+            return patch;
+          });
+        },
         onDone: (done) => {
           if (get().status !== ChatStatus.Streaming) return;
 
@@ -419,11 +450,21 @@ export const useChatStore = create<ChatStoreState>((set, get) => ({
               activeAbort: undefined,
               messages,
               conversations: newConversations,
-              pendingHighlight: done.highlight,
-              pendingFocus: done.focus,
-              pendingOpenModal: openModalCitation,
-              pendingNavigate: done.navigate ?? state.pendingNavigate,
-              pendingSkillSelect: done.skillSelect,
+              pendingHighlight: deliveredEffects.has("highlight")
+                ? state.pendingHighlight
+                : done.highlight,
+              pendingFocus: deliveredEffects.has("focus")
+                ? state.pendingFocus
+                : done.focus,
+              pendingOpenModal: deliveredEffects.has("openModal")
+                ? state.pendingOpenModal
+                : openModalCitation,
+              pendingNavigate: deliveredEffects.has("navigate")
+                ? state.pendingNavigate
+                : (done.navigate ?? state.pendingNavigate),
+              pendingSkillSelect: deliveredEffects.has("skillSelect")
+                ? state.pendingSkillSelect
+                : done.skillSelect,
             };
           });
           persist(get().conversations, get().activeConversationId);

@@ -13,6 +13,7 @@ export function streamChat(
     onCard?: (card: Extract<ChatStreamEvent, { type: "card" }>["card"]) => void;
     onNavigate?: (href: Extract<ChatStreamEvent, { type: "navigate" }>["href"]) => void;
     onAction?: (action: ChatMessageAction) => void;
+    onToolEffect?: (effect: Extract<ChatStreamEvent, { type: "tool_effect" }>) => void;
     onDone: (done: DoneEvent) => void;
     onError: (
       code: Extract<ChatStreamEvent, { type: "error" }>["code"],
@@ -97,6 +98,9 @@ function dispatch(
       break;
     case "action":
       handlers.onAction?.(event.action);
+      break;
+    case "tool_effect":
+      handlers.onToolEffect?.(event);
       break;
     case "done":
       handlers.onDone(event);

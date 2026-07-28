@@ -99,9 +99,26 @@ export const ChatEventType = {
   Card: "card",
   Navigate: "navigate",
   Action: "action",
+  ToolEffect: "tool_effect",
   Done: "done",
   Error: "error",
 } as const;
+
+/**
+ * Same tool-effect fields as DoneEvent, delivered the moment each tool call
+ * resolves mid-turn instead of bundled at the end. Exactly one field is
+ * populated per event. `openModal` is already resolved to an AgentCitation
+ * here (unlike DoneEvent.openModal), since there's no batched resolution
+ * pass to defer to.
+ */
+export type ToolEffectEvent = {
+  type: typeof ChatEventType.ToolEffect;
+  highlight?: AgentEntityId;
+  focus?: AgentEntityId;
+  openModal?: AgentCitation;
+  navigate?: InternalRoute;
+  skillSelect?: AgentEntityId;
+};
 
 export type DoneEvent = {
   type: typeof ChatEventType.Done;
@@ -127,5 +144,6 @@ export type ChatStreamEvent =
       type: typeof ChatEventType.Action;
       action: ChatMessageAction;
     }
+  | ToolEffectEvent
   | DoneEvent
   | { type: typeof ChatEventType.Error; code: ChatErrorCode; message: string };
