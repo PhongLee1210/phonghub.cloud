@@ -12,7 +12,7 @@ import {
   checkCombinedBudget,
   trimHistoryToBudget,
 } from "@/lib/chat/token-budget";
-import { CHAT_TOOLS } from "@/lib/chat/tools";
+import { buildClientTools, CHAT_TOOLS } from "@/lib/chat/tools";
 import { checkTokenQuota, recordTokenUsage } from "@/lib/chat/token-quota";
 import { isNonEmptyString, isObject } from "@/lib/guards";
 import { effectiveContextBudget, streamLLM } from "@/lib/llm";
@@ -26,6 +26,7 @@ import {
   ChatRequestBody,
   ChatStreamEvent,
   InternalRoute,
+  SerializedClientTool,
 } from "@/types/chat";
 
 export const runtime = "nodejs";
@@ -138,6 +139,15 @@ async function resolveCitations(
   return citations.length > 0 ? citations : undefined;
 }
 
+function validateClientTool(entry: unknown): entry is SerializedClientTool {
+  if (!isObject(entry)) return false;
+  return (
+    isNonEmptyString(entry.name) &&
+    isNonEmptyString(entry.description) &&
+    "preResolved" in entry
+  );
+}
+
 function validateBody(body: unknown): ChatRequestBody | undefined {
   if (!isObject(body)) return undefined;
   const { messages } = body;
@@ -152,7 +162,16 @@ function validateBody(body: unknown): ChatRequestBody | undefined {
     if (content.length > chatConfig.limits.maxInputChars) return undefined;
   }
 
-  return { messages: messages as ChatRequestBody["messages"] };
+  const result: ChatRequestBody = {
+    messages: messages as ChatRequestBody["messages"],
+  };
+
+  if ("clientTools" in body && Array.isArray(body.clientTools)) {
+    const valid = body.clientTools.every(validateClientTool);
+    if (valid) result.clientTools = body.clientTools as SerializedClientTool[];
+  }
+
+  return result;
 }
 
 export async function POST(req: NextRequest) {
@@ -304,12 +323,18 @@ export async function POST(req: NextRequest) {
         const abortController = new AbortController();
         req.signal.addEventListener("abort", () => abortController.abort());
 
+        const safeClientTools = (parsed.clientTools ?? []).filter(
+          (ct) => !(ct.name in CHAT_TOOLS)
+        );
+        const clientToolSet = buildClientTools(safeClientTools);
+        const allTools = { ...clientToolSet, ...CHAT_TOOLS };
+
         const iterator = streamLLM("chat", {
           messages: llmMessages,
           maxTokens: chatConfig.limits.maxOutputTokens,
           temperature: chatConfig.limits.temperature,
           signal: abortController.signal,
-          tools: CHAT_TOOLS,
+          tools: allTools,
         })[Symbol.asyncIterator]();
 
         // 6. Pull chunks and stream them. A throw here (pre-token or

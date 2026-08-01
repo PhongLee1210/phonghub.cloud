@@ -2,6 +2,8 @@
 
 import dynamic from "next/dynamic";
 
+import { PageContextTool } from "@/components/ai/page-context-tool";
+
 const GlobalChatWidget = dynamic(
   () =>
     import("@/components/chat/global-chat-widget").then((m) => ({
@@ -15,5 +17,10 @@ export function GlobalChatWidgetLoader({
 }: {
   isMobile?: boolean;
 }) {
-  return <GlobalChatWidget isMobile={isMobile} />;
+  return (
+    <>
+      <PageContextTool />
+      <GlobalChatWidget isMobile={isMobile} />
+    </>
+  );
 }

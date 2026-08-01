@@ -2,6 +2,7 @@ import { create } from "zustand";
 
 import { chatConfig } from "@/config/chat";
 import { SKILLS, SkillCategoryEnum } from "@/config/skills";
+import { useAiToolRegistry } from "@/lib/ai-tools/registry";
 import { streamChat } from "@/lib/chat/client";
 import { findCitation } from "@/lib/chat/entity-dom";
 import { pickRandom } from "@/lib/utils";
@@ -75,7 +76,7 @@ interface ChatStoreState {
   setGraphCategory: (category: GraphCategoryFilter) => void;
   setGraphCenterSkill: (key: string, category?: SkillCategoryEnum) => void;
   clearSkillSelect: () => void;
-  sendMessage: (text: string) => void;
+  sendMessage: (text: string) => Promise<void>;
   stopStreaming: () => void;
   reset: () => void;
   newChat: () => void;
@@ -268,7 +269,7 @@ export const useChatStore = create<ChatStoreState>((set, get) => ({
     set({ pendingSkillSelect: undefined });
   },
 
-  sendMessage: (text: string) => {
+  sendMessage: async (text: string) => {
     const trimmed = text.trim().slice(0, chatConfig.limits.maxInputChars);
     if (!trimmed || get().status === ChatStatus.Streaming) return;
 
@@ -370,8 +371,13 @@ export const useChatStore = create<ChatStoreState>((set, get) => ({
       });
     };
 
+    const clientTools = await useAiToolRegistry.getState().snapshot();
+
     const { abort } = streamChat(
-      { messages: wireMessages },
+      {
+        messages: wireMessages,
+        ...(clientTools.length > 0 ? { clientTools } : {}),
+      },
       {
         onNavigate: (href) => {
           set({ pendingNavigate: href });
