@@ -919,6 +919,7 @@ export function SkillsGraph({ skills, projectsBySkill }: SkillsGraphProps) {
                       <span className="relative z-10 mt-1.5 flex h-[14px] w-[14px] shrink-0 items-center justify-center rounded-full border border-primary/50 bg-background">
                         <motion.span
                           className="h-1 w-1 rounded-full bg-primary shadow-[0_0_3px_1px_hsl(var(--primary)/0.5)]"
+                          initial={{ opacity: 0.5 }}
                           animate={
                             reducedMotion
                               ? undefined
