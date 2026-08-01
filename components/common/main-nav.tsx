@@ -153,6 +153,19 @@ export function MainNav({ items, children }: MainNavProps) {
           {/* Desktop: right nav items + ModeToggle */}
           <nav className="hidden items-center gap-5 md:flex">
             {rightItems.map((item, index) => renderItem(item, index))}
+            <motion.div
+              initial={{ opacity: 0, scale: 0.8 }}
+              animate={{ opacity: 1, scale: 1 }}
+              transition={{ type: "spring", damping: 28, stiffness: 200 }}
+              whileHover={{ scale: 1.1 }}
+              whileTap={{ scale: 0.9 }}
+            >
+              <Link href="/contact" aria-label="Contact">
+                <span className="inline-flex h-8 w-8 items-center justify-center rounded-md text-sm font-medium transition-colors hover:bg-accent hover:text-accent-foreground">
+                  <Icons.send className="h-4 w-4" />
+                </span>
+              </Link>
+            </motion.div>
             {children}
           </nav>
 
@@ -175,6 +188,11 @@ export function MainNav({ items, children }: MainNavProps) {
               </Link>
             </motion.div>
             <div className="flex items-center gap-3">
+              <Link href="/contact" aria-label="Contact">
+                <span className="inline-flex h-8 w-8 items-center justify-center rounded-md text-sm font-medium transition-colors hover:bg-accent hover:text-accent-foreground">
+                  <Icons.send className="h-4 w-4" />
+                </span>
+              </Link>
               {children}
               <motion.button
                 className="flex min-h-[44px] min-w-[44px] items-center justify-center -mr-2"
