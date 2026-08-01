@@ -3,8 +3,8 @@ import "server-only";
 import { ToolSet, tool } from "ai";
 import { z } from "zod";
 
-import { ValidCategory, ValidSkills } from "@/config/constants";
 import { CONTACT_INFO } from "@/config/contact";
+import { ValidCategory, ValidSkills } from "@/config/constants";
 import { ExperienceInterface } from "@/config/experience";
 import { ProjectInterface } from "@/config/projects";
 import { RESUME_RESOURCE } from "@/config/resume";
@@ -196,10 +196,7 @@ const searchContactTool = tool({
     available: CONTACT_INFO.available,
     name: CONTACT_INFO.name,
     email: CONTACT_INFO.email,
-    socials: CONTACT_INFO.socials.map((s) => ({
-      name: s.name,
-      username: s.username,
-    })),
+    socials: CONTACT_INFO.socials.map((s) => ({ name: s.name, username: s.username })),
   }),
 });
 
@@ -287,20 +284,14 @@ const selectSkillTool = tool({
   inputSchema: z.object({
     target: z
       .string()
-      .describe(
-        "The skill agentId to center the graph on, e.g. 'skill:react'."
-      ),
+      .describe("The skill agentId to center the graph on, e.g. 'skill:react'."),
   }),
   execute: async ({ target }) => {
     const parsed = parseEntityId(target);
     const valid = Boolean(parsed && parsed.kind === "skill");
     return valid
       ? { ok: true as const, target: target as AgentEntityId }
-      : {
-          ok: false as const,
-          target,
-          reason: "target must be a skill agentId",
-        };
+      : { ok: false as const, target, reason: "target must be a skill agentId" };
   },
 });
 
@@ -311,28 +302,7 @@ const expandSectionTool = tool({
   execute: executeModalTarget,
 });
 
-/**
- * Converts pre-resolved client tool definitions into AI SDK tool entries.
- * Client tools execute instantly (return cached result) — no LLM args needed.
- */
-export function buildClientTools(
-  clientTools: Array<{
-    name: string;
-    description: string;
-    preResolved: unknown;
-  }>
-): ToolSet {
-  const tools: ToolSet = {};
-  for (const ct of clientTools) {
-    tools[ct.name] = tool({
-      description: ct.description,
-      inputSchema: z.object({}),
-      execute: async () => ct.preResolved,
-    });
-  }
-  return tools;
-}
-
+/** Every tool the "chat" alias's tool-capable models can call. */
 export const CHAT_TOOLS = {
   search_projects: searchProjectsTool,
   search_experiences: searchExperiencesTool,

@@ -1,3 +1,4 @@
+import cloneDeep from "lodash.clonedeep";
 import lodashIsNull from "lodash.isnull";
 import isPlainObject from "lodash.isplainobject";
 import lodashIsString from "lodash.isstring";
@@ -29,3 +30,6 @@ export function isString(value: unknown): value is string {
 export function isNonEmptyString(value: unknown): value is string {
   return isString(value) && value.length > 0;
 }
+
+/** Deep copy via lodash `cloneDeep` (handles Dates, Maps, nested structures). */
+export const cloneCopy = cloneDeep;

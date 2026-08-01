@@ -16,7 +16,6 @@ import { ProjectsSectionV2 } from "@/components/features/projects/projects-secti
 import { SkillsSectionV2 } from "@/components/features/skills/skills-section-v2";
 import { BlogDispatch } from "@/components/home/blog-dispatch";
 import { CareerLog } from "@/components/home/career-log";
-import { CTASection } from "@/components/home/cta-section";
 import { Hero } from "@/components/home/hero";
 import { Button } from "@/components/ui/button";
 
@@ -143,7 +142,6 @@ export default async function IndexPage() {
           </Link>
         </AnimatedText>
       </AnimatedSection>
-      <CTASection />
     </ClientPageWrapper>
   );
 }

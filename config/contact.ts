@@ -1,13 +1,3 @@
-import { LeadTopic } from "@/lib/lead/schema";
-
-export const LEAD_TOPIC_LABELS: Record<LeadTopic, string> = {
-  product: "Product",
-  automation: "Automation",
-  advisory: "Advisory",
-  hiring: "Hiring",
-  other: "Other",
-};
-
 export const CONTACT_INFO = {
   name: "Le Thanh Phong",
   available: true,

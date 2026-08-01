@@ -91,16 +91,8 @@ export interface PersistedChat {
   updatedAt: number;
 }
 
-export interface SerializedClientTool {
-  name: string;
-  description: string;
-  parameters: Record<string, unknown>;
-  preResolved: unknown;
-}
-
 export interface ChatRequestBody {
   messages: Array<{ role: ChatRole; content: string }>;
-  clientTools?: SerializedClientTool[];
 }
 
 export const ChatErrorCode = {
