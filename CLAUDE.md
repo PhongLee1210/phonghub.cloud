@@ -79,6 +79,32 @@ bun install                     # deps are NOT installed automatically
 - Keep changes focused; do not combine unrelated refactoring.
 - IF the same set of Tailwind utility classes is repeated across 3+ usages, extract it into a reusable component or a `cva`/`class-variance-authority` variant instead of copy-pasting the class string.
 
+### Comments and Code Documentation
+
+Write code that is self-explanatory through clear naming, small functions, and good module organization. Prefer improving the code over adding comments.
+
+- Do **not** comment what the code does.
+- Do **not** narrate obvious implementation steps.
+- Do **not** leave commented-out code or `TODO`, `FIXME`, `HACK`, or placeholder comments unless explicitly requested.
+- Do **not** use comments to compensate for poor naming, long functions, or weak architecture.
+
+Comments should explain **why**, not **what**.
+
+Only add comments when they provide context that cannot be inferred from the code itself, such as:
+
+- Business rationale or design trade-offs.
+- Performance optimizations or non-obvious implementation decisions.
+- Framework, browser, or third-party library workarounds.
+- References to research papers, RFCs, specifications, or external algorithms.
+
+If a function needs extensive comments, refactor it into smaller, well-named functions first. Only comment inherently complex logic that remains after refactoring.
+
+Before writing a comment, ask:
+
+> "Would better naming, extraction, or structure make this comment unnecessary?"
+
+If yes, improve the code instead. Comments are the last resort, not the first.
+
 ### Runtime Type Guards (`lib/guards.ts`)
 
 Always use `lib/guards.ts` for runtime type checks.
@@ -132,3 +158,7 @@ export const DEFAULT_TASK_PAGE_SIZE = 10;
 - Maintain config-driven/Markdown-based, no-database architecture unless requested otherwise.
 - Always document behavioral, setup, or environment changes.
 - Confirm before destructive actions (force-push, branch/content deletion, env resets).
+
+When I say "watch mode", call `agentation_watch_annotations` in a loop.
+For each annotation: acknowledge it, make the fix, then resolve it with a summary.
+Continue watching until I say stop or timeout is reached.

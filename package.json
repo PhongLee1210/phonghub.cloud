@@ -7,7 +7,8 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint .",
-    "test": "bun test --conditions react-server --path-ignore-patterns '**/worktrees/**'"
+    "test": "bun test --conditions react-server --path-ignore-patterns '**/worktrees/**'",
+    "eval": "bun run scripts/eval-chat.ts"
   },
   "dependencies": {
     "@ai-sdk/anthropic": "^4.0.8",
@@ -78,6 +79,7 @@
     "@types/lodash.isstring": "^4.0.9",
     "@types/lodash.isundefined": "^3.0.9",
     "@types/marked": "^6.0.0",
+    "agentation": "^3.0.2",
     "prettier": "^3.5.3",
     "prettier-plugin-organize-imports": "^4.1.0"
   }

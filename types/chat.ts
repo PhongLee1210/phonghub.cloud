@@ -62,6 +62,10 @@ export interface ChatMessage {
   suggestions?: string[];
   /** Every resource the assistant cited in this reply, rendered as chips. */
   citations?: AgentCitation[];
+  /** Raw thinking step keys (e.g. "search_projects") captured before content starts streaming. */
+  thinkingSteps?: string[];
+  /** How long the thinking phase lasted in milliseconds. */
+  thinkingElapsedMs?: number;
   createdAt: number;
   error?: boolean;
 }

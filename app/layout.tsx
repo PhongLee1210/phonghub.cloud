@@ -12,6 +12,7 @@ import { siteConfig } from "@/config/site";
 import { getDeviceHint } from "@/lib/device";
 import { cn } from "@/lib/utils";
 import { ModalProvider } from "@/providers/modal-provider";
+import { DevTools } from "@/components/common/dev-tools";
 
 const fontSans = FontSans({
   subsets: ["latin"],
@@ -147,6 +148,7 @@ export default async function RootLayout({ children }: RootLayoutProps) {
           <Toaster />
           <ModalProvider />
           <GlobalChatWidgetLoader isMobile={isMobile} />
+          <DevTools />
         </ThemeProvider>
       </body>
       {GA_ID && <GoogleAnalytics gaId={GA_ID} />}

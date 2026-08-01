@@ -332,6 +332,7 @@ export const useChatStore = create<ChatStoreState>((set, get) => ({
     let tokenBuffer = "";
     let rafId: number | null = null;
     const deliveredEffects = new Set<ToolEffectField>();
+    let thinkingStartedAt = 0;
 
     const cancelRaf = () => {
       if (rafId !== null) {
@@ -345,10 +346,28 @@ export const useChatStore = create<ChatStoreState>((set, get) => ({
       if (!tokenBuffer) return;
       const delta = tokenBuffer;
       tokenBuffer = "";
-      set((s) => ({
-        streamingContent: s.streamingContent + delta,
-        ...(s.thinkingSteps.length > 0 ? { thinkingSteps: [] } : {}),
-      }));
+      set((s) => {
+        const hadSteps = s.thinkingSteps.length > 0;
+        const elapsedMs =
+          hadSteps && thinkingStartedAt ? Date.now() - thinkingStartedAt : 0;
+        return {
+          streamingContent: s.streamingContent + delta,
+          ...(hadSteps
+            ? {
+                thinkingSteps: [],
+                messages: s.messages.map((m) =>
+                  m.id === assistantMessage.id
+                    ? {
+                        ...m,
+                        thinkingSteps: s.thinkingSteps,
+                        thinkingElapsedMs: elapsedMs,
+                      }
+                    : m
+                ),
+              }
+            : {}),
+        };
+      });
     };
 
     const { abort } = streamChat(
@@ -364,9 +383,12 @@ export const useChatStore = create<ChatStoreState>((set, get) => ({
           }
         },
         onThinking: (step) => {
-          set((state) => ({
-            thinkingSteps: [...state.thinkingSteps, step],
-          }));
+          set((state) => {
+            if (state.thinkingSteps.length === 0) {
+              thinkingStartedAt = Date.now();
+            }
+            return { thinkingSteps: [...state.thinkingSteps, step] };
+          });
         },
         onAction: (action) => {
           set((state) => {
@@ -423,12 +445,18 @@ export const useChatStore = create<ChatStoreState>((set, get) => ({
           );
           const hasCommand = Boolean(
             done.highlight ||
-              done.focus ||
-              openModalCitation ||
-              done.navigate ||
-              done.skillSelect
+            done.focus ||
+            openModalCitation ||
+            done.navigate ||
+            done.skillSelect
           );
           set((state) => {
+            // Edge case: done fires before any token (steps not yet snapshotted).
+            const hadSteps = state.thinkingSteps.length > 0;
+            const elapsedMs =
+              hadSteps && thinkingStartedAt
+                ? Date.now() - thinkingStartedAt
+                : 0;
             const messages = state.messages.map((m) =>
               m.id === assistantMessage.id
                 ? {
@@ -436,6 +464,12 @@ export const useChatStore = create<ChatStoreState>((set, get) => ({
                     content: finalContent,
                     suggestions: resolved,
                     citations: done.citations,
+                    ...(hadSteps
+                      ? {
+                          thinkingSteps: state.thinkingSteps,
+                          thinkingElapsedMs: elapsedMs,
+                        }
+                      : {}),
                   }
                 : m
             );

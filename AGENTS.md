@@ -107,3 +107,4 @@ See [docs/GIT_WORKFLOW.md](docs/GIT_WORKFLOW.md): branch prefixes `feature/`, `f
 - [lib/llm/README.md](lib/llm/README.md) — LLM gateway internals, adding a provider, env keys, test setup
 - [implementation-notes.md](implementation-notes.md) — build log + documented deviations (chat widget, rate limiting)
 - [docs/GIT_WORKFLOW.md](docs/GIT_WORKFLOW.md) — branch/commit/PR rules
+- [docs/PHONG_AI_PORTFOLIO_ARCHITECTURE.md](docs/PHONG_AI_PORTFOLIO_ARCHITECTURE.md) — AI chat agent flow: request guards, system prompt, tool loop, citation pipeline, stream protocol, eval

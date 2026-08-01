@@ -4,11 +4,10 @@ import { motion, useReducedMotion } from "framer-motion";
 import { memo, useEffect, useMemo, useRef } from "react";
 
 import { MessageMarkdown } from "@/components/chat/message-markdown";
-import { ResourceCitationChips } from "@/components/chat/resource-citation-chips";
 import { StarButton } from "@/components/chat/star-button";
 import { SuggestionChips } from "@/components/chat/suggestion-chips";
 import { SuggestionList } from "@/components/chat/suggestion-list";
-import { ThinkingChecklist } from "@/components/chat/thinking-checklist";
+import { ThinkingReasoning } from "@/components/chat/thinking-reasoning/thinking-reasoning";
 import { Icons } from "@/components/common/icons";
 import { chatConfig } from "@/config/chat";
 import { useChatStore } from "@/hooks/use-chat-store";
@@ -33,6 +32,7 @@ interface MessageRowProps {
   isStreamingLast: boolean;
   isGreeting: boolean;
   showSuggestions: boolean;
+  liveThinkingSteps: string[];
   onSuggestionSelect?: (prompt: string) => void;
 }
 
@@ -42,26 +42,36 @@ const MessageRow = memo(function MessageRow({
   isStreamingLast,
   isGreeting,
   showSuggestions,
+  liveThinkingSteps,
   onSuggestionSelect,
 }: MessageRowProps) {
   const reducedMotion = useReducedMotion();
   const isUser = message.role === "user";
 
+  // Pre-content thinking state: show ThinkingReasoning as the whole message row.
   if (isStreamingLast && !displayContent) {
     return (
       <motion.div
         initial={{ opacity: 0, y: 8 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: reducedMotion ? 0 : 0.22, ease: "easeOut" }}
-        className="flex items-end gap-2 self-start"
+        className="flex min-w-0 items-start gap-2 self-start"
       >
         <span className="flex h-7 w-7 flex-shrink-0 items-center justify-center rounded-full bg-lavender text-lavender-foreground">
           <Icons.aurora className="h-3.5 w-3.5" />
         </span>
-        <ThinkingChecklist />
+        <div className="flex min-w-0 max-w-[80%] flex-col items-start">
+          <ThinkingReasoning phase="thinking" steps={liveThinkingSteps} />
+        </div>
       </motion.div>
     );
   }
+
+  // Detect whether this message has a persisted thinking trace.
+  const hasThought =
+    !isUser &&
+    message.thinkingSteps !== undefined &&
+    message.thinkingSteps.length > 0;
 
   return (
     <motion.div
@@ -69,8 +79,10 @@ const MessageRow = memo(function MessageRow({
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: reducedMotion ? 0 : 0.22, ease: "easeOut" }}
       className={cn(
-        "flex min-w-0 items-end gap-2",
-        isUser ? "self-end flex-row-reverse" : "self-start"
+        "flex min-w-0 gap-2",
+        isUser
+          ? "self-end flex-row-reverse items-end"
+          : "self-start items-start"
       )}
     >
       <span
@@ -94,6 +106,15 @@ const MessageRow = memo(function MessageRow({
           isUser ? "items-end" : "items-start"
         )}
       >
+        {/* "Thought for Xs" — collapsed trace above the message bubble */}
+        {hasThought && (
+          <ThinkingReasoning
+            phase="done"
+            steps={message.thinkingSteps!}
+            elapsedMs={message.thinkingElapsedMs}
+          />
+        )}
+
         <div
           className={cn(
             "break-words rounded-[16px] px-[12px] py-[10px] text-[13px] leading-relaxed",
@@ -110,6 +131,7 @@ const MessageRow = memo(function MessageRow({
             <MessageMarkdown
               className="text-foreground dark:text-muted-foreground"
               content={displayContent}
+              citations={message.citations}
             />
           )}
           {isStreamingLast && displayContent && (
@@ -125,9 +147,7 @@ const MessageRow = memo(function MessageRow({
             />
           )}
         </div>
-        {!isUser && message.citations && message.citations.length > 0 && (
-          <ResourceCitationChips citations={message.citations} className="mt-1" />
-        )}
+
         {showSuggestions && message.suggestions && onSuggestionSelect && (
           <SuggestionChips
             suggestions={message.suggestions}
@@ -156,6 +176,7 @@ export const ChatMessageList = ({
 }: ChatMessageListProps) => {
   const messages = useChatStore((s) => s.messages);
   const streamingContent = useChatStore((s) => s.streamingContent);
+  const thinkingSteps = useChatStore((s) => s.thinkingSteps);
   const status = useChatStore((s) => s.status);
   const isStreaming = status === "streaming";
 
@@ -218,6 +239,7 @@ export const ChatMessageList = ({
             isStreamingLast={isStreamingLast}
             isGreeting={isGreeting}
             showSuggestions={showSuggestions}
+            liveThinkingSteps={isStreamingLast ? thinkingSteps : []}
             onSuggestionSelect={onSuggestionSelect}
           />
         );
