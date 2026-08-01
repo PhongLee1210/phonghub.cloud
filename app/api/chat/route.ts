@@ -377,6 +377,11 @@ export async function POST(req: NextRequest) {
                 navigateRoute = route;
                 send({ type: ChatEventType.ToolEffect, navigate: route });
               }
+            } else if (chunk.name === "search_contact") {
+              send({
+                type: ChatEventType.Action,
+                action: ChatMessageAction.ContactCard,
+              });
             }
           } else if (chunk.type === "done") {
             void recordTokenUsage(ip, redis, chunk.usage.outputTokens).catch(

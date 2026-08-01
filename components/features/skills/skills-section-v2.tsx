@@ -9,7 +9,8 @@ import { SKILLS } from "@/config/skills";
 import { pagesConfig } from "@/config/pages";
 import { filterProjectsByTechStack } from "@/lib/data/projects";
 
-import { RelatedProject, SkillsGraph } from "./skills-graph";
+import { RelatedProject } from "./skill-detail-panel";
+import { SkillsGraph } from "./skills-graph";
 
 function buildProjectsBySkill(): Record<string, RelatedProject[]> {
   const entries = SKILLS.map((skill) => {

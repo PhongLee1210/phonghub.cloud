@@ -141,7 +141,7 @@ export default async function RootLayout({ children }: RootLayoutProps) {
           attribute="class"
           defaultTheme="system"
           enableSystem
-          themes={["light", "dark"]}
+          themes={["light", "dark", "retro", "cyberpunk", "paper", "aurora", "synthwave"]}
         >
           {children}
           <Analytics />

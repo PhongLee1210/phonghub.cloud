@@ -4,6 +4,7 @@ import { motion, useReducedMotion } from "framer-motion";
 import { memo, useEffect, useMemo, useRef } from "react";
 
 import { MessageMarkdown } from "@/components/chat/message-markdown";
+import { PreviewCard } from "@/components/chat/preview-card";
 import { StarButton } from "@/components/chat/star-button";
 import { SuggestionChips } from "@/components/chat/suggestion-chips";
 import { SuggestionList } from "@/components/chat/suggestion-list";
@@ -12,7 +13,7 @@ import { Icons } from "@/components/common/icons";
 import { chatConfig } from "@/config/chat";
 import { useChatStore } from "@/hooks/use-chat-store";
 import { cn } from "@/lib/utils";
-import { ChatMessage } from "@/types/chat";
+import { ChatMessage, ThinkingPhase } from "@/types/chat";
 
 interface ChatMessageListProps {
   onSuggestionSelect?: (prompt: string) => void;
@@ -61,7 +62,7 @@ const MessageRow = memo(function MessageRow({
           <Icons.aurora className="h-3.5 w-3.5" />
         </span>
         <div className="flex min-w-0 max-w-[80%] flex-col items-start">
-          <ThinkingReasoning phase="thinking" steps={liveThinkingSteps} />
+          <ThinkingReasoning phase={ThinkingPhase.Thinking} steps={liveThinkingSteps} />
         </div>
       </motion.div>
     );
@@ -109,7 +110,7 @@ const MessageRow = memo(function MessageRow({
         {/* "Thought for Xs" — collapsed trace above the message bubble */}
         {hasThought && (
           <ThinkingReasoning
-            phase="done"
+            phase={ThinkingPhase.Done}
             steps={message.thinkingSteps!}
             elapsedMs={message.thinkingElapsedMs}
           />
@@ -156,6 +157,7 @@ const MessageRow = memo(function MessageRow({
           />
         )}
         {message.action === "star_repo" && <StarButton variant="inline" />}
+        {message.action === "contact_card" && <PreviewCard />}
         <span className="px-1 text-[0.65rem] text-muted-foreground">
           {isUser && message.error ? (
             <span className="flex items-center gap-1 text-destructive">

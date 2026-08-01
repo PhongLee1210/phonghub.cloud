@@ -4,6 +4,7 @@ import type { AgentCitation } from "@/types/chat";
 
 import {
   assertHasCitations,
+  assertHasContactAction,
   assertMarkersMatchCitations,
   assertNoInventedRoutes,
   assertNotEmpty,
@@ -88,6 +89,20 @@ describe("assertMarkersMatchCitations", () => {
   });
   test("passes with no markers", () => {
     expect(assertMarkersMatchCitations("no markers", []).pass).toBe(true);
+  });
+});
+
+// ── assertHasContactAction ───────────────────────────────────────
+
+describe("assertHasContactAction", () => {
+  test("passes with contact_card action", () => {
+    expect(assertHasContactAction("contact_card").pass).toBe(true);
+  });
+  test("fails with undefined action", () => {
+    expect(assertHasContactAction(undefined).pass).toBe(false);
+  });
+  test("fails with different action", () => {
+    expect(assertHasContactAction("star_repo").pass).toBe(false);
   });
 });
 

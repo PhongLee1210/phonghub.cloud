@@ -4,8 +4,10 @@ import { motion, useReducedMotion } from "framer-motion";
 import { useEffect, useLayoutEffect, useRef, useState } from "react";
 
 import { THINKING_STEP_LABELS } from "@/config/chat";
+import { ThinkingPhase } from "@/types/chat";
 import { cn } from "@/lib/utils";
 
+import { CheckIcon } from "./check-icon";
 import styles from "./thinking-reasoning.module.css";
 
 const ROW_H = 16;
@@ -13,30 +15,10 @@ const GAP = 3;
 const MAX_H = ROW_H * 5 + GAP * 4;
 
 export interface ThinkingReasoningProps {
+  /** Raw step keys (e.g. "search_projects") — mapped via THINKING_STEP_LABELS before display. */
   steps: string[];
-  phase: "thinking" | "done";
+  phase: ThinkingPhase;
   elapsedMs?: number;
-}
-
-function CheckIcon() {
-  return (
-    <svg
-      width="10"
-      height="10"
-      viewBox="0 0 12 12"
-      aria-hidden="true"
-      className={styles.stepCheck}
-    >
-      <polyline
-        points="1.5,6 4.5,9 10.5,3"
-        fill="none"
-        stroke="hsl(var(--lavender))"
-        strokeWidth="1.5"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      />
-    </svg>
-  );
 }
 
 export function ThinkingReasoning({
@@ -46,10 +28,8 @@ export function ThinkingReasoning({
 }: ThinkingReasoningProps) {
   const reducedMotion = useReducedMotion();
   const viewportRef = useRef<HTMLDivElement>(null);
-  const animatedRef = useRef<HTMLDivElement>(null);
   const traceRef = useRef<HTMLDivElement>(null);
   const [open, setOpen] = useState(false);
-  const [expandedH, setExpandedH] = useState(0);
   const [lineHeight, setLineHeight] = useState(0);
 
   const steps = rawSteps.map((s) => THINKING_STEP_LABELS[s] ?? s);
@@ -61,14 +41,13 @@ export function ThinkingReasoning({
   const viewH = Math.min(contentH, MAX_H);
 
   useEffect(() => {
-    if (phase !== "thinking") return;
+    if (phase !== ThinkingPhase.Thinking) return;
     const el = viewportRef.current;
     if (!el) return;
     el.scrollTop = el.scrollHeight;
   }, [count, phase]);
 
   useLayoutEffect(() => {
-    if (animatedRef.current) setExpandedH(animatedRef.current.scrollHeight);
     if (traceRef.current) setLineHeight(traceRef.current.offsetHeight);
   }, [steps.length, phase]);
 
@@ -76,7 +55,7 @@ export function ThinkingReasoning({
     ? "linear-gradient(to bottom, transparent 0, black 8px, black calc(100% - 8px), transparent 100%)"
     : "none";
 
-  if (phase === "thinking" && count === 0) {
+  if (phase === ThinkingPhase.Thinking && count === 0) {
     return (
       <div
         role="status"
@@ -90,7 +69,7 @@ export function ThinkingReasoning({
     );
   }
 
-  if (phase === "thinking") {
+  if (phase === ThinkingPhase.Thinking) {
     return (
       <motion.div
         initial={{ opacity: 0 }}
@@ -160,7 +139,7 @@ export function ThinkingReasoning({
                   {isLast ? (
                     <span className={styles.stepDot} />
                   ) : (
-                    <CheckIcon key={`check-${i}`} />
+                    <CheckIcon key={`check-${i}`} className={styles.stepCheck} />
                   )}
                   <p className={styles.trSentence}>{step}</p>
                 </motion.div>
@@ -233,16 +212,15 @@ export function ThinkingReasoning({
         </svg>
       </button>
 
-      <div
-        ref={animatedRef}
-        style={{
-          height: open ? expandedH : 0,
-          opacity: open ? 1 : 0,
-          overflow: "hidden",
-          transition: reducedMotion
-            ? "none"
-            : "height 400ms cubic-bezier(0.23,1,0.32,1), opacity 400ms cubic-bezier(0.23,1,0.32,1)",
-        }}
+      <motion.div
+        initial={false}
+        animate={{ height: open ? "auto" : 0, opacity: open ? 1 : 0 }}
+        transition={
+          reducedMotion
+            ? { duration: 0 }
+            : { duration: 0.4, ease: [0.23, 1, 0.32, 1] }
+        }
+        style={{ overflow: "hidden" }}
       >
         <div className="relative ml-[5px] pl-4">
           <span
@@ -273,13 +251,13 @@ export function ThinkingReasoning({
                       }
                 }
               >
-                <CheckIcon key={`done-check-${i}`} />
+                <CheckIcon className={styles.stepCheck} />
                 <p className={styles.trSentence}>{step}</p>
               </div>
             ))}
           </div>
         </div>
-      </div>
+      </motion.div>
     </motion.div>
   );
 }

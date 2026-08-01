@@ -114,7 +114,7 @@ export const EXPERIENCES: ExperienceInterface[] = [
       "Gained hands-on experience in sales and advertising within the telecom industry.",
       "Built foundation for professional career through practical internship experience.",
     ],
-    skills: ["Sales", "Customer Service"],
+    skills: [],
     companyUrl: "https://fpt.vn",
     logo: "/experience/fpt-telecom-logo.webp",
   },

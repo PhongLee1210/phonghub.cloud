@@ -15,28 +15,30 @@ import type {
   DoneEvent,
 } from "@/types/chat";
 import { ChatEventType } from "@/types/chat";
-import { runAssertions, type AssertionResult } from "@/lib/chat/eval-assertions";
+import { runAssertions, runContactAssertions, type AssertionResult } from "@/lib/chat/eval-assertions";
 
 const BASE = process.env.EVAL_BASE_URL ?? "http://localhost:3000";
 
 /** Mirrors chatConfig.seedSuggestionCards prompts without importing the
  *  chatConfig module (which pulls in React icon imports). */
 const EVAL_CASES = [
-  { label: "Work experience", prompt: "What's Phong's work experience?" },
-  { label: "Projects",        prompt: "What projects has Phong worked on?" },
-  { label: "Skills",          prompt: "What are Phong's most confident skills?" },
+  { label: "Work experience", prompt: "What's Phong's work experience?",    type: "standard" },
+  { label: "Projects",        prompt: "What projects has Phong worked on?",  type: "standard" },
+  { label: "Skills",          prompt: "What are Phong's most confident skills?", type: "standard" },
+  { label: "Contact",         prompt: "How can I contact Phong?",            type: "contact"  },
 ] as const;
 
 // ── stream collector ─────────────────────────────────────────────────────────
 
 async function collectStream(
   body: ReadableStream<Uint8Array>
-): Promise<{ text: string; doneEvent: DoneEvent | null }> {
+): Promise<{ text: string; doneEvent: DoneEvent | null; action: string | undefined }> {
   const reader = body.getReader();
   const decoder = new TextDecoder();
   let buffer = "";
   let text = "";
   let doneEvent: DoneEvent | null = null;
+  let action: string | undefined;
 
   while (true) {
     const { value, done } = await reader.read();
@@ -50,13 +52,14 @@ async function collectStream(
         const event = JSON.parse(line) as ChatStreamEvent;
         if (event.type === ChatEventType.Token) text += event.text;
         if (event.type === ChatEventType.Done) doneEvent = event;
+        if (event.type === ChatEventType.Action) action = event.action;
       } catch {
         // skip malformed NDJSON lines
       }
     }
   }
 
-  return { text, doneEvent };
+  return { text, doneEvent, action };
 }
 
 // ── display helpers ──────────────────────────────────────────────────────────
@@ -115,25 +118,28 @@ async function runEval() {
     } catch (err) {
       console.log(`  ${RED}✗ fetch failed — is the server running at ${BASE}?${RESET}`);
       console.log(`    ${String(err)}\n`);
-      totalChecks += 6;
+      totalChecks += EVAL_CASES[i].type === "contact" ? 4 : 6;
       continue;
     }
 
     if (!res.ok || !res.body) {
       console.log(`  ${RED}✗ HTTP ${res.status} — skipping${RESET}\n`);
-      totalChecks += 6;
+      totalChecks += EVAL_CASES[i].type === "contact" ? 4 : 6;
       continue;
     }
 
-    const { text, doneEvent } = await collectStream(res.body);
+    const { text, doneEvent, action } = await collectStream(res.body);
     const citations: AgentCitation[] = doneEvent?.citations ?? [];
+    const isContact = EVAL_CASES[i].type === "contact";
 
     // Show preview of first 300 chars
     const preview = text.length > 300 ? text.slice(0, 300) + "…" : text;
-    console.log(`  ${DIM}Response (${text.length} chars, ${citations.length} citations):${RESET}`);
+    console.log(`  ${DIM}Response (${text.length} chars, ${citations.length} citations, action=${action ?? "none"}):${RESET}`);
     console.log(`  ${DIM}"${preview}"${RESET}\n`);
 
-    const results = runAssertions(text, citations);
+    const results = isContact
+      ? runContactAssertions(text, action)
+      : runAssertions(text, citations);
     for (const r of results) {
       printResult(r);
       totalChecks++;

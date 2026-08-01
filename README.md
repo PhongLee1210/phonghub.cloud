@@ -2,44 +2,46 @@
 
 ## Overview
 
-- **What**: The personal portfolio and blog website of Le Thanh Phong (Phong Lee), a software engineer. It presents professional experience, projects, skills, a résumé, and a Markdown-driven blog.
-- **Why**: To showcase Phong's work and career history publicly and to publish long-form blog content, all served from a single statically-optimized Next.js site with no separate backend or database.
-- **Primary users**: Recruiters and site visitors browsing the portfolio, and the site owner, who authors content via Markdown files and config data.
+- **What**: Personal portfolio and blog of Le Thanh Phong (Phong Lee), a software engineer. This Next.js site showcases professional experience, projects, skills, résumé, and includes a Markdown-driven blog.
+- **Why**: To present Phong's work publicly and publish long-form content, all via a statically-optimized site with no server-side database.
+- **Primary users**: Recruiters and visitors browsing the portfolio, plus the site owner managing content via Markdown and config files.
 
 ## Features
 
-- Project showcase with detail pages (`/projects`, `/projects/[projectId]`)
-- Experience timeline with detail pages (`/experience`, `/experience/[experienceId]`)
-- Skills page with proficiency indicators (`/skills`)
-- Résumé page (`/resume`)
-- Contact page (`/contact`)
-- Markdown-based blog with category, tag, and search support (`/blogs`, `/blogs/[slug]`, `/blogs/category/[category]`, `/blogs/tag/[tag]`)
-- AI chat widget (floating launcher on every page) answering questions about Phong's projects, skills, and experience, streamed from a provider-agnostic LLM gateway (`POST /api/chat`, `lib/llm/`) — see `docs/chat-widget-implementation-plan.html` and `implementation-notes.md`
-- "Star on GitHub" action in the chat widget — visitors can star the portfolio repo with one click, or by asking the assistant to support the project (`GET`/`POST /api/github/star`, `lib/github/`)
-- Dark/light theme switching (`next-themes`)
+- Project showcase (with detail pages): `/projects`, `/projects/[projectId]`
+- Experience timeline & details: `/experience`, `/experience/[experienceId]`
+- Skills page with proficiency indicators: `/skills`
+- Résumé download/view: `/resume`
+- Contact page: `/contact`
+- Markdown blog with categories, tags & search: `/blogs`, `/blogs/[slug]`, `/blogs/category/[category]`, `/blogs/tag/[tag]`
+- **AI chat widget:** (floating launcher, all pages) — answers questions about Phong’s portfolio, projects, skills, experience; uses a provider-agnostic LLM gateway backend (see [Chat integration section below](#local-ai-integration-for-better-dev-experience))
+- “Star on GitHub” action: star the repo directly from the chat widget
+- Theme switching (dark/light): via `next-themes`
 - Framer Motion animations
-- SEO metadata, sitemap (`app/sitemap.ts`), and web manifest (`app/manifest.ts`)
+- SEO metadata, sitemap & manifest
 
 ## Tech Stack
 
 - **Framework**: Next.js 16 (App Router), React 19, TypeScript
-- **Styling**: Tailwind CSS, Radix UI primitives, `class-variance-authority`, Framer Motion
-- **Content**: Markdown blog posts (`content/blog`), parsed with `gray-matter` and `remark`
+- **Styling**: Tailwind CSS, Radix UI, `class-variance-authority`, Framer Motion
+- **Content**: Markdown posts (`content/blog`), using `gray-matter` & `remark`
 - **Forms/validation**: `react-hook-form`, `zod`
-- **State**: `zustand` (client state, e.g. modals, chat widget)
-- **LLM gateway**: internal provider-agnostic layer (`lib/llm/`) over the Vercel AI SDK (`ai`, `@ai-sdk/anthropic`, `@ai-sdk/openai`, `@ai-sdk/google`, `@ai-sdk/groq`); rate limiting via `@upstash/ratelimit` + `@upstash/redis`
-- **Runtime & package manager**: Bun (`bun.lock`)
-- **Linting/formatting**: ESLint (`eslint-config-next`), Prettier
-- **Deployment**: Vercel (see `vercel.json`)
+- **State**: `zustand`
+- **LLM gateway**: Internal abstraction over Vercel AI SDK (`ai`, `@ai-sdk/anthropic`, `@ai-sdk/openai`, `@ai-sdk/google`, `@ai-sdk/groq`), rate-limited via Upstash Redis.
+- **Runtime/PM:** Bun (`bun.lock`)
+- **Lint/format:** ESLint + Prettier
+- **Deploy:** Vercel
 
-There is no database — all content comes from Markdown files (`content/blog`) and static config modules (`config/*.ts`).
+No database — content is Markdown files and static config only.
+
+---
 
 ## Quick Start
 
 ### Prerequisites
 
 - Node.js 22+
-- Bun 1.0+ (recommended) — npm/yarn also work since dependencies are standard, but the repo is tracked with `bun.lock`
+- Bun 1.0+ (preferred; npm/yarn also work)
 
 ### Installation
 
@@ -51,87 +53,114 @@ bun install
 
 ### Environment Variables
 
-Copy the example file and fill in the values you need:
+Copy `.env.example` and configure values as needed:
 
 ```bash
 cp .env.example .env.local
 ```
 
-| Variable | Purpose |
-|---|---|
-| `NEXT_PUBLIC_GOOGLE_MEASUREMENT_ID` | Google Analytics measurement ID. |
-| `NEXT_PUBLIC_GOOGLE_VERIFICATION` | Google Search Console site verification token. |
-| `NEXT_PUBLIC_RESUME_LINK` | Link used by the résumé page/download action. |
-| `ANTHROPIC_API_KEY` / `OPENAI_API_KEY` / `GOOGLE_GENERATIVE_AI_API_KEY` / `GROQ_API_KEY` | LLM gateway provider keys — server-only, set only for providers you use. See `lib/llm/README.md`. |
-| `LLM_CHAT_MODEL` / `LLM_CHEAP_MODEL` | Override the `chat`/`cheap` model alias (`provider:model`, e.g. `groq:llama-3.3-70b`). Optional — sane defaults are baked in. |
-| `LLM_CHAT_FALLBACKS` | Optional comma-separated fallback chain for the `chat` alias (pre-token failover only). Off by default. |
-| `UPSTASH_REDIS_REST_URL` / `UPSTASH_REDIS_REST_TOKEN` | Rate limiting store for `/api/chat` and `/api/github/star`. If unset, requests are rejected in production and allowed through in development — see `implementation-notes.md`. |
-| `GITHUB_TOKEN` | Server-only Personal Access Token (fine-grained `starring:write`, or classic `public_repo` scope) used by `/api/github/star` to star the repo on behalf of the configured GitHub account when a visitor triggers the chat widget's "Star on GitHub" action. Never sent to the browser. |
+| Variable                                              | Purpose                                                            |
+| ----------------------------------------------------- | ------------------------------------------------------------------ |
+| `NEXT_PUBLIC_GOOGLE_MEASUREMENT_ID`                   | Google Analytics measurement ID.                                   |
+| `NEXT_PUBLIC_GOOGLE_VERIFICATION`                     | Google Search Console verification.                                |
+| `NEXT_PUBLIC_RESUME_LINK`                             | Link used for résumé page and download.                            |
+| `ANTHROPIC_API_KEY` / `OPENAI_API_KEY` / etc.         | LLM provider keys — set those used (see `lib/llm/README.md`).      |
+| `LLM_CHAT_MODEL`, `LLM_CHEAP_MODEL`                   | Optionally override default/generic LLM models by alias.           |
+| `LLM_CHAT_FALLBACKS`                                  | Optional comma-separated fallback chain for LLM provider failover. |
+| `UPSTASH_REDIS_REST_URL` / `UPSTASH_REDIS_REST_TOKEN` | For chat/GitHub star rate limiting with Upstash.                   |
+| `GITHUB_TOKEN`                                        | PAT for `/api/github/star` from server-side. Never sent to client. |
 
-`.env.example` documents the full list, including which variables are server-only (never sent to the browser).
+See `.env.example` for details.
 
-### Run Development Server
+---
+
+## Running Locally
+
+### 1. Launch the dev server
 
 ```bash
 bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000).
+Navigate to [http://localhost:3000](http://localhost:3000).
+
+### 2. (Recommended) Local AI Integration for Better Dev Experience
+
+For the best developer experience, especially when using the built-in AI chat widget, run local agentation and Serena MCP servers:
+
+#### a. Start Agentation MCP Server
+
+```bash
+npx agentation-mcp server --port 9122
+```
+
+#### b. Start Serena MCP Server
+
+This bridges to local language models or MCP providers for fast, cost-free prototyping:
+
+```bash
+serena start-mcp-server --transport streamable-http --port 9121
+```
+
+> **Note:**
+>
+> - You may need to install [`agentation-mcp`](https://www.npmjs.com/package/agentation-mcp) and [`serena`](https://github.com/serena-ai/serena) globally or run with `npx`.
+> - These steps are optional but greatly improve your ability to test the AI chat and LLM features locally and with real streaming responses.
 
 ## Project Structure
 
 ```
 app/                  # Next.js App Router
 ├── (root)/           # Public pages: home, experience, projects, skills, resume, contact, blogs, list100
-├── api/               # Route handlers: projects, experiences, skills, blog/search, chat (NDJSON stream), github/star
+├── api/              # Route handlers: projects/experiences/skills/blog/search/chat/github/star
 ├── sitemap.ts, manifest.ts, layout.tsx, globals.css
-components/           # UI, grouped by feature (blog, contact, experience, projects, skills, list100, modals, chat, common, ui)
-config/               # Static site content and metadata (site, routes, pages, projects, project-snippets, experience, skills, socials, constants, chat)
-content/blog/         # Markdown blog posts
-lib/                  # Business logic: lib/blog (Markdown parsing/service), lib/llm (LLM gateway), lib/chat (system prompt, suggestion worker, rate limit, client stream reader), lib/github (star client), code-tokenizer.ts, motion.ts, api.ts, utils.ts
-hooks/, providers/    # Shared React hooks and context providers (incl. chat store)
-types/                # Shared client-safe types (chat wire protocol)
-public/, assets/      # Static assets and fonts
-docs/                 # Repository documentation (see below)
+components/           # UI grouped by major feature
+config/               # Static site meta/config, social/profiles, projects/skills, chat config, etc
+content/blog/         # Markdown blog posts (autodiscovered)
+lib/                  # Business logic/services: blog parsing, LLM gateway, chat, GitHub, etc
+hooks/, providers/    # Shared React hooks and contexts
+types/                # Shared TS types
+public/, assets/      # Static files
+docs/                 # Design docs and repo notes
 ```
 
 ## Development
 
 ```bash
-bun dev             # start dev server
+bun dev             # dev server
 bun run build       # production build
 bun run start       # run production build locally
-bun run lint        # ESLint
-bunx tsc --noEmit   # type check
-bun run test        # unit tests (bun:test)
+bun run lint        # lint
+bunx tsc --noEmit   # type-check
+bun run test        # Bun unit tests
 ```
 
-Business logic (content loading, formatting, filtering) lives in `lib/`; UI components should consume `lib/` and `config/` rather than reading Markdown or the filesystem directly. See `docs/GIT_WORKFLOW.md` for commit/branch conventions.
+Business logic lives in `lib/`. UI components should _never_ read Markdown/config or the filesystem directly; use services in `lib/` or `config/`. See `docs/GIT_WORKFLOW.md` for commit/branch conventions.
 
 ## Testing
 
-Unit tests run via Bun's built-in test runner (`bun run test`; see `lib/llm/*.test.ts` and `lib/chat/*.test.ts` for coverage of the chat gateway's pure logic and Redis-backed guards). There's no component/integration/e2e test suite — verify UI changes by running lint and type-checking, then manually checking the affected pages in the browser.
+Unit test coverage of chat/LLM logic via Bun (see `lib/llm/*.test.ts`, `lib/chat/*.test.ts`). No e2e tests: verify UI changes in-browser, and always run static checks.
 
 ## Deployment
 
-The project is configured for [Vercel](https://vercel.com) (`vercel.json`), using `bun install` / `bun run build` as the install/build commands and `.next` as the output directory. Set the environment variables listed above in your Vercel project settings before deploying.
+Ready for Vercel using Bun (`bun install`, `bun run build`, output: `.next`). Set environment variables as above in your Vercel project.
 
 ## Documentation
 
-- [docs/GIT_WORKFLOW.md](docs/GIT_WORKFLOW.md) — branch naming, commit message, and pull request rules
-- [CLAUDE.md](CLAUDE.md) — guidance for AI coding agents working in this repository
-- [docs/chat-widget-implementation-plan.html](docs/chat-widget-implementation-plan.html) / [docs/chat-widget-mockup.html](docs/chat-widget-mockup.html) — design/plan for the AI chat widget and LLM gateway
-- [implementation-notes.md](implementation-notes.md) — build log and documented deviations for the chat widget feature
-- [lib/llm/README.md](lib/llm/README.md) — LLM gateway internals, adding a provider, env keys
+- [docs/GIT_WORKFLOW.md](docs/GIT_WORKFLOW.md) — branch, commit, PR conventions
+- [CLAUDE.md](CLAUDE.md) — for AI code agents
+- [docs/chat-widget-implementation-plan.html](docs/chat-widget-implementation-plan.html) — design & plan for LLM chat gateway
+- [implementation-notes.md](implementation-notes.md) — chat build notes
+- [lib/llm/README.md](lib/llm/README.md) — LLM gateway usage, internal docs, env keys
 
 ## Contributing
 
-This is a personal portfolio project. If you're contributing changes:
+This is a personal project. If you wish to contribute:
 
-1. Create a branch following the naming convention in [docs/GIT_WORKFLOW.md](docs/GIT_WORKFLOW.md) (`feature/...`, `fix/...`, `refactor/...`, `docs/...`).
-2. Run `bun run lint` and `bunx tsc --noEmit` before committing.
-3. Keep pull requests small and explain *why* the change is needed.
+1. Use branches with [docs/GIT_WORKFLOW.md](docs/GIT_WORKFLOW.md) conventions (`feature/...`, `fix/...`, etc).
+2. Run `bun run lint` & `bunx tsc --noEmit` before committing.
+3. Keep PRs tightly scoped, and explain _why_ your change is needed.
 
 ## License
 
-No license file is currently published in this repository. Contact the repository owner ([phonglee1210@gmail.com](mailto:phonglee1210@gmail.com)) regarding usage rights.
+No license file is published in this repo. Contact [phonglee1210@gmail.com](mailto:phonglee1210@gmail.com) for any usage requests.

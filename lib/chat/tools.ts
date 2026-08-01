@@ -3,6 +3,7 @@ import "server-only";
 import { ToolSet, tool } from "ai";
 import { z } from "zod";
 
+import { CONTACT_INFO } from "@/config/contact";
 import { ValidCategory, ValidSkills } from "@/config/constants";
 import { ExperienceInterface } from "@/config/experience";
 import { ProjectInterface } from "@/config/projects";
@@ -187,6 +188,18 @@ const searchBlogTool = tool({
   },
 });
 
+const searchContactTool = tool({
+  description:
+    "Retrieve Phong's contact information, availability, and social media profiles. Call this when the user asks about: how to contact Phong, email address, phone number, reaching out, hiring Phong, whether he is available for work or open to opportunities, GitHub profile, LinkedIn, Twitter, Facebook, social media profiles, or any similar contact intent. A contact card UI will automatically appear in the chat — do not invent or repeat social links in your text reply.",
+  inputSchema: z.object({}),
+  execute: async () => ({
+    available: CONTACT_INFO.available,
+    name: CONTACT_INFO.name,
+    email: CONTACT_INFO.email,
+    socials: CONTACT_INFO.socials.map((s) => ({ name: s.name, username: s.username })),
+  }),
+});
+
 const highlightResourceTool = tool({
   description:
     "Visually highlight and scroll to a single resource already surfaced by a search tool earlier in this turn. Use the exact agentId from that search result (e.g. 'project:enrollment-platform', 'resume').",
@@ -296,6 +309,7 @@ export const CHAT_TOOLS = {
   search_skills: searchSkillsTool,
   search_resume: searchResumeTool,
   search_blog: searchBlogTool,
+  search_contact: searchContactTool,
   highlight_resource: highlightResourceTool,
   navigate_to: navigateToTool,
   focus: focusResourceTool,

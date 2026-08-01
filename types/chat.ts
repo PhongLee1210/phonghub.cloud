@@ -4,6 +4,12 @@ export const ChatRole = {
 } as const;
 export type ChatRole = (typeof ChatRole)[keyof typeof ChatRole];
 
+export const ThinkingPhase = {
+  Thinking: "thinking",
+  Done: "done",
+} as const;
+export type ThinkingPhase = (typeof ThinkingPhase)[keyof typeof ThinkingPhase];
+
 export type InternalRoute =
   | "/skills"
   | "/projects"
@@ -49,6 +55,7 @@ export interface ProjectCardPayload {
 
 export const ChatMessageAction = {
   StarRepo: "star_repo",
+  ContactCard: "contact_card",
 } as const;
 export type ChatMessageAction =
   (typeof ChatMessageAction)[keyof typeof ChatMessageAction];

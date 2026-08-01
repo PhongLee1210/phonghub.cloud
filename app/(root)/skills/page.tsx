@@ -65,21 +65,6 @@ const CATEGORY_SECTIONS: {
     description: "Version control, testing, and database management tools",
     category: SkillCategoryEnum.DEVELOPER_TOOLS,
   },
-  {
-    title: "Design",
-    description: "Design and prototyping tools",
-    category: SkillCategoryEnum.DESIGN,
-  },
-  {
-    title: "Business",
-    description: "Sales and business development skills",
-    category: SkillCategoryEnum.BUSINESS,
-  },
-  {
-    title: "Soft Skills",
-    description: "Customer-facing and interpersonal skills",
-    category: SkillCategoryEnum.SOFT_SKILLS,
-  },
 ];
 
 export default function SkillsPage() {

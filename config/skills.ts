@@ -8,9 +8,6 @@ export enum SkillCategoryEnum {
   AI_LLM = "ai-llm",
   DEVOPS = "devops",
   DEVELOPER_TOOLS = "developer-tools",
-  DESIGN = "design",
-  BUSINESS = "business",
-  SOFT_SKILLS = "soft-skills",
 }
 
 export interface ISkill {
@@ -416,24 +413,6 @@ export const skillsUnsorted = [
     icon: "dbeaver",
     category: SkillCategoryEnum.DEVELOPER_TOOLS,
   },
-  {
-    key: "sales",
-    name: "Sales",
-    description:
-      "Sales techniques, customer relationship management, and business development strategies.",
-    rating: 3,
-    icon: "settings",
-    category: SkillCategoryEnum.BUSINESS,
-  },
-  {
-    key: "customer-service",
-    name: "Customer Service",
-    description:
-      "Customer support, relationship management, and service excellence practices.",
-    rating: 4,
-    icon: "settings",
-    category: SkillCategoryEnum.SOFT_SKILLS,
-  },
 ] as const satisfies readonly ISkill[];
 
 export type ValidSkills = (typeof skillsUnsorted)[number]["name"];
@@ -454,7 +433,4 @@ export const SKILL_CATEGORY_LABELS: Record<SkillCategoryEnum, string> = {
   [SkillCategoryEnum.AI_LLM]: "AI / LLM",
   [SkillCategoryEnum.DEVOPS]: "DevOps",
   [SkillCategoryEnum.DEVELOPER_TOOLS]: "Developer Tools",
-  [SkillCategoryEnum.DESIGN]: "Design",
-  [SkillCategoryEnum.BUSINESS]: "Business",
-  [SkillCategoryEnum.SOFT_SKILLS]: "Soft Skills",
 };

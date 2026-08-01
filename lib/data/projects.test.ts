@@ -52,6 +52,6 @@ describe("filterProjectsByTechStack", () => {
   });
 
   test("returns an empty list when no project uses the skill", () => {
-    expect(filterProjectsByTechStack("Sales")).toEqual([]);
+    expect(filterProjectsByTechStack("DBeaver")).toEqual([]);
   });
 });

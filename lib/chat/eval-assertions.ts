@@ -94,6 +94,15 @@ export function assertNoInventedRoutes(text: string): AssertionResult {
   };
 }
 
+export function assertHasContactAction(action: string | undefined): AssertionResult {
+  const pass = action === "contact_card";
+  return {
+    name: "has_contact_action",
+    pass,
+    detail: pass ? 'action="contact_card"' : `action=${JSON.stringify(action)} — contact card not triggered`,
+  };
+}
+
 export function runAssertions(
   text: string,
   citations: AgentCitation[]
@@ -105,5 +114,18 @@ export function runAssertions(
     assertSequentialMarkers(text),
     assertMarkersMatchCitations(text, citations),
     assertNoInventedRoutes(text),
+  ];
+}
+
+/** Assertion set for contact responses — no [n] citation markers expected. */
+export function runContactAssertions(
+  text: string,
+  action: string | undefined
+): AssertionResult[] {
+  return [
+    assertNotEmpty(text),
+    assertNotTooLong(text),
+    assertNoInventedRoutes(text),
+    assertHasContactAction(action),
   ];
 }
