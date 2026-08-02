@@ -1,4 +1,3 @@
-import { HeroAssistant } from "@/components/chat/hero-assistant";
 import { HeroInteractive } from "@/components/home/hero-interactive";
 import { PhotoCollage } from "@/components/home/photo-collage";
 import { ScrollToExplore } from "@/components/home/scroll-to-explore";
@@ -11,7 +10,6 @@ export const Hero = async () => {
     <section className="relative min-h-screen overflow-hidden">
       <HeroInteractive isMobile={isMobile} />
       <PhotoCollage />
-      <HeroAssistant isMobile={isMobile} />
       <ScrollToExplore />
     </section>
   );

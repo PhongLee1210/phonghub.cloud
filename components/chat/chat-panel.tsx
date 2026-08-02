@@ -84,7 +84,7 @@ export const ChatPanel = ({
               ? { type: "spring", damping: 32, stiffness: 320, mass: 0.8 }
               : { type: "spring", damping: 28, stiffness: 240 }
           }
-          className="fixed inset-x-0 top-[calc(var(--safe-top,0px)+4.5rem)] bottom-[calc(var(--safe-bottom,0px)+4.5rem)] z-[59] flex w-full flex-col overflow-hidden bg-chat-bg text-card-foreground shadow-[0_24px_64px_hsl(var(--foreground)/0.22)] min-[481px]:inset-x-auto min-[481px]:left-auto min-[481px]:top-auto min-[481px]:bottom-20 min-[481px]:right-6 min-[481px]:h-[440px] min-[481px]:max-h-[calc(100vh-6rem)] min-[481px]:w-[300px] min-[481px]:max-w-[calc(100vw-3rem)] min-[481px]:rounded-2xl min-[481px]:border min-[481px]:border-border"
+          className="fixed inset-x-0 top-[calc(var(--safe-top,0px)+4.5rem)] bottom-[calc(var(--safe-bottom,0px)+4.5rem)] z-[59] flex w-full flex-col overflow-hidden bg-chat-bg text-card-foreground shadow-[0_24px_64px_hsl(var(--foreground)/0.22)] min-[481px]:inset-x-auto min-[481px]:left-auto min-[481px]:top-auto min-[481px]:bottom-20 min-[481px]:right-6 min-[481px]:h-[calc(100dvh-190px)] min-[481px]:min-h-[440px] min-[481px]:max-h-[640px] min-[481px]:w-[380px] min-[481px]:max-w-[calc(100vw-3rem)] min-[481px]:rounded-[28px] min-[481px]:border min-[481px]:border-border"
         >
           {isMobile && (
             <div className="flex flex-shrink-0 justify-center pb-1 pt-3">
