@@ -33,12 +33,29 @@ function SendIcon() {
   );
 }
 
+function StopIcon() {
+  return (
+    <svg
+      width="12"
+      height="12"
+      viewBox="0 0 24 24"
+      fill="currentColor"
+      aria-hidden="true"
+    >
+      <rect x="4" y="4" width="16" height="16" rx="2" />
+    </svg>
+  );
+}
+
 export function PromptInput({ disabled, onSubmit, inputRef }: PromptInputProps) {
   const draft = useChatStore((s) => s.draft);
   const setDraft = useChatStore((s) => s.setDraft);
+  const status = useChatStore((s) => s.status);
+  const stopStreaming = useChatStore((s) => s.stopStreaming);
   const localRef = useRef<HTMLTextAreaElement>(null);
   const textareaRef = inputRef ?? localRef;
 
+  const isStreaming = status === "streaming";
   const canSend = draft.trim().length > 0 && !disabled;
 
   const autoGrow = () => {
@@ -97,19 +114,30 @@ export function PromptInput({ disabled, onSubmit, inputRef }: PromptInputProps) 
           </button>
 
           <div className={styles.right}>
-            <button
-              type="button"
-              aria-label="Send"
-              disabled={!canSend}
-              onClick={submit}
-              className={cn(
-                styles.iconBtn,
-                styles.send,
-                canSend && styles.sendActive
-              )}
-            >
-              <SendIcon />
-            </button>
+            {isStreaming ? (
+              <button
+                type="button"
+                aria-label="Stop generating"
+                onClick={stopStreaming}
+                className={cn(styles.iconBtn, styles.stop)}
+              >
+                <StopIcon />
+              </button>
+            ) : (
+              <button
+                type="button"
+                aria-label="Send"
+                disabled={!canSend}
+                onClick={submit}
+                className={cn(
+                  styles.iconBtn,
+                  styles.send,
+                  canSend && styles.sendActive
+                )}
+              >
+                <SendIcon />
+              </button>
+            )}
           </div>
         </div>
       </div>

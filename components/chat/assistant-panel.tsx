@@ -35,7 +35,7 @@ export const AssistantPanel = ({
   const activeFocus = useChatStore((s) => s.activeFocus);
   const sendMessage = useChatStore((s) => s.sendMessage);
   const setDraft = useChatStore((s) => s.setDraft);
-  const stopStreaming = useChatStore((s) => s.stopStreaming);
+
   const reset = useChatStore((s) => s.reset);
   const inputRef = useRef<HTMLTextAreaElement>(null);
   const [isFullscreen, setIsFullscreen] = useState(false);
@@ -94,18 +94,6 @@ export const AssistantPanel = ({
             className="flex-shrink-0 font-semibold text-foreground underline underline-offset-2"
           >
             Retry
-          </button>
-        </div>
-      )}
-
-      {status === "streaming" && (
-        <div className="flex flex-shrink-0 justify-center px-[14px] pb-2">
-          <button
-            type="button"
-            onClick={stopStreaming}
-            className="rounded-full border border-[var(--line)] px-3 py-1.5 text-xs text-muted-foreground hover:text-foreground"
-          >
-            Stop generating
           </button>
         </div>
       )}
