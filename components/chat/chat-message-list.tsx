@@ -199,7 +199,7 @@ export const ChatMessageList = ({
   useEffect(() => {
     if (isNearBottomRef.current) {
       const el = containerRef.current;
-      if (el) el.scrollTop = el.scrollHeight;
+      if (el) el.scrollTo({ top: el.scrollHeight, behavior: "smooth" });
     }
   }, [messages, streamingContent]);
 
@@ -214,7 +214,7 @@ export const ChatMessageList = ({
     <div
       ref={containerRef}
       onScroll={onScroll}
-      className="flex flex-1 flex-col gap-[12px] overflow-x-hidden overflow-y-auto p-[16px] pb-[8px]"
+      className="scrollbar-macos flex flex-1 flex-col gap-[12px] overflow-x-hidden overflow-y-auto p-[16px] pb-[8px]"
       role="log"
       aria-live="polite"
       aria-relevant="additions"
