@@ -4,6 +4,7 @@ import { motion, useReducedMotion } from "framer-motion";
 import { memo, useEffect, useMemo, useRef } from "react";
 
 import { MessageMarkdown } from "@/components/chat/message-markdown";
+import { LeadCaptureCard } from "@/components/chat/lead-capture-card";
 import { PreviewCard } from "@/components/chat/preview-card";
 import { StarButton } from "@/components/chat/star-button";
 import { SuggestionChips } from "@/components/chat/suggestion-chips";
@@ -158,6 +159,9 @@ const MessageRow = memo(function MessageRow({
         )}
         {message.action === "star_repo" && <StarButton variant="inline" />}
         {message.action === "contact_card" && <PreviewCard />}
+        {message.action === "lead_capture" && (
+          <LeadCaptureCard leadContext={message.leadContext} />
+        )}
         <span className="px-1 text-[0.65rem] text-muted-foreground">
           {isUser && message.error ? (
             <span className="flex items-center gap-1 text-destructive">

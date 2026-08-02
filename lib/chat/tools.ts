@@ -25,6 +25,7 @@ import {
   findMostRecentProject,
 } from "@/lib/data/projects";
 import { filterSkillsByCategory, getStrongestSkills } from "@/lib/data/skills";
+import { LEAD_TOPICS } from "@/lib/lead/schema";
 import { AgentEntityId } from "@/types/chat";
 
 const CONTENT_DIR = "content/blog";
@@ -304,6 +305,22 @@ const selectSkillTool = tool({
   },
 });
 
+const captureLeadTool = tool({
+  description:
+    "Offer to connect the visitor with Phong by showing a lead capture form in chat. Call when visitor expresses hiring intent, project collaboration interest, or explicitly asks to contact Phong. Extract name and email from conversation if mentioned. A lead form card will appear in chat — keep your text reply brief.",
+  inputSchema: z.object({
+    detected_topic: z.enum(LEAD_TOPICS),
+    visitor_name: z.string().optional(),
+    visitor_email: z.string().optional(),
+  }),
+  execute: async (args) => ({
+    ok: true,
+    detected_topic: args.detected_topic,
+    visitor_name: args.visitor_name,
+    visitor_email: args.visitor_email,
+  }),
+});
+
 const expandSectionTool = tool({
   description:
     "Expand full detail for a single resource inline. Functionally identical to open_modal — use whichever phrasing best matches the visitor's request.",
@@ -346,4 +363,5 @@ export const CHAT_TOOLS = {
   select_skill: selectSkillTool,
   open_modal: openModalTool,
   expand_section: expandSectionTool,
+  capture_lead: captureLeadTool,
 } satisfies ToolSet;

@@ -56,9 +56,16 @@ export interface ProjectCardPayload {
 export const ChatMessageAction = {
   StarRepo: "star_repo",
   ContactCard: "contact_card",
+  LeadCapture: "lead_capture",
 } as const;
 export type ChatMessageAction =
   (typeof ChatMessageAction)[keyof typeof ChatMessageAction];
+
+export interface LeadCapturePayload {
+  detectedTopic: import("@/lib/lead/schema").LeadTopic;
+  visitorName?: string;
+  visitorEmail?: string;
+}
 
 export interface ChatMessage {
   id: string;
@@ -66,6 +73,7 @@ export interface ChatMessage {
   content: string;
   card?: ProjectCardPayload;
   action?: ChatMessageAction;
+  leadContext?: LeadCapturePayload;
   suggestions?: string[];
   /** Every resource the assistant cited in this reply, rendered as chips. */
   citations?: AgentCitation[];
@@ -162,6 +170,7 @@ export type ChatStreamEvent =
   | {
       type: typeof ChatEventType.Action;
       action: ChatMessageAction;
+      payload?: LeadCapturePayload;
     }
   | ToolEffectEvent
   | DoneEvent

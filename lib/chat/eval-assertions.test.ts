@@ -5,6 +5,8 @@ import type { AgentCitation } from "@/types/chat";
 import {
   assertHasCitations,
   assertHasContactAction,
+  assertHasLeadCaptureAction,
+  assertLeadPayloadHasTopic,
   assertMarkersMatchCitations,
   assertNoInventedRoutes,
   assertNotEmpty,
@@ -103,6 +105,49 @@ describe("assertHasContactAction", () => {
   });
   test("fails with different action", () => {
     expect(assertHasContactAction("star_repo").pass).toBe(false);
+  });
+});
+
+// ── assertHasLeadCaptureAction ───────────────────────────────────
+
+describe("assertHasLeadCaptureAction", () => {
+  test("passes with lead_capture action", () => {
+    expect(assertHasLeadCaptureAction("lead_capture").pass).toBe(true);
+  });
+  test("fails with undefined action", () => {
+    expect(assertHasLeadCaptureAction(undefined).pass).toBe(false);
+  });
+  test("fails with contact_card action", () => {
+    expect(assertHasLeadCaptureAction("contact_card").pass).toBe(false);
+  });
+});
+
+// ── assertLeadPayloadHasTopic ───────────────────────────────────
+
+describe("assertLeadPayloadHasTopic", () => {
+  test("passes with valid topic 'hiring'", () => {
+    expect(assertLeadPayloadHasTopic({ detectedTopic: "hiring" }).pass).toBe(true);
+  });
+  test("passes with valid topic 'product'", () => {
+    expect(assertLeadPayloadHasTopic({ detectedTopic: "product" }).pass).toBe(true);
+  });
+  test("passes with valid topic 'automation'", () => {
+    expect(assertLeadPayloadHasTopic({ detectedTopic: "automation" }).pass).toBe(true);
+  });
+  test("passes with valid topic 'advisory'", () => {
+    expect(assertLeadPayloadHasTopic({ detectedTopic: "advisory" }).pass).toBe(true);
+  });
+  test("passes with valid topic 'other'", () => {
+    expect(assertLeadPayloadHasTopic({ detectedTopic: "other" }).pass).toBe(true);
+  });
+  test("fails with undefined payload", () => {
+    expect(assertLeadPayloadHasTopic(undefined).pass).toBe(false);
+  });
+  test("fails with missing topic", () => {
+    expect(assertLeadPayloadHasTopic({}).pass).toBe(false);
+  });
+  test("fails with invalid topic", () => {
+    expect(assertLeadPayloadHasTopic({ detectedTopic: "ai" }).pass).toBe(false);
   });
 });
 

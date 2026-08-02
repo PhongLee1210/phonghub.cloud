@@ -1,11 +1,13 @@
 import { NextRequest } from "next/server";
 
+import { LeadTopic } from "@/lib/lead/schema";
 import { chatConfig } from "@/config/chat";
 import { acquireConcurrencySlot } from "@/lib/chat/concurrency-limiter";
 import { buildSystemPrompt } from "@/lib/chat/context";
 import { encodeEvent } from "@/lib/chat/protocol";
 import { checkRateLimit } from "@/lib/chat/rate-limit";
 import { getRedisClient } from "@/lib/chat/redis";
+import { normalizeCitationMarkers } from "@/lib/chat/citation-postprocess";
 import { resolveCitation, CitationTarget } from "@/lib/chat/resources";
 import { getSuggestions } from "@/lib/chat/suggestion-worker";
 import {
@@ -26,6 +28,7 @@ import {
   ChatRequestBody,
   ChatStreamEvent,
   InternalRoute,
+  LeadCapturePayload,
   SerializedClientTool,
 } from "@/types/chat";
 
@@ -126,6 +129,26 @@ async function resolveCitations(
 
   const resolved = await Promise.all(
     Array.from(targets).map(async (target) => {
+      try {
+        return await resolveCitation(target);
+      } catch (err) {
+        console.warn("[chat/route] resolveCitation failed:", err);
+        return undefined;
+      }
+    })
+  );
+
+  const citations = resolved.filter((c): c is AgentCitation => c !== undefined);
+  return citations.length > 0 ? citations : undefined;
+}
+
+async function resolveCitationsOrdered(
+  targets: CitationTarget[]
+): Promise<AgentCitation[] | undefined> {
+  if (targets.length === 0) return undefined;
+
+  const resolved = await Promise.all(
+    targets.map(async (target) => {
       try {
         return await resolveCitation(target);
       } catch (err) {
@@ -341,9 +364,12 @@ export async function POST(req: NextRequest) {
         //    mid-stream) falls through to the unified catch below.
         // tool_call/tool_result chunks arrive as structured stream parts
         // (native tool-calling) — no text-tail to split out anymore.
+        // Text is buffered so agentId markers can be post-processed into
+        // sequential [n] citations deterministically at done time.
+        let textBuffer = "";
         const emit = async (chunk: LLMStreamChunk) => {
           if (chunk.type === "text") {
-            if (chunk.text) send({ type: ChatEventType.Token, text: chunk.text });
+            if (chunk.text) textBuffer += chunk.text;
           } else if (chunk.type === "tool_call") {
             send({ type: ChatEventType.Thinking, step: chunk.name });
           } else if (chunk.type === "tool_result") {
@@ -407,6 +433,22 @@ export async function POST(req: NextRequest) {
                 type: ChatEventType.Action,
                 action: ChatMessageAction.ContactCard,
               });
+            } else if (chunk.name === "capture_lead") {
+              const leadResult = chunk.result as {
+                detected_topic: string;
+                visitor_name?: string;
+                visitor_email?: string;
+              };
+              const payload: LeadCapturePayload = {
+                detectedTopic: leadResult.detected_topic as LeadTopic,
+                visitorName: leadResult.visitor_name,
+                visitorEmail: leadResult.visitor_email,
+              };
+              send({
+                type: ChatEventType.Action,
+                action: ChatMessageAction.LeadCapture,
+                payload,
+              });
             }
           } else if (chunk.type === "done") {
             void recordTokenUsage(ip, redis, chunk.usage.outputTokens).catch(
@@ -421,8 +463,17 @@ export async function POST(req: NextRequest) {
               });
             }
 
+            const { normalizedText, orderedTargets } =
+              normalizeCitationMarkers(textBuffer, citationTargets);
+
+            if (normalizedText) {
+              send({ type: ChatEventType.Token, text: normalizedText });
+            }
+
             const [citations, suggestions] = await Promise.all([
-              resolveCitations(citationTargets),
+              orderedTargets.length > 0
+                ? resolveCitationsOrdered(orderedTargets)
+                : resolveCitations(citationTargets),
               suggestionsPromise,
             ]);
 

@@ -15,30 +15,68 @@ import type {
   DoneEvent,
 } from "@/types/chat";
 import { ChatEventType } from "@/types/chat";
-import { runAssertions, runContactAssertions, type AssertionResult } from "@/lib/chat/eval-assertions";
+import { runAssertions, runContactAssertions, runLeadCaptureAssertions, runSkillsAssertions, type AssertionResult } from "@/lib/chat/eval-assertions";
 
 const BASE = process.env.EVAL_BASE_URL ?? "http://localhost:3000";
+const DELAY_MS = Number(process.env.EVAL_DELAY_MS) || 3000;
+
+function sleep(ms: number) {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
 
 /** Mirrors chatConfig.seedSuggestionCards prompts without importing the
  *  chatConfig module (which pulls in React icon imports). */
-const EVAL_CASES = [
+type EvalCase =
+  | { label: string; prompt: string; type: "standard" | "contact" | "skills" }
+  | { label: string; messages: { role: "user" | "assistant"; content: string }[]; type: "lead_capture" }
+  | { label: string; prompt: string; type: "lead_capture" };
+
+const EVAL_CASES: EvalCase[] = [
   { label: "Work experience", prompt: "What's Phong's work experience?",    type: "standard" },
   { label: "Projects",        prompt: "What projects has Phong worked on?",  type: "standard" },
-  { label: "Skills",          prompt: "What are Phong's most confident skills?", type: "standard" },
+  { label: "Skills",          prompt: "What are Phong's most confident skills?", type: "skills" },
   { label: "Contact",         prompt: "How can I contact Phong?",            type: "contact"  },
-] as const;
+  // Lead capture — single message, explicit hire intent
+  {
+    label: "Lead: hire intent",
+    prompt: "I'm looking to hire Phong for a product build. My name is Alex and my email is alex@example.com. Can you connect us?",
+    type: "lead_capture",
+  },
+  // Lead capture — single message, collaboration intent
+  {
+    label: "Lead: collab intent",
+    prompt: "I want to work with Phong on an automation project. Please help me reach out to him.",
+    type: "lead_capture",
+  },
+  // Lead capture — multi-turn conversation
+  {
+    label: "Lead: conversation",
+    messages: [
+      { role: "user", content: "What kind of projects has Phong worked on?" },
+      { role: "assistant", content: "Phong has worked on several projects spanning web platforms, automation tools, and AI-powered applications [1]. You can explore his full portfolio at [projects](/projects)." },
+      { role: "user", content: "Impressive! I have a product idea and would love to discuss working together. Yes, please help me reach out to Phong." },
+    ],
+    type: "lead_capture",
+  },
+];
 
 // ── stream collector ─────────────────────────────────────────────────────────
 
 async function collectStream(
   body: ReadableStream<Uint8Array>
-): Promise<{ text: string; doneEvent: DoneEvent | null; action: string | undefined }> {
+): Promise<{
+  text: string;
+  doneEvent: DoneEvent | null;
+  action: string | undefined;
+  actionPayload: Record<string, unknown> | undefined;
+}> {
   const reader = body.getReader();
   const decoder = new TextDecoder();
   let buffer = "";
   let text = "";
   let doneEvent: DoneEvent | null = null;
   let action: string | undefined;
+  let actionPayload: Record<string, unknown> | undefined;
 
   while (true) {
     const { value, done } = await reader.read();
@@ -52,14 +90,19 @@ async function collectStream(
         const event = JSON.parse(line) as ChatStreamEvent;
         if (event.type === ChatEventType.Token) text += event.text;
         if (event.type === ChatEventType.Done) doneEvent = event;
-        if (event.type === ChatEventType.Action) action = event.action;
+        if (event.type === ChatEventType.Action) {
+          action = event.action;
+          if ("payload" in event && event.payload) {
+            actionPayload = event.payload as unknown as Record<string, unknown>;
+          }
+        }
       } catch {
         // skip malformed NDJSON lines
       }
     }
   }
 
-  return { text, doneEvent, action };
+  return { text, doneEvent, action, actionPayload };
 }
 
 // ── display helpers ──────────────────────────────────────────────────────────
@@ -89,6 +132,8 @@ function printExpectations() {
   console.log(`  ${YELLOW}sequential${RESET}         [1][2][3]… no gaps, starting from [1]`);
   console.log(`  ${YELLOW}markers_match${RESET}      max [n] ≤ done.citations.length (no orphan markers)`);
   console.log(`  ${YELLOW}no_invented_routes${RESET} markdown link hrefs only from ALLOWED_ROUTES`);
+  console.log(`  ${YELLOW}has_lead_capture${RESET}   action="lead_capture" triggered (lead_capture cases)`);
+  console.log(`  ${YELLOW}lead_has_topic${RESET}     payload.detectedTopic is a valid lead topic`);
   console.log(`${"─".repeat(58)}\n`);
 }
 
@@ -102,44 +147,61 @@ async function runEval() {
   let promptsPassed = 0;
 
   for (let i = 0; i < EVAL_CASES.length; i++) {
-    const { label, prompt } = EVAL_CASES[i];
+    const evalCase = EVAL_CASES[i];
+    const { label, type } = evalCase;
+
+    const messages =
+      "messages" in evalCase
+        ? evalCase.messages
+        : [{ role: "user" as const, content: evalCase.prompt }];
+    const displayPrompt =
+      "messages" in evalCase
+        ? `[${messages.length}-turn conversation]`
+        : evalCase.prompt;
+
     console.log(`${BOLD}── ${i + 1}/${EVAL_CASES.length}: ${label}${RESET}`);
-    console.log(`   ${DIM}"${prompt}"${RESET}\n`);
+    console.log(`   ${DIM}"${displayPrompt}"${RESET}\n`);
+
+    const expectedChecks = type === "standard" ? 6 : type === "skills" ? 5 : type === "contact" ? 4 : 5;
 
     let res: Response;
     try {
       res = await fetch(`${BASE}/api/chat`, {
         method: "POST",
         headers: { "content-type": "application/json" },
-        body: JSON.stringify({
-          messages: [{ role: "user", content: prompt }],
-        }),
+        body: JSON.stringify({ messages }),
       });
     } catch (err) {
       console.log(`  ${RED}✗ fetch failed — is the server running at ${BASE}?${RESET}`);
       console.log(`    ${String(err)}\n`);
-      totalChecks += EVAL_CASES[i].type === "contact" ? 4 : 6;
+      totalChecks += expectedChecks;
       continue;
     }
 
     if (!res.ok || !res.body) {
       console.log(`  ${RED}✗ HTTP ${res.status} — skipping${RESET}\n`);
-      totalChecks += EVAL_CASES[i].type === "contact" ? 4 : 6;
+      totalChecks += expectedChecks;
       continue;
     }
 
-    const { text, doneEvent, action } = await collectStream(res.body);
+    const { text, doneEvent, action, actionPayload } = await collectStream(res.body);
     const citations: AgentCitation[] = doneEvent?.citations ?? [];
-    const isContact = EVAL_CASES[i].type === "contact";
 
-    // Show preview of first 300 chars
     const preview = text.length > 300 ? text.slice(0, 300) + "…" : text;
     console.log(`  ${DIM}Response (${text.length} chars, ${citations.length} citations, action=${action ?? "none"}):${RESET}`);
     console.log(`  ${DIM}"${preview}"${RESET}\n`);
 
-    const results = isContact
-      ? runContactAssertions(text, action)
-      : runAssertions(text, citations);
+    let results: AssertionResult[];
+    if (type === "lead_capture") {
+      results = runLeadCaptureAssertions(text, action, actionPayload);
+    } else if (type === "contact") {
+      results = runContactAssertions(text, action);
+    } else if (type === "skills") {
+      results = runSkillsAssertions(text, citations);
+    } else {
+      results = runAssertions(text, citations);
+    }
+
     for (const r of results) {
       printResult(r);
       totalChecks++;
@@ -149,6 +211,11 @@ async function runEval() {
     const casePass = results.every((r) => r.pass);
     if (casePass) promptsPassed++;
     console.log(`\n  ${casePass ? GREEN + "PASS" : RED + "FAIL"}${RESET}\n`);
+
+    if (i < EVAL_CASES.length - 1) {
+      console.log(`  ${DIM}⏳ waiting ${DELAY_MS / 1000}s (rate limit cooldown)...${RESET}\n`);
+      await sleep(DELAY_MS);
+    }
   }
 
   console.log(`${"═".repeat(58)}`);

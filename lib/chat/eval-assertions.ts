@@ -103,6 +103,30 @@ export function assertHasContactAction(action: string | undefined): AssertionRes
   };
 }
 
+export function assertHasLeadCaptureAction(action: string | undefined): AssertionResult {
+  const pass = action === "lead_capture";
+  return {
+    name: "has_lead_capture",
+    pass,
+    detail: pass ? 'action="lead_capture"' : `action=${JSON.stringify(action)} — lead capture not triggered`,
+  };
+}
+
+export function assertLeadPayloadHasTopic(
+  payload: Record<string, unknown> | undefined
+): AssertionResult {
+  const validTopics = ["product", "automation", "advisory", "hiring", "other"];
+  const topic = payload?.detectedTopic;
+  const pass = typeof topic === "string" && validTopics.includes(topic);
+  return {
+    name: "lead_has_topic",
+    pass,
+    detail: pass
+      ? `detectedTopic="${topic}"`
+      : `detectedTopic=${JSON.stringify(topic)} — not a valid topic`,
+  };
+}
+
 export function runAssertions(
   text: string,
   citations: AgentCitation[]
@@ -111,6 +135,20 @@ export function runAssertions(
     assertNotEmpty(text),
     assertNotTooLong(text),
     assertHasCitations(text),
+    assertSequentialMarkers(text),
+    assertMarkersMatchCitations(text, citations),
+    assertNoInventedRoutes(text),
+  ];
+}
+
+/** Assertion set for skills responses — citations optional since skill names are self-evident. */
+export function runSkillsAssertions(
+  text: string,
+  citations: AgentCitation[]
+): AssertionResult[] {
+  return [
+    assertNotEmpty(text),
+    assertNotTooLong(text),
     assertSequentialMarkers(text),
     assertMarkersMatchCitations(text, citations),
     assertNoInventedRoutes(text),
@@ -127,5 +165,20 @@ export function runContactAssertions(
     assertNotTooLong(text),
     assertNoInventedRoutes(text),
     assertHasContactAction(action),
+  ];
+}
+
+/** Assertion set for lead capture responses — checks action + payload topic. */
+export function runLeadCaptureAssertions(
+  text: string,
+  action: string | undefined,
+  payload: Record<string, unknown> | undefined
+): AssertionResult[] {
+  return [
+    assertNotEmpty(text, 20),
+    assertNotTooLong(text),
+    assertNoInventedRoutes(text),
+    assertHasLeadCaptureAction(action),
+    assertLeadPayloadHasTopic(payload),
   ];
 }

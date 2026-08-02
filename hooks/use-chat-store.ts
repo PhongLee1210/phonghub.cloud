@@ -12,6 +12,7 @@ import {
   ChatMessage,
   ChatRole,
   Conversation,
+  DoneEvent,
   InternalRoute,
   PersistedChat,
   ToolEffectEvent,
@@ -334,6 +335,9 @@ export const useChatStore = create<ChatStoreState>((set, get) => ({
     let rafId: number | null = null;
     const deliveredEffects = new Set<ToolEffectField>();
     let thinkingStartedAt = 0;
+    let pendingDone: DoneEvent | null = null;
+
+    const CHARS_PER_FRAME = 12;
 
     const cancelRaf = () => {
       if (rafId !== null) {
@@ -342,17 +346,89 @@ export const useChatStore = create<ChatStoreState>((set, get) => ({
       }
     };
 
+    const commitDone = (done: NonNullable<typeof pendingDone>) => {
+      if (get().status !== ChatStatus.Streaming) return;
+
+      const finalContent = get().streamingContent;
+
+      const resolved = done.suggestions;
+      const openModalCitation = findCitation(done.citations, done.openModal);
+      const hasCommand = Boolean(
+        done.highlight ||
+          done.focus ||
+          openModalCitation ||
+          done.navigate ||
+          done.skillSelect
+      );
+      set((state) => {
+        const hadSteps = state.thinkingSteps.length > 0;
+        const elapsedMs =
+          hadSteps && thinkingStartedAt
+            ? Date.now() - thinkingStartedAt
+            : 0;
+        const messages = state.messages.map((m) =>
+          m.id === assistantMessage.id
+            ? {
+                ...m,
+                content: finalContent,
+                suggestions: resolved,
+                citations: done.citations,
+                ...(hadSteps
+                  ? {
+                      thinkingSteps: state.thinkingSteps,
+                      thinkingElapsedMs: elapsedMs,
+                    }
+                  : {}),
+              }
+            : m
+        );
+        const newConversations = state.conversations.map((c) =>
+          c.id === activeConversationId
+            ? { ...c, messages, updatedAt: Date.now() }
+            : c
+        );
+        return {
+          status: hasCommand ? ChatStatus.Acting : ChatStatus.Idle,
+          suggestions: resolved,
+          thinkingSteps: [],
+          streamingContent: "",
+          activeAbort: undefined,
+          messages,
+          conversations: newConversations,
+          pendingHighlight: deliveredEffects.has("highlight")
+            ? state.pendingHighlight
+            : done.highlight,
+          pendingFocus: deliveredEffects.has("focus")
+            ? state.pendingFocus
+            : done.focus,
+          pendingOpenModal: deliveredEffects.has("openModal")
+            ? state.pendingOpenModal
+            : openModalCitation,
+          pendingNavigate: deliveredEffects.has("navigate")
+            ? state.pendingNavigate
+            : (done.navigate ?? state.pendingNavigate),
+          pendingSkillSelect: deliveredEffects.has("skillSelect")
+            ? state.pendingSkillSelect
+            : done.skillSelect,
+        };
+      });
+      persist(get().conversations, get().activeConversationId);
+    };
+
     const flushTokens = () => {
       rafId = null;
-      if (!tokenBuffer) return;
-      const delta = tokenBuffer;
-      tokenBuffer = "";
+      if (!tokenBuffer) {
+        if (pendingDone) commitDone(pendingDone);
+        return;
+      }
+      const chunk = tokenBuffer.slice(0, CHARS_PER_FRAME);
+      tokenBuffer = tokenBuffer.slice(CHARS_PER_FRAME);
       set((s) => {
         const hadSteps = s.thinkingSteps.length > 0;
         const elapsedMs =
           hadSteps && thinkingStartedAt ? Date.now() - thinkingStartedAt : 0;
         return {
-          streamingContent: s.streamingContent + delta,
+          streamingContent: s.streamingContent + chunk,
           ...(hadSteps
             ? {
                 thinkingSteps: [],
@@ -369,6 +445,14 @@ export const useChatStore = create<ChatStoreState>((set, get) => ({
             : {}),
         };
       });
+      if (tokenBuffer) {
+        rafId = requestAnimationFrame(flushTokens);
+      } else if (pendingDone) {
+        rafId = requestAnimationFrame(() => {
+          rafId = null;
+          commitDone(pendingDone!);
+        });
+      }
     };
 
     const clientTools = await useAiToolRegistry.getState().snapshot();
@@ -396,10 +480,12 @@ export const useChatStore = create<ChatStoreState>((set, get) => ({
             return { thinkingSteps: [...state.thinkingSteps, step] };
           });
         },
-        onAction: (action) => {
+        onAction: (action, payload) => {
           set((state) => {
             const newMessages = state.messages.map((m) =>
-              m.id === assistantMessage.id ? { ...m, action } : m
+              m.id === assistantMessage.id
+                ? { ...m, action, ...(payload ? { leadContext: payload } : {}) }
+                : m
             );
             const newConversations = state.conversations.map((c) =>
               c.id === activeConversationId
@@ -439,77 +525,10 @@ export const useChatStore = create<ChatStoreState>((set, get) => ({
         },
         onDone: (done) => {
           if (get().status !== ChatStatus.Streaming) return;
-
-          cancelRaf();
-          const finalContent = get().streamingContent + tokenBuffer;
-          tokenBuffer = "";
-
-          const resolved = done.suggestions;
-          const openModalCitation = findCitation(
-            done.citations,
-            done.openModal
-          );
-          const hasCommand = Boolean(
-            done.highlight ||
-            done.focus ||
-            openModalCitation ||
-            done.navigate ||
-            done.skillSelect
-          );
-          set((state) => {
-            // Edge case: done fires before any token (steps not yet snapshotted).
-            const hadSteps = state.thinkingSteps.length > 0;
-            const elapsedMs =
-              hadSteps && thinkingStartedAt
-                ? Date.now() - thinkingStartedAt
-                : 0;
-            const messages = state.messages.map((m) =>
-              m.id === assistantMessage.id
-                ? {
-                    ...m,
-                    content: finalContent,
-                    suggestions: resolved,
-                    citations: done.citations,
-                    ...(hadSteps
-                      ? {
-                          thinkingSteps: state.thinkingSteps,
-                          thinkingElapsedMs: elapsedMs,
-                        }
-                      : {}),
-                  }
-                : m
-            );
-            const newConversations = state.conversations.map((c) =>
-              c.id === activeConversationId
-                ? { ...c, messages, updatedAt: Date.now() }
-                : c
-            );
-            return {
-              status: hasCommand ? ChatStatus.Acting : ChatStatus.Idle,
-              suggestions: resolved,
-              thinkingSteps: [],
-              streamingContent: "",
-              activeAbort: undefined,
-              messages,
-              conversations: newConversations,
-              pendingHighlight: deliveredEffects.has("highlight")
-                ? state.pendingHighlight
-                : done.highlight,
-              pendingFocus: deliveredEffects.has("focus")
-                ? state.pendingFocus
-                : done.focus,
-              pendingOpenModal: deliveredEffects.has("openModal")
-                ? state.pendingOpenModal
-                : openModalCitation,
-              pendingNavigate: deliveredEffects.has("navigate")
-                ? state.pendingNavigate
-                : (done.navigate ?? state.pendingNavigate),
-              pendingSkillSelect: deliveredEffects.has("skillSelect")
-                ? state.pendingSkillSelect
-                : done.skillSelect,
-            };
-          });
-          persist(get().conversations, get().activeConversationId);
+          pendingDone = done;
+          if (!tokenBuffer && rafId === null) {
+            commitDone(done);
+          }
         },
         onError: (_code, message) => {
           if (get().status !== ChatStatus.Streaming) return;
@@ -558,6 +577,11 @@ export const useChatStore = create<ChatStoreState>((set, get) => ({
     set({
       activeAbort: () => {
         cancelRaf();
+        // Flush unrevealed buffer into streamingContent so stopStreaming preserves full text
+        if (tokenBuffer) {
+          set((s) => ({ streamingContent: s.streamingContent + tokenBuffer }));
+          tokenBuffer = "";
+        }
         abort();
       },
     });
