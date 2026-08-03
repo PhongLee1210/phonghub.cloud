@@ -7,31 +7,9 @@ import { featuredProjects } from "@/config/projects";
 import type { ProjectInterface } from "@/config/projects";
 
 import { ProjectCardV2 } from "./project-card-v2";
-import { ProjectsShowcase } from "./projects-showcase";
+import { ScrollTheaterWrapper } from "./scroll-theater-wrapper";
 
-/**
- * ProjectsSectionV2 — Phase 4 cutover replacement for the home page's
- * `<AnimatedSection id="projects">`. Composition:
- *
- *   1. Hero composition via `<ProjectsShowcase>` (featured project #1 =
- *      HiliosAI per `featuredProjects[0]`).
- *   2. Grid of `<ProjectCardV2>` for the remaining featured projects
- *      (project #2 and #3 — the hero is shown in the showcase above).
- *   3. "View All → /projects" link.
- *
- * Server component — `<ProjectsShowcase>` (client) owns all motion via the
- * `BuilderShowcase` orchestrator. The grid section wraps in `motion` via
- * `BuilderShowcase`'s cascade only when inside it; the grid below uses
- * plain CSS (no motion) — T6.2 can add scroll-driven reveals if desired.
- *
- * Standalone `/projects` route is unchanged — still uses the legacy
- * `<ProjectCard>` / `<ProjectWorkspace>`.
- */
 export interface ProjectsSectionV2Props {
-  /**
-   * Featured projects slice. Defaults to `featuredProjects` (3 entries).
-   * The first entry is the hero; the rest populate the grid.
-   */
   projects?: readonly ProjectInterface[];
   className?: string;
 }
@@ -48,7 +26,7 @@ export function ProjectsSectionV2({
       id="projects"
       className={["py-16 md:py-24", className ?? ""].join(" ")}
     >
-      {hero ? <ProjectsShowcase project={hero} /> : null}
+      {hero ? <ScrollTheaterWrapper project={hero} /> : null}
 
       {gridProjects.length > 0 ? (
         <div className="mx-auto w-full max-w-7xl px-4 pt-8 md:px-6">

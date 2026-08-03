@@ -1,7 +1,15 @@
 "use client";
 
-import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
-import { useId, useMemo, useState, useSyncExternalStore } from "react";
+import {
+  AnimatePresence,
+  motion,
+  useInView,
+  useMotionValueEvent,
+  useReducedMotion,
+  useScroll,
+  useTransform,
+} from "framer-motion";
+import { useId, useMemo, useRef, useState, useSyncExternalStore } from "react";
 
 import { ISkill, SKILL_CATEGORY_LABELS, SkillCategoryEnum } from "@/config/skills";
 import { useChatStore } from "@/hooks/use-chat-store";
@@ -135,12 +143,27 @@ export function SkillsGraph({ skills, projectsBySkill }: SkillsGraphProps) {
     [skills, centerKey]
   );
 
+  const graphContainerRef = useRef<HTMLDivElement>(null);
+  const graphInView = useInView(graphContainerRef, { once: false, amount: 0.2 });
+
+  const { scrollYProgress: graphScrollProgress } = useScroll({
+    target: graphContainerRef,
+    offset: ["start end", "end start"],
+  });
+
+  const labelsOpacity = useTransform(graphScrollProgress, [0, 0.4], [0, 1]);
+  const edgePathLength = useTransform(graphScrollProgress, [0.1, 0.5], [0, 1]);
+  const [exploreVisible, setExploreVisible] = useState(false);
+  useMotionValueEvent(graphScrollProgress, "change", (v) => {
+    setExploreVisible(v > 0.6 && graphInView);
+  });
+
   if (!centerSkill) return null;
 
   const relatedProjects = (projectsBySkill[centerSkill.name] ?? []).slice(0, 3);
 
   return (
-    <div className="grid gap-6 lg:grid-cols-[1fr_20rem]">
+    <div ref={graphContainerRef} className="grid gap-6 lg:grid-cols-[1fr_20rem]">
       <div className="space-y-4 rounded-xl border bg-background p-4 sm:p-6">
         <div className="flex flex-wrap gap-2">
           <button
@@ -245,6 +268,7 @@ export function SkillsGraph({ skills, projectsBySkill }: SkillsGraphProps) {
                         strokeLinecap="round"
                         vectorEffect="non-scaling-stroke"
                         filter={`url(#${glowFilterId})`}
+                        style={mounted && !reducedMotion ? { pathLength: edgePathLength } : undefined}
                         initial={{ opacity: 0 }}
                         animate={{
                           strokeWidth: reducedMotion
@@ -273,28 +297,42 @@ export function SkillsGraph({ skills, projectsBySkill }: SkillsGraphProps) {
               </AnimatePresence>
             </svg>
 
-            <AnimatePresence>
-              {mounted &&
-                visibleSkills.map((skill, index) => {
-                  const pos = layout[skill.key];
-                  if (!pos) return null;
-                  return (
-                    <SkillNode
-                      key={skill.key}
-                      skill={skill}
-                      pos={pos}
-                      isSelected={skill.key === centerSkill.key}
-                      spawnOriginKey={spawnOriginKey}
-                      layout={layout}
-                      index={index}
-                      reducedMotion={reducedMotion}
-                      onClick={handleNodeClick}
-                    />
-                  );
-                })}
-            </AnimatePresence>
+            <motion.div
+              className="absolute inset-0"
+              style={mounted && !reducedMotion ? { opacity: labelsOpacity } : undefined}
+            >
+              <AnimatePresence>
+                {mounted &&
+                  visibleSkills.map((skill, index) => {
+                    const pos = layout[skill.key];
+                    if (!pos) return null;
+                    return (
+                      <SkillNode
+                        key={skill.key}
+                        skill={skill}
+                        pos={pos}
+                        isSelected={skill.key === centerSkill.key}
+                        spawnOriginKey={spawnOriginKey}
+                        layout={layout}
+                        index={index}
+                        reducedMotion={reducedMotion}
+                        onClick={handleNodeClick}
+                      />
+                    );
+                  })}
+              </AnimatePresence>
+            </motion.div>
           </div>
         </div>
+
+        <motion.p
+          className="text-center text-xs text-muted-foreground"
+          initial={{ opacity: 0 }}
+          animate={exploreVisible || reducedMotion ? { opacity: 1 } : { opacity: 0 }}
+          transition={{ duration: 0.4 }}
+        >
+          Click a node to explore connections
+        </motion.p>
       </div>
 
       <aside className="overflow-hidden rounded-xl border bg-background p-4 sm:p-6">

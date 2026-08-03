@@ -5,6 +5,7 @@ import { useRef, useState } from "react";
 import { motion, useInView, useReducedMotion } from "framer-motion";
 
 import { BlogPostSummary } from "@/lib/blog/service";
+import { BLOG_ENTRANCE_VARIANTS } from "@/lib/motion";
 
 const BlogCard = dynamic(() => import("@/components/blog/blog-card"));
 
@@ -28,14 +29,11 @@ export default function AnimatedBlogGrid({ posts }: AnimatedBlogGridProps) {
       {posts.map((post, index) => (
         <motion.div
           key={post.slug}
-          initial={{ clipPath: "inset(0 100% 0 0 round 0.5rem)" }}
-          animate={
-            started ? { clipPath: "inset(0 0% 0 0 round 0.5rem)" } : {}
-          }
+          variants={BLOG_ENTRANCE_VARIANTS[index % 3]}
+          initial="hidden"
+          animate={started ? "visible" : "hidden"}
           transition={{
-            duration: 0.65,
-            ease: [0.16, 1, 0.3, 1],
-            delay: prefersReducedMotion ? 0 : index * 0.12,
+            delay: prefersReducedMotion ? 0 : index * 0.15,
           }}
           onAnimationComplete={() =>
             setActiveImages((prev) => ({ ...prev, [post.slug]: true }))

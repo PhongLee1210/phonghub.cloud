@@ -87,6 +87,7 @@ export default async function IndexPage() {
         direction="left"
         className="mx-auto w-full max-w-7xl space-y-8 px-4 py-16 md:px-6 md:py-24"
         id="experience"
+        crossfade
       >
         <div className="flex max-w-[42rem] flex-col items-start space-y-4 text-left">
           <AnimatedText
@@ -117,6 +118,7 @@ export default async function IndexPage() {
         direction="up"
         className="mx-auto w-full max-w-7xl space-y-8 px-4 py-16 md:px-6 md:py-24"
         id="blog"
+        crossfade
       >
         <div className="flex max-w-[42rem] flex-col items-start space-y-4 text-left">
           <AnimatedText

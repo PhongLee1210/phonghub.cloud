@@ -1,5 +1,7 @@
 "use client";
 
+import { MotionValue } from "framer-motion";
+
 import { BuilderShowcase } from "@/components/features/showcase/builder-showcase";
 import { CodeEditorPanel } from "@/components/features/showcase/code-editor-panel";
 import { TerminalStrip } from "@/components/features/showcase/terminal-strip";
@@ -9,16 +11,6 @@ import { featuredProjects } from "@/config/projects";
 import type { ProjectInterface } from "@/config/projects";
 
 import { ProjectPreviewBody } from "./project-preview-body";
-
-/**
- * ProjectsShowcase — wires `BuilderShowcase` to the featured project.
- *
- * Editor  → snippet matching `project.id`, typewriter reveal.
- * Preview → `<ProjectPreviewBody>` wraps `<LivePreviewFrame>` with the
- *           project's website URL + hero screenshot + status "active".
- * Terminal→ the default `SHOWCASE_BUILD_LOG` lines.
- * Tagline → the Figma default `SHOWCASE_TAGLINE`.
- */
 
 const DEFAULT_PROJECT: ProjectInterface = featuredProjects[0];
 
@@ -30,19 +22,23 @@ export interface ProjectsShowcaseProps {
   project?: ProjectInterface;
   snippet?: (typeof PROJECT_SNIPPETS)[number];
   className?: string;
+  scrollDriven?: boolean;
+  scrollProgress?: MotionValue<number>;
 }
 
 export function ProjectsShowcase({
   project = DEFAULT_PROJECT,
   snippet = DEFAULT_SNIPPET,
   className,
+  scrollDriven,
+  scrollProgress,
 }: ProjectsShowcaseProps) {
   const editor = snippet ? (
     <CodeEditorPanel
       filename={snippet.filename}
       language={snippet.language}
       lines={snippet.rawLines}
-      mode="reveal"
+      mode={scrollDriven ? "static" : "reveal"}
       lineDelayMs={140}
     />
   ) : (
@@ -53,7 +49,7 @@ export function ProjectsShowcase({
         "// No snippet available for this project.",
         "// Add one to config/project-snippets.ts to populate this panel.",
       ]}
-      mode="reveal"
+      mode={scrollDriven ? "static" : "reveal"}
       lineDelayMs={140}
     />
   );
@@ -65,6 +61,8 @@ export function ProjectsShowcase({
       editor={editor}
       preview={<ProjectPreviewBody project={project} />}
       terminal={<TerminalStrip lines={SHOWCASE_BUILD_LOG} />}
+      scrollDriven={scrollDriven}
+      scrollProgress={scrollProgress}
     />
   );
 }

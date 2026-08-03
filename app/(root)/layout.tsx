@@ -1,6 +1,7 @@
 import { BottomTabBar } from "@/components/common/bottom-tab-bar";
 import { MainNav } from "@/components/common/main-nav";
 import { ModeToggle } from "@/components/common/mode-toggle";
+import { ScrollProgress } from "@/components/common/scroll-progress";
 import { SiteFooter } from "@/components/common/site-footer";
 import { routesConfig } from "@/config/routes";
 
@@ -18,6 +19,7 @@ export default function MarketingLayout({ children }: MarketingLayoutProps) {
         {children}
       </main>
       <BottomTabBar />
+      <ScrollProgress />
       <SiteFooter />
     </div>
   );

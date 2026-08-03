@@ -3,6 +3,7 @@ import Link from "next/link";
 import { AnimatedSection } from "@/components/common/animated-section";
 import { AnimatedText } from "@/components/common/animated-text";
 import { Icons } from "@/components/common/icons";
+import { MagneticButton } from "@/components/common/magnetic-button";
 import { Button } from "@/components/ui/button";
 
 export function CTASection() {
@@ -29,11 +30,13 @@ export function CTASection() {
         </AnimatedText>
       </div>
       <AnimatedText delay={0.4} className="flex justify-start">
-        <Link href="/contact" prefetch={false}>
-          <Button className="rounded-xl">
-            <Icons.send className="mr-2 h-4 w-4" /> Get in Touch
-          </Button>
-        </Link>
+        <MagneticButton>
+          <Link href="/contact" prefetch={false}>
+            <Button className="rounded-xl">
+              <Icons.send className="mr-2 h-4 w-4" /> Get in Touch
+            </Button>
+          </Link>
+        </MagneticButton>
       </AnimatedText>
     </AnimatedSection>
   );
