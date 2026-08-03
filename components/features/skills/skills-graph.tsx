@@ -3,7 +3,6 @@
 import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 import { useId, useMemo, useState, useSyncExternalStore } from "react";
 
-import { Icons } from "@/components/common/icons";
 import { ISkill, SKILL_CATEGORY_LABELS, SkillCategoryEnum } from "@/config/skills";
 import { useChatStore } from "@/hooks/use-chat-store";
 import { cn } from "@/lib/utils";
@@ -20,16 +19,11 @@ import {
   seededRandom,
 } from "./skills-graph-layout";
 
-const SPRING_TRANSITION = { type: "spring", stiffness: 300, damping: 30 } as const;
 const LINE_DRAW_TRANSITION = { duration: 0.9, ease: "easeInOut" } as const;
 const LINE_GLOW_DURATION = 2.6;
 const LINE_WIDTH_DURATION = 1.8;
 const LINE_GLOW_STAGGER = 0.06;
 
-const ZOOM_MIN = 0.7;
-const ZOOM_MAX = 2.4;
-const ZOOM_STEP = 0.2;
-const ZOOM_DEFAULT = 1;
 
 const TAB_CATEGORIES = new Set<SkillCategoryEnum>([
   SkillCategoryEnum.LANGUAGES,
@@ -48,10 +42,6 @@ function subscribeNever() {
   return () => {};
 }
 
-function clampZoom(value: number): number {
-  return Math.min(ZOOM_MAX, Math.max(ZOOM_MIN, value));
-}
-
 export interface SkillsGraphProps {
   skills: ISkill[];
   projectsBySkill: Record<string, RelatedProject[]>;
@@ -65,7 +55,6 @@ export function SkillsGraph({ skills, projectsBySkill }: SkillsGraphProps) {
   }, [skills]);
 
   const glowFilterId = useId();
-  const [zoom, setZoom] = useState(ZOOM_DEFAULT);
   const mounted = useSyncExternalStore(subscribeNever, () => true, () => false);
 
   const activeCategory = useChatStore((s) => s.graphActiveCategory);
@@ -184,44 +173,7 @@ export function SkillsGraph({ skills, projectsBySkill }: SkillsGraphProps) {
         </div>
 
         <div className="relative aspect-square w-full max-w-xl mx-auto overflow-hidden rounded-lg sm:aspect-[4/3]">
-          <div className="absolute right-2 top-2 z-10 flex items-center gap-0.5 rounded-full border bg-background/90 p-1 shadow-sm backdrop-blur-sm">
-            <button
-              type="button"
-              aria-label="Zoom out"
-              onClick={() => setZoom((z) => clampZoom(z - ZOOM_STEP))}
-              className="flex h-8 w-8 items-center justify-center rounded-full text-muted-foreground transition-colors duration-150 ease-out hover:bg-muted hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring active:scale-[0.96]"
-            >
-              <Icons.zoomOut size={15} />
-            </button>
-            <button
-              type="button"
-              aria-label="Reset zoom"
-              onClick={() => setZoom(ZOOM_DEFAULT)}
-              className="flex h-8 w-8 items-center justify-center rounded-full text-muted-foreground transition-colors duration-150 ease-out hover:bg-muted hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring active:scale-[0.96]"
-            >
-              <Icons.reset size={14} />
-            </button>
-            <button
-              type="button"
-              aria-label="Zoom in"
-              onClick={() => setZoom((z) => clampZoom(z + ZOOM_STEP))}
-              className="flex h-8 w-8 items-center justify-center rounded-full text-muted-foreground transition-colors duration-150 ease-out hover:bg-muted hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring active:scale-[0.96]"
-            >
-              <Icons.zoomIn size={15} />
-            </button>
-          </div>
-
-          <motion.div
-            className="absolute inset-0"
-            style={{ transformOrigin: "50% 50%" }}
-            animate={{ scale: zoom }}
-            transition={reducedMotion ? { duration: 0 } : SPRING_TRANSITION}
-            onWheel={(event) => {
-              if (!event.ctrlKey) return;
-              event.preventDefault();
-              setZoom((z) => clampZoom(z - event.deltaY * 0.01));
-            }}
-          >
+          <div className="absolute inset-0">
             <svg
               viewBox="0 0 100 100"
               preserveAspectRatio="none"
@@ -341,7 +293,7 @@ export function SkillsGraph({ skills, projectsBySkill }: SkillsGraphProps) {
                   );
                 })}
             </AnimatePresence>
-          </motion.div>
+          </div>
         </div>
       </div>
 

@@ -109,7 +109,7 @@ export function SkillNode({
                   y: { ...driftTransition, delay: driftDelay + 0.3 },
                 }
           }
-          className="flex flex-col items-center gap-1"
+          className="relative"
         >
           <motion.button
             type="button"
@@ -141,7 +141,7 @@ export function SkillNode({
           </motion.button>
           <span
             className={cn(
-              "max-w-[4rem] truncate text-center text-[9px] font-medium",
+              "absolute top-full left-1/2 -translate-x-1/2 mt-1 max-w-[4rem] truncate text-center text-[9px] font-medium",
               isSelected ? "font-semibold text-foreground" : "text-muted-foreground"
             )}
           >
