@@ -99,3 +99,77 @@ export const fadeUpStagger: Variants = {
     transition: SPRING_SHOWCASE,
   },
 };
+
+// --- Section crossfade transitions ---
+export const sectionExit: Variants = {
+  hidden: { opacity: 1, scale: 1 },
+  visible: { opacity: 0.6, scale: 0.98 },
+};
+
+export const sectionEnter: Variants = {
+  hidden: { opacity: 0, y: 24 },
+  visible: {
+    opacity: 1,
+    y: 0,
+    transition: { type: "spring", ...SPRING_GENTLE },
+  },
+};
+
+// --- Scroll-pinned build theater ranges ---
+export const SCROLL_THEATER = {
+  editorRange: [0, 0.3] as [number, number],
+  terminalRange: [0.3, 0.5] as [number, number],
+  badgeRange: [0.5, 0.65] as [number, number],
+  previewRange: [0.65, 1.0] as [number, number],
+  previewScaleRange: [0.96, 1.0] as [number, number],
+} as const;
+
+// --- Progressive disclosure ---
+export const fadeIn: Variants = {
+  hidden: { opacity: 0 },
+  visible: {
+    opacity: 1,
+    transition: { duration: 0.5, ease: EASE_OUT },
+  },
+};
+
+export const slideFromLeft: Variants = {
+  hidden: { opacity: 0, x: -24 },
+  visible: {
+    opacity: 1,
+    x: 0,
+    transition: { type: "spring", ...SPRING_GENTLE },
+  },
+};
+
+export const slideFromRight: Variants = {
+  hidden: { opacity: 0, x: 24 },
+  visible: {
+    opacity: 1,
+    x: 0,
+    transition: { type: "spring", ...SPRING_GENTLE },
+  },
+};
+
+export const slideFromBelow: Variants = {
+  hidden: { opacity: 0, y: 24 },
+  visible: {
+    opacity: 1,
+    y: 0,
+    transition: { type: "spring", ...SPRING_GENTLE },
+  },
+};
+
+export const BLOG_ENTRANCE_VARIANTS = [
+  slideFromLeft,
+  slideFromRight,
+  slideFromBelow,
+] as const;
+
+// --- Magnetic button spring ---
+export const SPRING_MAGNETIC: Transition = {
+  type: "spring",
+  damping: 18,
+  stiffness: 260,
+  mass: 0.6,
+};
