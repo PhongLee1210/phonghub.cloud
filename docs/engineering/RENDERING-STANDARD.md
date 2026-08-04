@@ -32,11 +32,14 @@ Both problems share a root cause: **too much of the page is one hydration unit.*
 6. `Suspense` `fallback` must match the static shell's layout dimensions (skeleton, not spinner-that-shifts-layout) to avoid CLS during the swap.
 7. When adding a new page or component, state which tier it belongs to — static shell, cached, or dynamic hole — in the PR description if it's not obvious from the code.
 
-## Migration checklist for this repo
+## New component checklist
 
-- `app/layout.tsx`: stop passing server-computed `isMobile` into the client tree; detect on the client, or wrap `GlobalChatWidgetLoader` in its own `Suspense` boundary.
-- `app/(root)/page.tsx`: `CareerTimeline` and `AnimatedBlogGrid` are already `next/dynamic`-imported; give them explicit `Suspense` boundaries with skeleton fallbacks instead of relying on `next/dynamic`'s implicit loading behavior.
-- `components/three/*`: confirm all R3F/canvas usage is `ssr: false` and boundary-isolated.
-- Root layout: remove blanket `suppressHydrationWarning` once the above leaks are fixed; re-add narrowly if a specific, understood divergence remains (e.g. theme class from `next-themes`).
+Run through this before writing a new page or component, or extending an existing one. It's the shape of the failures we actually hit turning `cacheComponents` on — checking these up front is cheaper than a build-breaking cascade later.
 
-Treat this as an incremental migration, not a rewrite — apply it whenever you touch a page/component, don't do a big-bang pass.
+1. **Pick the tier first.** Static shell, cached, or dynamic hole (see Rules #7)? Decide before writing the component, not after the build fails.
+2. **New `[param]` route segment?** It needs `generateStaticParams`, full stop. Without it the segment becomes fully per-request dynamic, and *any* client hook reading routing context anywhere in the shared layout (`usePathname`, `useSelectedLayoutSegment`, etc.) gets dragged into "uncached data accessed outside `<Suspense>`" build errors — the whole layout tree pays for one missing export. See `app/(root)/blogs/category/[category]/page.tsx` and `.../tag/[tag]/page.tsx` for the pattern.
+3. **Reading `config/*.ts` or `content/blog/*`?** Wrap the fetch in `"use cache"` (file-level, literal first line — before all imports, or the build rejects it) and call `cacheLife("hours")` (not `unstable_cacheLife`, which is deprecated/stabilized to `cacheLife`) as the first statement. See `lib/blog/service.ts`.
+4. **No non-deterministic values in the initial render** — `new Date()`, `Math.random()`, `headers()`, `cookies()` — in *either* Server or Client Components. This isn't just a server-side rule: a Client Component calling `new Date()` during render without a `<Suspense>` boundary above it fails the build too (hit in `components/experience/timeline.tsx`'s sort comparator). If you need "now," compute it in an effect/event handler, or special-case the value (e.g. sort `"Present"` without touching `Date`) instead of reaching for the wall clock during render.
+5. **Route segment config is incompatible with `cacheComponents`.** Don't add `export const dynamic`, `revalidate`, or `runtime` to new pages/routes — express caching via `"use cache"` + `cacheTag`/`cacheLife` on the data functions instead. `runtime = "nodejs"` is also just the default; drop it rather than declaring it.
+6. **Client-only/interactive island?** Give it its own `next/dynamic(..., { ssr: false })` or `<Suspense>` leaf per Rule #4, with a fallback matching the shell's dimensions (Rule #6).
+7. Run `bun run build` (Turbopack + Cache Components) before opening a PR — these are hard build errors, not lint warnings, so they surface early if you check.

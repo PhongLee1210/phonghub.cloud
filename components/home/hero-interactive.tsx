@@ -10,11 +10,7 @@ import { SocialButton } from "@/components/common/social-button";
 import { exploringTopics, heroCopy } from "@/config/home";
 import { SocialLinks } from "@/config/socials";
 
-interface HeroInteractiveProps {
-  isMobile?: boolean;
-}
-
-export const HeroInteractive = ({ isMobile: _isMobile }: HeroInteractiveProps) => {
+export const HeroInteractive = () => {
   const reducedMotion = useReducedMotion();
 
   const fadeUp = (delay = 0) => ({
