@@ -1,12 +1,8 @@
 "use client";
 
 import { motion, useMotionValue, useReducedMotion, useSpring } from "framer-motion";
-import { useCallback, useRef, useSyncExternalStore } from "react";
+import { useCallback, useRef } from "react";
 import { SPRING_MAGNETIC } from "@/lib/motion";
-
-function subscribeNoop() {
-  return () => {};
-}
 
 interface MagneticButtonProps {
   children: React.ReactNode;
@@ -23,8 +19,7 @@ export function MagneticButton({
 }: MagneticButtonProps) {
   const ref = useRef<HTMLDivElement>(null);
   const reducedMotion = useReducedMotion();
-  const mounted = useSyncExternalStore(subscribeNoop, () => true, () => false);
-  const isActive = mounted && !reducedMotion;
+  const isActive = !reducedMotion;
 
   const rawX = useMotionValue(0);
   const rawY = useMotionValue(0);

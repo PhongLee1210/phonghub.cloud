@@ -10,7 +10,7 @@ import { pagesConfig } from "@/config/pages";
 import { filterProjectsByTechStack } from "@/lib/data/projects";
 
 import { RelatedProject } from "./skill-detail-panel";
-import { SkillsGraph } from "./skills-graph";
+import { SkillsGraphLoader } from "./skills-graph-loader";
 
 function buildProjectsBySkill(): Record<string, RelatedProject[]> {
   const entries = SKILLS.map((skill) => {
@@ -70,7 +70,7 @@ export function SkillsSectionV2({ className }: SkillsSectionV2Props) {
         </AnimatedText>
       </div>
 
-      <SkillsGraph skills={SKILLS} projectsBySkill={projectsBySkill} />
+      <SkillsGraphLoader skills={SKILLS} projectsBySkill={projectsBySkill} />
 
       <AnimatedText delay={0.4} className="flex justify-start">
         <Link href="/skills" prefetch={false}>

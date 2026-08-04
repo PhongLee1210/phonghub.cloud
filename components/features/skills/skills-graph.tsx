@@ -9,7 +9,7 @@ import {
   useScroll,
   useTransform,
 } from "framer-motion";
-import { useId, useMemo, useRef, useState, useSyncExternalStore } from "react";
+import { useId, useMemo, useRef, useState } from "react";
 
 import { ISkill, SKILL_CATEGORY_LABELS, SkillCategoryEnum } from "@/config/skills";
 import { useChatStore } from "@/hooks/use-chat-store";
@@ -42,14 +42,6 @@ const TAB_CATEGORIES = new Set<SkillCategoryEnum>([
   SkillCategoryEnum.DEVELOPER_TOOLS,
 ]);
 
-// Physics-derived positions use transcendental math (sin/cos/sqrt) that isn't
-// bit-identical across JS engines — tiny differences compound over 100 iterations
-// into visible coordinate drift, causing SSR/client hydration mismatches.
-// Deferring to post-mount sidesteps the issue without needing float parity.
-function subscribeNever() {
-  return () => {};
-}
-
 export interface SkillsGraphProps {
   skills: ISkill[];
   projectsBySkill: Record<string, RelatedProject[]>;
@@ -63,7 +55,6 @@ export function SkillsGraph({ skills, projectsBySkill }: SkillsGraphProps) {
   }, [skills]);
 
   const glowFilterId = useId();
-  const mounted = useSyncExternalStore(subscribeNever, () => true, () => false);
 
   const activeCategory = useChatStore((s) => s.graphActiveCategory);
   const centerKey = useChatStore((s) => s.graphCenterSkillKey);
@@ -213,113 +204,111 @@ export function SkillsGraph({ skills, projectsBySkill }: SkillsGraphProps) {
                 </filter>
               </defs>
               <AnimatePresence>
-                {mounted &&
-                  visibleEdges.map(([aKey, bKey], index) => {
-                    const a = layout[aKey];
-                    const b = layout[bKey];
-                    if (!a || !b) return null;
-                    const isActive = aKey === centerSkill.key || bKey === centerSkill.key;
+                {visibleEdges.map(([aKey, bKey], index) => {
+                  const a = layout[aKey];
+                  const b = layout[bKey];
+                  if (!a || !b) return null;
+                  const isActive = aKey === centerSkill.key || bKey === centerSkill.key;
 
-                    // Drift params mirroring SkillNode — same seeds → endpoints
-                    // track their node positions exactly.
-                    const dAX = (seededRandom(`${aKey}:dx`) - 0.5) * 2 * NODE_DRIFT_AMPLITUDE_SVG;
-                    const dAY = (seededRandom(`${aKey}:dy`) - 0.5) * 2 * NODE_DRIFT_AMPLITUDE_SVG;
-                    const dAX2 = (seededRandom(`${aKey}:dx2`) - 0.5) * NODE_DRIFT_AMPLITUDE_SVG;
-                    const dAY2 = (seededRandom(`${aKey}:dy2`) - 0.5) * NODE_DRIFT_AMPLITUDE_SVG;
-                    const dADur = NODE_DRIFT_MIN_DURATION_SECONDS + seededRandom(`${aKey}:dur`) * NODE_DRIFT_DURATION_JITTER_SECONDS;
-                    const dADelay = seededRandom(`${aKey}:delay`) * NODE_DRIFT_MAX_DELAY_SECONDS;
+                  // Drift params mirroring SkillNode — same seeds → endpoints
+                  // track their node positions exactly.
+                  const dAX = (seededRandom(`${aKey}:dx`) - 0.5) * 2 * NODE_DRIFT_AMPLITUDE_SVG;
+                  const dAY = (seededRandom(`${aKey}:dy`) - 0.5) * 2 * NODE_DRIFT_AMPLITUDE_SVG;
+                  const dAX2 = (seededRandom(`${aKey}:dx2`) - 0.5) * NODE_DRIFT_AMPLITUDE_SVG;
+                  const dAY2 = (seededRandom(`${aKey}:dy2`) - 0.5) * NODE_DRIFT_AMPLITUDE_SVG;
+                  const dADur = NODE_DRIFT_MIN_DURATION_SECONDS + seededRandom(`${aKey}:dur`) * NODE_DRIFT_DURATION_JITTER_SECONDS;
+                  const dADelay = seededRandom(`${aKey}:delay`) * NODE_DRIFT_MAX_DELAY_SECONDS;
 
-                    const dBX = (seededRandom(`${bKey}:dx`) - 0.5) * 2 * NODE_DRIFT_AMPLITUDE_SVG;
-                    const dBY = (seededRandom(`${bKey}:dy`) - 0.5) * 2 * NODE_DRIFT_AMPLITUDE_SVG;
-                    const dBX2 = (seededRandom(`${bKey}:dx2`) - 0.5) * NODE_DRIFT_AMPLITUDE_SVG;
-                    const dBY2 = (seededRandom(`${bKey}:dy2`) - 0.5) * NODE_DRIFT_AMPLITUDE_SVG;
-                    const dBDur = NODE_DRIFT_MIN_DURATION_SECONDS + seededRandom(`${bKey}:dur`) * NODE_DRIFT_DURATION_JITTER_SECONDS;
-                    const dBDelay = seededRandom(`${bKey}:delay`) * NODE_DRIFT_MAX_DELAY_SECONDS;
+                  const dBX = (seededRandom(`${bKey}:dx`) - 0.5) * 2 * NODE_DRIFT_AMPLITUDE_SVG;
+                  const dBY = (seededRandom(`${bKey}:dy`) - 0.5) * 2 * NODE_DRIFT_AMPLITUDE_SVG;
+                  const dBX2 = (seededRandom(`${bKey}:dx2`) - 0.5) * NODE_DRIFT_AMPLITUDE_SVG;
+                  const dBY2 = (seededRandom(`${bKey}:dy2`) - 0.5) * NODE_DRIFT_AMPLITUDE_SVG;
+                  const dBDur = NODE_DRIFT_MIN_DURATION_SECONDS + seededRandom(`${bKey}:dur`) * NODE_DRIFT_DURATION_JITTER_SECONDS;
+                  const dBDelay = seededRandom(`${bKey}:delay`) * NODE_DRIFT_MAX_DELAY_SECONDS;
 
-                    const staticD = `M${a.x} ${a.y} L${b.x} ${b.y}`;
+                  const staticD = `M${a.x} ${a.y} L${b.x} ${b.y}`;
 
-                    const glowTransition = {
-                      duration: LINE_GLOW_DURATION,
-                      repeat: reducedMotion ? 0 : Infinity,
-                      repeatType: "mirror" as const,
-                      ease: "easeInOut" as const,
-                      delay: (index % 10) * LINE_GLOW_STAGGER,
-                    };
-                    const widthTransition = {
-                      duration: LINE_WIDTH_DURATION,
-                      repeat: reducedMotion ? 0 : Infinity,
-                      repeatType: "mirror" as const,
-                      ease: "easeInOut" as const,
-                      delay: (index % 10) * LINE_GLOW_STAGGER * 0.5,
-                    };
-                    const driftA = (dur: number, delay: number) => ({
-                      duration: dur,
-                      repeat: Infinity,
-                      repeatType: "mirror" as const,
-                      ease: "easeInOut" as const,
-                      delay: LINE_DRAW_TRANSITION.duration + delay,
-                    });
-                    return (
-                      <motion.path
-                        key={`${aKey}-${bKey}`}
-                        d={staticD}
-                        className="stroke-primary"
-                        fill="none"
-                        strokeLinecap="round"
-                        vectorEffect="non-scaling-stroke"
-                        filter={`url(#${glowFilterId})`}
-                        style={mounted && !reducedMotion ? { pathLength: edgePathLength } : undefined}
-                        initial={{ opacity: 0, d: staticD }}
-                        animate={{
-                          strokeWidth: reducedMotion
-                            ? isActive ? 0.8 : 0.45
-                            : isActive ? [0.45, 1, 0.45] : [0.25, 0.65, 0.25],
-                          opacity: reducedMotion
-                            ? isActive ? 0.65 : 0.35
-                            : isActive ? [0.5, 0.9, 0.5] : [0.22, 0.45, 0.22],
-                          d: reducedMotion ? staticD : [
-                            staticD,
-                            `M${a.x + dAX} ${a.y + dAY} L${b.x + dBX} ${b.y + dBY}`,
-                            `M${a.x + dAX2} ${a.y + dAY2} L${b.x + dBX2} ${b.y + dBY2}`,
-                            staticD,
-                          ],
-                        }}
-                        exit={{ opacity: 0 }}
-                        transition={{
-                          opacity: glowTransition,
-                          strokeWidth: widthTransition,
-                          d: driftA(Math.min(dADur, dBDur), Math.min(dADelay, dBDelay)),
-                          default: reducedMotion ? { duration: 0 } : LINE_DRAW_TRANSITION,
-                        }}
-                      />
-                    );
-                  })}
+                  const glowTransition = {
+                    duration: LINE_GLOW_DURATION,
+                    repeat: reducedMotion ? 0 : Infinity,
+                    repeatType: "mirror" as const,
+                    ease: "easeInOut" as const,
+                    delay: (index % 10) * LINE_GLOW_STAGGER,
+                  };
+                  const widthTransition = {
+                    duration: LINE_WIDTH_DURATION,
+                    repeat: reducedMotion ? 0 : Infinity,
+                    repeatType: "mirror" as const,
+                    ease: "easeInOut" as const,
+                    delay: (index % 10) * LINE_GLOW_STAGGER * 0.5,
+                  };
+                  const driftA = (dur: number, delay: number) => ({
+                    duration: dur,
+                    repeat: Infinity,
+                    repeatType: "mirror" as const,
+                    ease: "easeInOut" as const,
+                    delay: LINE_DRAW_TRANSITION.duration + delay,
+                  });
+                  return (
+                    <motion.path
+                      key={`${aKey}-${bKey}`}
+                      d={staticD}
+                      className="stroke-primary"
+                      fill="none"
+                      strokeLinecap="round"
+                      vectorEffect="non-scaling-stroke"
+                      filter={`url(#${glowFilterId})`}
+                      style={!reducedMotion ? { pathLength: edgePathLength } : undefined}
+                      initial={{ opacity: 0, d: staticD }}
+                      animate={{
+                        strokeWidth: reducedMotion
+                          ? isActive ? 0.8 : 0.45
+                          : isActive ? [0.45, 1, 0.45] : [0.25, 0.65, 0.25],
+                        opacity: reducedMotion
+                          ? isActive ? 0.65 : 0.35
+                          : isActive ? [0.5, 0.9, 0.5] : [0.22, 0.45, 0.22],
+                        d: reducedMotion ? staticD : [
+                          staticD,
+                          `M${a.x + dAX} ${a.y + dAY} L${b.x + dBX} ${b.y + dBY}`,
+                          `M${a.x + dAX2} ${a.y + dAY2} L${b.x + dBX2} ${b.y + dBY2}`,
+                          staticD,
+                        ],
+                      }}
+                      exit={{ opacity: 0 }}
+                      transition={{
+                        opacity: glowTransition,
+                        strokeWidth: widthTransition,
+                        d: driftA(Math.min(dADur, dBDur), Math.min(dADelay, dBDelay)),
+                        default: reducedMotion ? { duration: 0 } : LINE_DRAW_TRANSITION,
+                      }}
+                    />
+                  );
+                })}
               </AnimatePresence>
             </svg>
 
             <motion.div
               className="absolute inset-0"
-              style={mounted && !reducedMotion ? { opacity: labelsOpacity } : undefined}
+              style={!reducedMotion ? { opacity: labelsOpacity } : undefined}
             >
               <AnimatePresence>
-                {mounted &&
-                  visibleSkills.map((skill, index) => {
-                    const pos = layout[skill.key];
-                    if (!pos) return null;
-                    return (
-                      <SkillNode
-                        key={skill.key}
-                        skill={skill}
-                        pos={pos}
-                        isSelected={skill.key === centerSkill.key}
-                        spawnOriginKey={spawnOriginKey}
-                        layout={layout}
-                        index={index}
-                        reducedMotion={reducedMotion}
-                        onClick={handleNodeClick}
-                      />
-                    );
-                  })}
+                {visibleSkills.map((skill, index) => {
+                  const pos = layout[skill.key];
+                  if (!pos) return null;
+                  return (
+                    <SkillNode
+                      key={skill.key}
+                      skill={skill}
+                      pos={pos}
+                      isSelected={skill.key === centerSkill.key}
+                      spawnOriginKey={spawnOriginKey}
+                      layout={layout}
+                      index={index}
+                      reducedMotion={reducedMotion}
+                      onClick={handleNodeClick}
+                    />
+                  );
+                })}
               </AnimatePresence>
             </motion.div>
           </div>

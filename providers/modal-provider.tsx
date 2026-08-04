@@ -1,25 +1,13 @@
 "use client";
 
-import { useSyncExternalStore } from "react";
+import dynamic from "next/dynamic";
 
-import { CustomModal } from "@/components/modals/custom-modal";
+const CustomModal = dynamic(
+  () =>
+    import("@/components/modals/custom-modal").then((m) => ({
+      default: m.CustomModal,
+    })),
+  { ssr: false }
+);
 
-const emptySubscribe = () => () => {};
-
-export const ModalProvider = () => {
-  const isMounted = useSyncExternalStore(
-    emptySubscribe,
-    () => true,
-    () => false,
-  );
-
-  if (!isMounted) {
-    return null;
-  }
-
-  return (
-    <>
-      <CustomModal />
-    </>
-  );
-};
+export const ModalProvider = () => <CustomModal />;

@@ -1,11 +1,7 @@
 "use client";
 
 import { motion, useScroll, useTransform } from "framer-motion";
-import { ReactNode, useRef, useSyncExternalStore } from "react";
-
-function subscribeNoop() {
-  return () => {};
-}
+import { ReactNode, useRef } from "react";
 
 interface AnimatedSectionProps {
   children: ReactNode;
@@ -25,7 +21,6 @@ export const AnimatedSection = ({
   crossfade,
 }: AnimatedSectionProps) => {
   const ref = useRef<HTMLDivElement>(null);
-  const mounted = useSyncExternalStore(subscribeNoop, () => true, () => false);
 
   const { scrollYProgress } = useScroll({
     target: ref,
@@ -48,9 +43,8 @@ export const AnimatedSection = ({
   };
 
   const initialOffset = directionOffset[direction];
-  const useCrossfade = mounted && crossfade;
 
-  if (useCrossfade) {
+  if (crossfade) {
     return (
       <motion.div
         ref={ref}

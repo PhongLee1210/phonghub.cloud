@@ -13,7 +13,6 @@ import { useChatStore } from "@/hooks/use-chat-store";
 const HINT_DELAY_MS = 5000;
 
 export const ChatWidget = () => {
-  const [isMounted, setIsMounted] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
   const [isWidgetOpen, setIsWidgetOpen] = useState(false);
   const [showHint, setShowHint] = useState(false);
@@ -25,7 +24,6 @@ export const ChatWidget = () => {
   useAgentBridge();
 
   useEffect(() => {
-    setIsMounted(true);
     hydrate();
 
     const mq = window.matchMedia("(max-width: 480px)");
@@ -46,8 +44,6 @@ export const ChatWidget = () => {
 
     return () => clearTimeout(timer);
   }, [isWidgetOpen]);
-
-  if (!isMounted) return null;
 
   return (
     <>

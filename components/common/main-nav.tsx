@@ -1,14 +1,13 @@
 "use client";
 
 import { AnimatePresence, motion, Variants } from "framer-motion";
-import { useTheme } from "next-themes";
-import Image from "next/image";
 import Link from "next/link";
 import { usePathname, useSelectedLayoutSegment } from "next/navigation";
 import * as React from "react";
 
 import { Icons } from "@/components/common/icons";
 import { MobileNavSheet } from "@/components/common/mobile-nav-sheet";
+import { ThemedLogo } from "@/components/common/themed-logo";
 import { siteConfig } from "@/config/site";
 import { cn } from "@/lib/utils";
 
@@ -39,17 +38,6 @@ export function MainNav({ items, children }: MainNavProps) {
     "hsl(var(--primary))"
   );
   const pathname = usePathname();
-  const { resolvedTheme } = useTheme();
-  const [mounted, setMounted] = React.useState(false);
-
-  React.useEffect(() => {
-    setMounted(true);
-  }, []);
-
-  const logoSrc =
-    mounted && resolvedTheme === "light"
-      ? "/logo/phonghub-grayscale.png"
-      : "/logo/phonghub.png";
 
   React.useEffect(() => {
     setShowMobileMenu(false);
@@ -139,8 +127,7 @@ export function MainNav({ items, children }: MainNavProps) {
             className="absolute left-1/2 hidden -translate-x-1/2 md:block"
           >
             <Link href="/" className="flex items-center space-x-2">
-              <Image
-                src={logoSrc}
+              <ThemedLogo
                 alt={siteConfig.authorName}
                 width={120}
                 height={40}
@@ -177,8 +164,7 @@ export function MainNav({ items, children }: MainNavProps) {
               transition={{ type: "spring", damping: 28, stiffness: 200 }}
             >
               <Link href="/" className="flex items-center space-x-2">
-                <Image
-                  src={logoSrc}
+                <ThemedLogo
                   alt={siteConfig.authorName}
                   width={120}
                   height={40}
