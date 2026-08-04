@@ -10,6 +10,7 @@ tags:
 summary: "Strategies and best practices for fostering engagement, productivity, and well-being in distributed teams."
 coverImage: "https://images.unsplash.com/photo-1519389950473-47ba0277781c"
 status: "published"
+agentVisible: false
 ---
 
 When I started my career as a software engineer, “remote work” usually meant working from home while sick—with your laptop balanced awkwardly on the couch. Today, some of the highest-performing teams I’ve worked with have never shared the same office, or even the same time zone.

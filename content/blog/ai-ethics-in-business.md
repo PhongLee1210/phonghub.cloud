@@ -10,6 +10,7 @@ tags:
 summary: "Explore the ethical dilemmas and best practices for implementing AI in business environments."
 coverImage: "https://images.unsplash.com/photo-1506744038136-46273834b3fb"
 status: "published"
+agentVisible: false
 ---
 
 As a software engineer who has helped ship AI-powered products into real companies, I’ve learned that the hardest problems are rarely technical. They are ethical.

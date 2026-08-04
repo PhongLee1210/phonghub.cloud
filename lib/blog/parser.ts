@@ -13,6 +13,7 @@ export interface BlogFrontmatter {
   summary: string;
   coverImage: string;
   status: "published" | "draft";
+  agentVisible?: boolean;
   [key: string]: unknown;
 }
 
@@ -50,6 +51,7 @@ function parseMarkdownFile(filePath: string): {
     category: data.category,
     summary: data.summary,
     coverImage: data.coverImage,
+    agentVisible: data.agentVisible !== false,
   };
   return {
     frontmatter: normalized,

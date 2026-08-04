@@ -40,6 +40,7 @@ interface ResourceSummary {
   agentId: CitationTarget;
   title: string;
   summary: string;
+  rating?: number;
 }
 
 /** Caps every search tool's result list — keeps tool-result payloads small. */
@@ -66,6 +67,7 @@ function toSkillSummary(skill: ISkill): ResourceSummary {
     agentId: buildEntityId("skill", skill.key),
     title: skill.name,
     summary: skill.description,
+    rating: skill.rating,
   };
 }
 
@@ -135,7 +137,7 @@ const searchExperiencesTool = tool({
 
 const searchSkillsTool = tool({
   description:
-    "Search Phong's skills. Filter by category (e.g. 'frameworks', 'backend', 'ai-llm'), or omit it for his strongest skills overall.",
+    "Search Phong's skills. Filter by category (e.g. 'frameworks', 'backend', 'ai-llm'), or omit it for his strongest skills overall. Each result includes a `rating` (1-5, where 5 = expert) — mention his proficiency level when relevant.",
   inputSchema: z.object({
     category: z
       .string()
@@ -175,7 +177,7 @@ const searchBlogTool = tool({
     tag: z.string().optional().describe("A tag to filter blog posts by."),
   }),
   execute: async ({ category, tag }) => {
-    const posts = await listPublishedPosts(CONTENT_DIR);
+    const posts = await listPublishedPosts(CONTENT_DIR, { forAgent: true });
     const filtered = posts.filter(
       (post) =>
         (!category || post.category === category) &&

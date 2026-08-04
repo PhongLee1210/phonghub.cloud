@@ -73,7 +73,7 @@ export const EXPERIENCES: ExperienceInterface[] = [
     company: "LTV",
     location: "Nha Trang, Khanh Hoa, Vietnam",
     startDate: new Date("2022-02-01"),
-    endDate: new Date("2025-06-01"),
+    endDate: new Date("2023-12-01"),
     description: [
       "Full-stack engineer building scalable web applications with Vue.js, Node.js, and AWS.",
       "Hands-on experience designing microservice-based systems and distributed architectures.",

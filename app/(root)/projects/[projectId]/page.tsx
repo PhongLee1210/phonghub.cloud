@@ -72,7 +72,7 @@ export default async function ProjectPage({ params }: ProjectPageProps) {
             />
 
             <div className="flex-1 text-left leading-tight">
-              <p className="font-medium">{"Le Thanh Phong"}</p>
+              <p className="font-medium">{"Phong Lee"}</p>
               <p className="text-[12px] text-muted-foreground">
                 @{siteConfig.username}
               </p>

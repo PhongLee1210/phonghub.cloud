@@ -10,6 +10,7 @@ tags:
 summary: "How enterprises can foster a culture of wellbeing and resilience in a rapidly changing digital environment."
 coverImage: "https://images.unsplash.com/photo-1519125323398-675f0ddb6308"
 status: "published"
+agentVisible: false
 ---
 
 The first time I burned out, it didn’t look dramatic from the outside. The systems were up, the sprints were “green,” and my pull requests kept getting merged. But inside, I was running on fumes—refreshing dashboards at midnight, answering messages across three time zones, and telling myself it was “just for this release.”

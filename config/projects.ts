@@ -219,7 +219,7 @@ export const PROJECTS: ProjectInterface[] = [
       "TypeScript",
     ],
     startDate: new Date("2022-02-01"),
-    endDate: null,
+    endDate: new Date("2022-08-01"),
     companyLogoImg: "/projects/svtech/svgtech-logo.png",
     pagesInfoArr: [
       {
@@ -421,7 +421,7 @@ export const PROJECTS: ProjectInterface[] = [
       "Built a full-stack e-commerce platform for garment business using Vue.js frontend and Node.js backend with AWS infrastructure. Implemented inventory management, order processing, and customer management systems.",
     techStack: ["Vue.js", "Node.js", "AWS", "PostgreSQL", "TypeScript"],
     startDate: new Date("2022-04-01"),
-    endDate: null,
+    endDate: new Date("2022-10-01"),
     companyLogoImg: "/projects/mygarment/banner.jpeg",
     pagesInfoArr: [
       {
@@ -463,7 +463,7 @@ export const PROJECTS: ProjectInterface[] = [
       "Built a comprehensive healthcare management platform using Vue.js frontend and Node.js microservices with GraphQL API. Optimized and refactored code for better performance and maintainability while designing intuitive UI based on mockups.",
     techStack: ["Vue.js", "Node.js", "GraphQL", "PostgreSQL", "TypeScript"],
     startDate: new Date("2022-06-01"),
-    endDate: null,
+    endDate: new Date("2023-01-01"),
     companyLogoImg: "/projects/jetcare/jetcare-logo.svg",
     pagesInfoArr: [
       {
@@ -504,7 +504,7 @@ export const PROJECTS: ProjectInterface[] = [
       "Developed the frontend for OASIS business management platform using Vue.js and Node.js microservices. Built responsive UI components and integrated with backend services while working in a remote development environment.",
     techStack: ["Vue.js", "Node.js", "TypeScript"],
     startDate: new Date("2022-10-01"),
-    endDate: null,
+    endDate: new Date("2023-05-01"),
     companyLogoImg: "/projects/oasis/ship-2.jpg",
     pagesInfoArr: [
       {

@@ -10,6 +10,7 @@ tags:
 summary: "Stay ahead of the latest cybersecurity threats and solutions shaping the enterprise landscape in 2024."
 coverImage: "https://images.unsplash.com/photo-1519389950473-47ba0277781c"
 status: "published"
+agentVisible: false
 ---
 
 Cybersecurity has never felt more real than the night I watched an incident channel explode with alerts at 2:13 a.m. As engineers, we’d modeled threats, run tabletop exercises, and rehearsed playbooks—but nothing sharpens your instincts like seeing real systems under attack.

@@ -17,7 +17,7 @@ export const pagesConfig: PagesConfig = {
     description: "Welcome to my portfolio website.",
     metadata: {
       title: "Home",
-      description: "Le Thanh Phong's portfolio website.",
+      description: "Phong Lee's portfolio website.",
     },
   },
   skills: {
@@ -26,7 +26,7 @@ export const pagesConfig: PagesConfig = {
     metadata: {
       title: "Skills",
       description:
-        "Le Thanh Phong's key skills that define his professional identity.",
+        "Phong Lee's key skills that define his professional identity.",
     },
   },
   projects: {
@@ -34,7 +34,7 @@ export const pagesConfig: PagesConfig = {
     description: "Showcasing impactful projects and technical achievements.",
     metadata: {
       title: "Projects",
-      description: "Le Thanh Phong's projects in building web applications.",
+      description: "Phong Lee's projects in building web applications.",
     },
   },
   contact: {
@@ -59,7 +59,7 @@ export const pagesConfig: PagesConfig = {
     metadata: {
       title: "Experience",
       description:
-        "Le Thanh Phong's professional journey and experience timeline.",
+        "Phong Lee's professional journey and experience timeline.",
     },
   },
   list100: {
@@ -69,15 +69,15 @@ export const pagesConfig: PagesConfig = {
     metadata: {
       title: "List 100 - Bucket List",
       description:
-        "Le Thanh Phong's bucket list - 100 things I want to do before I die.",
+        "Phong Lee's bucket list - 100 things I want to do before I die.",
     },
   },
   blogs: {
     title: "Blog",
     description:
-      "Insights, tutorials, and updates from Le Thanh Phong. Explore posts about web development, technology, and personal growth.",
+      "Insights, tutorials, and updates from Phong Lee. Explore posts about web development, technology, and personal growth.",
     metadata: {
-      title: "Le Thanh Phong's Blog",
+      title: "Phong Lee's Blog",
       description:
         "Read the latest blog posts from Phong Lee on software engineering, technology trends, productivity, and thoughts on personal and career development.",
     },

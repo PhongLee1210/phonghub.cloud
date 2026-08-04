@@ -10,6 +10,7 @@ tags:
 summary: "Essential leadership skills for navigating digital disruption and driving organizational change."
 coverImage: "https://images.unsplash.com/photo-1465101046530-73398c7f28ca"
 status: "published"
+agentVisible: false
 ---
 
 The best leaders I’ve worked with didn’t always know the latest framework or the hottest cloud service. But they all shared something far more valuable in the digital age: the ability to create **clarity, trust, and momentum** in the middle of constant change.

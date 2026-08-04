@@ -10,6 +10,7 @@ tags:
 summary: "A comprehensive guide to planning and executing a successful cloud migration for large organizations."
 coverImage: "https://images.unsplash.com/photo-1465101046530-73398c7f28ca"
 status: "published"
+agentVisible: false
 ---
 
 When executives say, “We’re moving to the cloud,” engineers hear something very different: years of unwinding legacy systems, unknown dependencies, and Friday‑night cutovers. I’ve lived through that journey more than once as a software engineer, and each time I’ve learned that a successful cloud migration is much more about **strategy and sequencing** than tools or services.

@@ -53,11 +53,13 @@ export async function getAllBlogPosts(
 }
 
 export async function listPublishedPosts(
-  contentDir: string
+  contentDir: string,
+  opts?: { forAgent?: boolean }
 ): Promise<BlogPostSummary[]> {
   const posts = await getAllBlogPosts(contentDir);
   const publishedPosts = posts
     .filter((post) => post.frontmatter.status === "published")
+    .filter((post) => !opts?.forAgent || post.frontmatter.agentVisible !== false)
     .map(toPostSummary)
     .sort((a, b) => b.date.localeCompare(a.date));
 

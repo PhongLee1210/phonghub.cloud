@@ -2,10 +2,10 @@ import type { MetadataRoute } from "next";
 
 export default function manifest(): MetadataRoute.Manifest {
   return {
-    name: "Le Thanh Phong | Software Engineer",
+    name: "Phong Lee | Software Engineer",
     short_name: "Phong Lee",
     description:
-      "Le Thanh Phong's software engineer portfolio showcasing full-stack development, DevOps, and AI engineering expertise",
+      "Phong Lee's software engineer portfolio showcasing full-stack development, DevOps, and AI engineering expertise",
     start_url: "/",
     display: "standalone",
     background_color: "#ffffff",

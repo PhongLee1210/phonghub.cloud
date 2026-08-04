@@ -29,7 +29,7 @@ const AnimatedBlogGrid = dynamic(
 );
 
 export const metadata: Metadata = {
-  title: `${pagesConfig.home.metadata.title} | Le Thanh Phong - Software Engineer`,
+  title: `${pagesConfig.home.metadata.title} | Phong Lee - Software Engineer`,
   description: `${pagesConfig.home.metadata.description} Software engineer with full-stack web development, DevOps, and AI engineering expertise.`,
   alternates: {
     canonical: siteConfig.url,

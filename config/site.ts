@@ -1,6 +1,6 @@
 export const siteConfig = {
-  name: "Le Thanh Phong | Software Engineer",
-  authorName: "Le Thanh Phong",
+  name: "Phong Lee | Software Engineer",
+  authorName: "Phong Lee",
   username: "PhongLee1210",
   description:
     "I'm a senior software engineer with 5+ years of experience in the industry, specializing in building scalable and efficient web applications. I'm a quick learner and always looking for new challenges and opportunities to grow.",

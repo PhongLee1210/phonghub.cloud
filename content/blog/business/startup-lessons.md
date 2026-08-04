@@ -10,6 +10,7 @@ tags:
 summary: "Key lessons from fast-growing startups on leveraging technology for rapid scaling."
 coverImage: "https://images.unsplash.com/photo-1465101046530-73398c7f28ca"
 status: "published"
+agentVisible: false
 ---
 
 The first startup I joined didn’t fail because of a lack of ideas or passion. It struggled because our technology choices couldn’t keep up with the growth we were chasing. Every new customer felt like it might break something.

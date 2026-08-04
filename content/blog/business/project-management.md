@@ -10,6 +10,7 @@ tags:
 summary: "How AI is transforming project management methodologies and what leaders need to know."
 coverImage: "https://images.unsplash.com/photo-1519389950473-47ba0277781c"
 status: "published"
+agentVisible: false
 ---
 
 The first time I watched an AI tool estimate project timelines, I felt a mix of excitement and skepticism. As a software engineer, I’ve seen enough Gantt charts and “optimistic” roadmaps to know that predicting delivery is hard—even for humans who know the codebase.
