@@ -1,8 +1,9 @@
 "use client";
 
 import { motion, useMotionValue, useReducedMotion, useSpring } from "framer-motion";
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useRef } from "react";
 import { SPRING_MAGNETIC } from "@/lib/motion";
+import { useMounted } from "@/hooks/use-mounted";
 
 interface MagneticButtonProps {
   children: React.ReactNode;
@@ -19,11 +20,7 @@ export function MagneticButton({
 }: MagneticButtonProps) {
   const ref = useRef<HTMLDivElement>(null);
   const reducedMotion = useReducedMotion();
-  const [mounted, setMounted] = useState(false);
-
-  useEffect(() => {
-    setMounted(true);
-  }, []);
+  const mounted = useMounted();
 
   // Only activate after mount to avoid hydration mismatch from useReducedMotion
   const isActive = mounted && !reducedMotion;

@@ -2,7 +2,8 @@
 
 import { useReducedMotion } from "framer-motion";
 import dynamic from "next/dynamic";
-import { useEffect, useState } from "react";
+
+import { useMounted } from "@/hooks/use-mounted";
 
 const ParticleConstellation = dynamic(
   () => import("@/components/three/particle-constellation"),
@@ -11,11 +12,7 @@ const ParticleConstellation = dynamic(
 
 export function HeroCanvas() {
   const reduced = useReducedMotion();
-  const [mounted, setMounted] = useState(false);
-
-  useEffect(() => {
-    setMounted(true);
-  }, []);
+  const mounted = useMounted();
 
   const showParticles = mounted && !reduced;
   const showFallback = mounted && reduced;

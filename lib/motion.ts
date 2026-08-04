@@ -192,7 +192,7 @@ export const ROBOT_WAYPOINTS: RobotWaypoint[] = [
   // Blog — left side
   { sizeVw: 18, rightVw: 0, bottomVh: 25 },
   // CTA (Get in touch) — BIG, right side
-  { sizeVw: 50, rightVw: 20, bottomVh: 10 },
+  { sizeVw: 50, rightVw: 10, bottomVh: 10 },
 ] as const;
 
 // --- Magnetic button spring ---
