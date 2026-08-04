@@ -39,7 +39,7 @@ export const scaleReveal: Variants = {
  * `SPRING_SHEET` — bottom-sheet / drawer momentum (slight bounce).
  * `EASE_REVEAL` — cubic-bezier for typewriter + terminal line reveals.
  *
- * See `docs/MOBILE_FIRST.md` §6 (Spring Animation Defaults).
+ * See `docs/design/MOBILE-FIRST.md` §6 (Spring Animation Defaults).
  */
 export const SPRING_SHOWCASE: Transition = {
   type: "spring",

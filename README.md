@@ -138,7 +138,7 @@ bunx tsc --noEmit   # type-check
 bun run test        # Bun unit tests
 ```
 
-Business logic lives in `lib/`. UI components should _never_ read Markdown/config or the filesystem directly; use services in `lib/` or `config/`. See `docs/GIT_WORKFLOW.md` for commit/branch conventions.
+Business logic lives in `lib/`. UI components should _never_ read Markdown/config or the filesystem directly; use services in `lib/` or `config/`.
 
 ## Testing
 
@@ -147,21 +147,6 @@ Unit test coverage of chat/LLM logic via Bun (see `lib/llm/*.test.ts`, `lib/chat
 ## Deployment
 
 Ready for Vercel using Bun (`bun install`, `bun run build`, output: `.next`). Set environment variables as above in your Vercel project.
-
-## Documentation
-
-- [docs/GIT_WORKFLOW.md](docs/GIT_WORKFLOW.md) — branch, commit, PR conventions
-- [docs/PHONG_AI_PORTFOLIO_ARCHITECTURE.md](docs/PHONG_AI_PORTFOLIO_ARCHITECTURE.md) — AI chat agent flow (guards, tools, citations, stream protocol, eval)
-- [CLAUDE.md](CLAUDE.md) / [AGENTS.md](AGENTS.md) — for AI code agents
-- [lib/llm/README.md](lib/llm/README.md) — LLM gateway usage, internal docs, env keys
-
-## Contributing
-
-This is a personal project. If you wish to contribute:
-
-1. Use branches with [docs/GIT_WORKFLOW.md](docs/GIT_WORKFLOW.md) conventions (`feature/...`, `fix/...`, etc).
-2. Run `bun run lint` & `bunx tsc --noEmit` before committing.
-3. Keep PRs tightly scoped, and explain _why_ your change is needed.
 
 ## License
 

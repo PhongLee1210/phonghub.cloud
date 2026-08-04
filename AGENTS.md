@@ -2,23 +2,7 @@
 
 High-signal instructions for AI coding agents working in this repo. Verify everything against the code; if docs and code disagree, trust the code.
 
-## Project Overview
-- Personal portfolio + blog site for Le Thanh Phong (phonghub.cloud): experience, projects, skills, résumé, Markdown blog, an AI chat widget, and a lead-capture flow (contact form + in-chat).
-- Single Next.js App Router site, statically prerendered where possible. **No database.** Content lives in Markdown (`content/blog`) and static modules (`config/*.ts`); server logic lives in `app/api/*` route handlers (chat NDJSON stream, lead→Resend email, GitHub star, content APIs).
-
-## Tech Stack
-- **Framework**: Next.js 16 (App Router), React 19, TypeScript (strict; `@/*` → repo root)
-- **Runtime & package manager**: Bun (`bun.lock`). Node 22+ also works; lockfile is Bun's.
-- **Styling**: Tailwind CSS, Radix UI primitives, `class-variance-authority`, Framer Motion, `next-themes`
-- **Forms/state**: `react-hook-form` + `zod`, `zustand`
-- **LLM gateway**: provider-agnostic internal layer in `lib/llm/` over the Vercel AI SDK (`ai`, `@ai-sdk/anthropic`, `@ai-sdk/openai`, `@ai-sdk/google`, `@ai-sdk/groq`, `@ai-sdk/mistral`)
-- **Rate limiting**: `@upstash/ratelimit` + `@upstash/redis`
-- **Email (lead capture)**: `resend` + `@react-email/components` (`/api/lead`)
-- **Content**: Markdown parsed with `gray-matter` / `remark` / `remark-html` / `marked`; rendered with `react-markdown` + `remark-gfm`
-- **Lint/format**: ESLint flat config (`eslint.config.mjs`, `eslint-config-next/core-web-vitals`), Prettier (`.prettierrc`)
-- **Deploy**: Vercel (`vercel.json`: `bun install` / `bun run build`, output `.next`)
-
-Lead capture delivers email via Resend (`RESEND_API_KEY`) from both the `/contact` form and the in-chat `capture_lead` tool; both POST to `/api/lead`.
+**This file is the single index for all project documentation** — see the [Doc Index](#doc-index) at the bottom. For human-facing onboarding, features, and stack, see `README.md`.
 
 ## Commands
 ```bash
@@ -38,6 +22,22 @@ Run a single test file: `bun test lib/llm/index.test.ts` (still needs the `react
 2. `bunx tsc --noEmit`
 3. `bun run test` — covers `lib/llm/*`, `lib/chat/*`, `lib/ai-tools/*`, `lib/data/*`, `lib/content/*`, `lib/device`, `lib/physics` pure logic (gateway routing, fallback, token budget/quota, concurrency limiter, Redis guards, citation postprocess). Uses a local `FakeProvider`; no real API keys or network.
 4. There is **no component/integration/e2e suite** — for UI or route-handler changes, also verify the affected page in the browser.
+
+### Validation Hierarchy
+
+When developing features, always ensure:
+
+- **Level 1: Unit tests** — Must pass
+- **Level 2: Integration tests** — Must pass (if applicable)
+- **Level 3: End-to-end tests** — Must pass for multi-component changes
+- Skipping levels = **Not Complete**
+
+### RTK Usage (logs & test tracking)
+
+```bash
+rtk log --tail 50              # print logs for a session
+rtk run -- bun run test        # run and track tests
+```
 
 ## The `bun:test` quirk
 Every file in `lib/llm` and `lib/chat` imports the `server-only` package, which throws outside Next's bundler. Tests therefore require `--conditions react-server` (already baked into the `test` script). Module mocks were found to leak across `bun:test` files in this Bun version, so tests inject a fake provider via the test-only `__setProvidersForTests()` export in `lib/llm/registry.ts` instead of `mock.module`.
@@ -71,7 +71,11 @@ lib/
 hooks/, providers/ # Shared hooks + context providers (incl. chat zustand store)
 types/             # Client-safe shared types (chat wire protocol, content)
 public/, assets/   # Static assets and fonts
-docs/              # GIT_WORKFLOW, MOBILE_FIRST, PHONG_AI_PORTFOLIO_ARCHITECTURE, TAILWIND-STYLES
+docs/
+  engineering/     # CODING-STANDARD, RENDERING-STANDARD (donut pattern)
+  design/          # TAILWIND-STYLES, MOBILE-FIRST
+  process/         # GIT-WORKFLOW
+  architecture/    # AI-CHAT-ARCHITECTURE
 ```
 
 ## Operational gotchas (hard-earned)
@@ -81,18 +85,13 @@ docs/              # GIT_WORKFLOW, MOBILE_FIRST, PHONG_AI_PORTFOLIO_ARCHITECTURE
 - **Model routing env overrides** (`provider:model` format): `LLM_CHAT_MODEL`, `LLM_CHEAP_MODEL` override alias defaults in `lib/llm/config.ts`; `LLM_CHAT_FALLBACKS` (comma-separated) enables a pre-token-only fallback chain for the `chat` alias (off by default).
 - **Never modify generated files**: `.next/`, `next-env.d.ts`.
 
-## Coding Conventions
-- Match existing patterns in `app/`, `components/`, `lib/`, `config/`. Reuse UI primitives in `components/ui`.
-- Formatting is Prettier-enforced (`.prettierrc`); ESLint is `next/core-web-vitals` plus the `lib/llm` import boundary.
-- Don't introduce unnecessary dependencies — this is a static portfolio with a single LLM gateway.
+## Development Workflow
 
-### Tailwind CSS Design System
-Full guide: [docs/TAILWIND-STYLES.md](docs/TAILWIND-STYLES.md). Key rules:
-- **Tokens before arbitrary values.** Use semantic tokens (`bg-card`, `text-muted-foreground`, `border-chat-border`, `bg-success`, `text-warning`) registered in `tailwind.config.ts` + `app/globals.css`. Never write `bg-[hsl(var(--token))]` or hardcode palette colors (`bg-emerald-500`) or hex (`text-[#b7b9cb]`).
-- **Scale before `[px]`.** Use `h-8`/`gap-4`/`rounded-lg`, not `h-[32px]`/`gap-[18px]`. Arbitrary values are reserved for fluid type (`clamp()`), viewport math (`100dvh`), and pixel-positioned layout.
-- **Primitives before raw elements.** `<Card>`, `<Button>`, `<Badge>` over hand-rolled `<div>`/`<button>`/`<span>` with the same class string.
-- **Accessibility: canonical focus ring** on every interactive element: `focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2`.
-- **No dead CSS.** Unused classes in `globals.css` get deleted. Reusable static styles go in `@layer components` (e.g. `.text-gradient-animated`), not inline `style={{}}`.
+1. Review `README.md` and relevant code in `app/`, `components/`, `lib/`, or `config/`.
+2. Design the smallest possible change.
+3. Implement, following conventions and using RTK where appropriate.
+4. Run full verification (lint, typecheck, and tests) and resolve all issues.
+5. Update `README.md` or add to `docs/` if behavior/setup/routes change.
 
 ## Hard Constraints
 - Never skip verification (lint + typecheck + test) before declaring work done.
@@ -102,12 +101,19 @@ Full guide: [docs/TAILWIND-STYLES.md](docs/TAILWIND-STYLES.md). Key rules:
 - Preserve the config-driven, Markdown-based, no-database architecture unless asked otherwise.
 - Ask before destructive operations (force-push, deleting content, resetting env files).
 
-## Git Workflow
-See [docs/GIT_WORKFLOW.md](docs/GIT_WORKFLOW.md): branch prefixes `feature/`, `fix/`, `refactor/`, `docs/`; Conventional Commits subjects (≤72 chars, imperative). Keep PRs small and explain *why*.
+---
 
-## Important Documents
-- [README.md](README.md) — project overview, full feature list, env var table
-- [.env.example](.env.example) — all env vars (annotated, server vs. public)
-- [lib/llm/README.md](lib/llm/README.md) — LLM gateway internals, adding a provider, env keys, test setup
-- [docs/GIT_WORKFLOW.md](docs/GIT_WORKFLOW.md) — branch/commit/PR rules
-- [docs/PHONG_AI_PORTFOLIO_ARCHITECTURE.md](docs/PHONG_AI_PORTFOLIO_ARCHITECTURE.md) — AI chat agent flow: request guards, system prompt, tool loop, citation pipeline, stream protocol, eval
+## Doc Index
+
+The only place that links to `docs/*`. Individual docs are self-contained (no cross-links).
+
+| Document | Path | Scope |
+|---|---|---|
+| Coding Standard | [docs/engineering/CODING-STANDARD.md](docs/engineering/CODING-STANDARD.md) | Conventions, comments, constants/enums, runtime guards, logging |
+| Rendering Standard | [docs/engineering/RENDERING-STANDARD.md](docs/engineering/RENDERING-STANDARD.md) | Donut pattern, `cacheComponents`, SSR/hydration, browser-extension isolation |
+| Tailwind Styles | [docs/design/TAILWIND-STYLES.md](docs/design/TAILWIND-STYLES.md) | Tokens, primitives, focus rings, themes, dead-CSS policy |
+| Mobile-First | [docs/design/MOBILE-FIRST.md](docs/design/MOBILE-FIRST.md) | Breakpoints, safe areas, z-stack, springs, sheets |
+| Git Workflow | [docs/process/GIT-WORKFLOW.md](docs/process/GIT-WORKFLOW.md) | Branches, commits, PRs |
+| AI Chat Architecture | [docs/architecture/AI-CHAT-ARCHITECTURE.md](docs/architecture/AI-CHAT-ARCHITECTURE.md) | Chat agent flow: guards, tools, citations, stream protocol, eval |
+| LLM Gateway | [lib/llm/README.md](lib/llm/README.md) | Gateway internals, adding a provider, env keys, test setup |
+| Env Vars | [.env.example](.env.example) | All env vars (annotated, server vs. public) |

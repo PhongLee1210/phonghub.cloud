@@ -30,15 +30,7 @@ docs(readme): update setup instructions
 
 ## Pre-Commit Checklist
 
-Run before every commit:
-
-```bash
-bun run lint
-bunx tsc --noEmit
-bun run test
-```
-
-`bun run test` requires the `--conditions react-server` flag (already baked into the script). No `format` script is wired up yet — run Prettier directly (`bunx prettier .`) if needed.
+Run full verification before committing (see `AGENTS.md` for the canonical command set).
 
 ## Pull Request Rules
 
@@ -58,5 +50,6 @@ GitHub-specific configuration lives in `.github/`; workflow rules live here in `
 └── workflows/
 
 docs/
-└── GIT_WORKFLOW.md
+└── process/
+    └── GIT-WORKFLOW.md
 ```
