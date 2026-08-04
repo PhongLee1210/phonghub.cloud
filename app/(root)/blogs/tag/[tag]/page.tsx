@@ -1,7 +1,12 @@
 import BlogList from "@/components/blog/blog-list";
 import PageContainer from "@/components/common/page-container";
-import { BlogPostSummary, filterPostsByTag } from "@/lib/blog/service";
+import { BlogPostSummary, filterPostsByTag, listTags } from "@/lib/blog/service";
 import { notFound } from "next/navigation";
+
+export async function generateStaticParams() {
+  const tags = await listTags("content/blog");
+  return tags.map((tag) => ({ tag }));
+}
 
 export default async function TagPage({
   params,
@@ -21,6 +26,3 @@ export default async function TagPage({
     </PageContainer>
   );
 }
-
-export const dynamic = "force-static";
-export const revalidate = 3600;

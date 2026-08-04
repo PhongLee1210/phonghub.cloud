@@ -5,8 +5,6 @@ import { getRedisClient } from "@/lib/chat/redis";
 import { GitHubClientError, getStarStatus, starRepository } from "@/lib/github/client";
 import { checkStarRateLimit } from "@/lib/github/rate-limit";
 
-export const runtime = "nodejs";
-
 const STATUS_CACHE_KEY = "phonghub:github:star:status";
 const STATUS_CACHE_TTL_SECONDS = 60;
 

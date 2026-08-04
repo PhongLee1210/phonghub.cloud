@@ -32,7 +32,6 @@ import {
   SerializedClientTool,
 } from "@/types/chat";
 
-export const runtime = "nodejs";
 export const maxDuration = 60;
 
 /**

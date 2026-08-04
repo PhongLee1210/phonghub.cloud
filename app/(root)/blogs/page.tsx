@@ -15,6 +15,3 @@ export default async function BlogPage() {
     </PageContainer>
   );
 }
-
-export const dynamic = "force-static";
-export const revalidate = 3600;

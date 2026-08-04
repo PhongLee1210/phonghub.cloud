@@ -9,7 +9,6 @@ import { ThemeProvider } from "@/components/common/theme-provider";
 import { GlobalChatWidgetLoader } from "@/components/chat/global-chat-widget-loader";
 import { Toaster } from "@/components/ui/toaster";
 import { siteConfig } from "@/config/site";
-import { getDeviceHint } from "@/lib/device";
 import { cn } from "@/lib/utils";
 import { ModalProvider } from "@/providers/modal-provider";
 import { DevTools } from "@/components/common/dev-tools";
@@ -120,15 +119,13 @@ export const metadata = {
   },
 };
 
-export default async function RootLayout({ children }: RootLayoutProps) {
+export default function RootLayout({ children }: RootLayoutProps) {
   const GA_ID = process.env.NEXT_PUBLIC_GOOGLE_MEASUREMENT_ID;
-  const { isMobile } = await getDeviceHint();
 
   return (
     <html lang="en" suppressHydrationWarning>
       <head />
       <body
-        suppressHydrationWarning
         className={cn(
           "min-h-screen bg-background font-sans antialiased",
           fontSans.variable,
@@ -147,7 +144,7 @@ export default async function RootLayout({ children }: RootLayoutProps) {
           <Analytics />
           <Toaster />
           <ModalProvider />
-          <GlobalChatWidgetLoader isMobile={isMobile} />
+          <GlobalChatWidgetLoader />
           <DevTools />
         </ThemeProvider>
       </body>

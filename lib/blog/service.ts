@@ -1,5 +1,8 @@
+"use cache";
+
 import fs from "fs";
 import path from "path";
+import { cacheLife } from "next/cache";
 import { parseBlogPost, ParsedBlogPost } from "./parser";
 
 export interface BlogPostSummary {
@@ -31,6 +34,8 @@ function findMarkdownFiles(dir: string): string[] {
 export async function getAllBlogPosts(
   contentDir: string
 ): Promise<ParsedBlogPost[]> {
+  cacheLife("hours");
+
   const absContentDir = path.isAbsolute(contentDir)
     ? contentDir
     : path.join(process.cwd(), contentDir);

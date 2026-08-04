@@ -30,11 +30,13 @@ interface TimelineProps {
 }
 
 const Timeline: React.FC<TimelineProps> = ({ experiences }) => {
-  // Sort experiences by date (most recent first)
+  // Sort experiences by date (most recent first); "Present" always sorts first
   const sortedExperiences = [...experiences].sort((a, b) => {
-    const dateA = a.endDate === "Present" ? new Date() : a.endDate;
-    const dateB = b.endDate === "Present" ? new Date() : b.endDate;
-    return dateB.getTime() - dateA.getTime();
+    if (a.endDate === "Present" || b.endDate === "Present") {
+      if (a.endDate === b.endDate) return 0;
+      return a.endDate === "Present" ? -1 : 1;
+    }
+    return b.endDate.getTime() - a.endDate.getTime();
   });
 
   return (

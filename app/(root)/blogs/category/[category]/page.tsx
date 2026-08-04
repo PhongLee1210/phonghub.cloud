@@ -1,7 +1,16 @@
 import BlogList from "@/components/blog/blog-list";
 import PageContainer from "@/components/common/page-container";
-import { BlogPostSummary, filterPostsByCategory } from "@/lib/blog/service";
+import {
+  BlogPostSummary,
+  filterPostsByCategory,
+  listCategories,
+} from "@/lib/blog/service";
 import { notFound } from "next/navigation";
+
+export async function generateStaticParams() {
+  const categories = await listCategories("content/blog");
+  return categories.map((category) => ({ category }));
+}
 
 export default async function CategoryPage({
   params,
@@ -24,6 +33,3 @@ export default async function CategoryPage({
     </PageContainer>
   );
 }
-
-export const dynamic = "force-static";
-export const revalidate = 3600;

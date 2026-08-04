@@ -12,13 +12,9 @@ import { useChatStore } from "@/hooks/use-chat-store";
 
 const HINT_DELAY_MS = 5000;
 
-interface ChatWidgetProps {
-  isMobile?: boolean;
-}
-
-export const ChatWidget = ({ isMobile: serverIsMobile }: ChatWidgetProps) => {
+export const ChatWidget = () => {
   const [isMounted, setIsMounted] = useState(false);
-  const [isMobile, setIsMobile] = useState(serverIsMobile ?? false);
+  const [isMobile, setIsMobile] = useState(false);
   const [isWidgetOpen, setIsWidgetOpen] = useState(false);
   const [showHint, setShowHint] = useState(false);
   const revealedRef = useRef(false);

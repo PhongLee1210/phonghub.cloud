@@ -2,6 +2,7 @@ import { Metadata } from "next";
 import dynamic from "next/dynamic";
 import Link from "next/link";
 import Script from "next/script";
+import { Suspense } from "react";
 
 import { EXPERIENCES } from "@/config/experience";
 import { pagesConfig } from "@/config/pages";
@@ -80,7 +81,9 @@ export default async function IndexPage() {
         dangerouslySetInnerHTML={{ __html: JSON.stringify(softwareSchema) }}
       />
 
-      <Hero />
+      <Suspense fallback={<div className="relative min-h-screen overflow-hidden" />}>
+        <Hero />
+      </Suspense>
       <SkillsSectionV2 />
       <ProjectsSectionV2 />
       <AnimatedSection

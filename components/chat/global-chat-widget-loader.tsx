@@ -12,15 +12,11 @@ const ChatWidget = dynamic(
   { ssr: false }
 );
 
-export function GlobalChatWidgetLoader({
-  isMobile,
-}: {
-  isMobile?: boolean;
-}) {
+export function GlobalChatWidgetLoader() {
   return (
     <>
       <PageContextTool />
-      <ChatWidget isMobile={isMobile} />
+      <ChatWidget />
     </>
   );
 }

@@ -113,6 +113,3 @@ export default async function BlogPostPage({
     </main>
   );
 }
-
-export const dynamic = "force-static";
-export const revalidate = 3600;
