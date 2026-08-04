@@ -20,8 +20,8 @@ export function resolveEntity(agentId: AgentEntityId): HTMLElement | null {
 
 /**
  * Matches a `CitationTarget` (e.g. from `DoneEvent.openModal`) against the
- * server-resolved `AgentCitation[]` from the same turn, for open_modal /
- * expand_section content — the client never re-derives title/description
+ * server-resolved `AgentCitation[]` from the same turn, for open_detail
+ * content — the client never re-derives title/description
  * itself, it just picks the citation the server already resolved.
  */
 export function findCitation(

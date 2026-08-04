@@ -116,11 +116,9 @@ export const THINKING_STEP_LABELS: Record<string, string> = {
   search_skills: "Searching skills",
   search_resume: "Checking the resume",
   search_blog: "Searching blog posts",
-  highlight_resource: "Highlighting",
+  reveal: "Highlighting",
+  open_detail: "Opening details",
   navigate_to: "Preparing navigation",
-  focus: "Focusing",
-  open_modal: "Opening details",
-  expand_section: "Expanding details",
 };
 
 /** How long an agent highlight ring stays lit before auto-clearing.

@@ -54,8 +54,6 @@ interface ChatStoreState {
   pendingNavigate?: InternalRoute;
   pendingHighlight?: AgentEntityId;
   activeHighlight?: AgentEntityId;
-  pendingFocus?: AgentEntityId;
-  activeFocus?: AgentEntityId;
   pendingOpenModal?: AgentCitation;
   /** Skills graph selection — persistent UI state, not reset on chat reset/newChat. */
   graphActiveCategory: GraphCategoryFilter;
@@ -71,8 +69,6 @@ interface ChatStoreState {
   clearNavigate: () => void;
   clearHighlight: () => void;
   setActiveHighlight: (id: AgentEntityId | undefined) => void;
-  clearFocus: () => void;
-  setActiveFocus: (id: AgentEntityId | undefined) => void;
   clearOpenModal: () => void;
   setGraphCategory: (category: GraphCategoryFilter) => void;
   setGraphCenterSkill: (key: string, category?: SkillCategoryEnum) => void;
@@ -177,8 +173,6 @@ export const useChatStore = create<ChatStoreState>((set, get) => ({
   pendingNavigate: undefined,
   pendingHighlight: undefined,
   activeHighlight: undefined,
-  pendingFocus: undefined,
-  activeFocus: undefined,
   pendingOpenModal: undefined,
   graphActiveCategory: "all",
   graphCenterSkillKey: null,
@@ -238,14 +232,6 @@ export const useChatStore = create<ChatStoreState>((set, get) => ({
 
   setActiveHighlight: (id: AgentEntityId | undefined) => {
     set({ activeHighlight: id });
-  },
-
-  clearFocus: () => {
-    set({ pendingFocus: undefined, activeFocus: undefined });
-  },
-
-  setActiveFocus: (id: AgentEntityId | undefined) => {
-    set({ activeFocus: id });
   },
 
   clearOpenModal: () => {
@@ -319,8 +305,6 @@ export const useChatStore = create<ChatStoreState>((set, get) => ({
       draft: "",
       pendingHighlight: undefined,
       activeHighlight: undefined,
-      pendingFocus: undefined,
-      activeFocus: undefined,
       pendingOpenModal: undefined,
       pendingSkillSelect: undefined,
       errorMessage: undefined,
@@ -355,7 +339,6 @@ export const useChatStore = create<ChatStoreState>((set, get) => ({
       const openModalCitation = findCitation(done.citations, done.openModal);
       const hasCommand = Boolean(
         done.highlight ||
-          done.focus ||
           openModalCitation ||
           done.navigate ||
           done.skillSelect
@@ -398,9 +381,6 @@ export const useChatStore = create<ChatStoreState>((set, get) => ({
           pendingHighlight: deliveredEffects.has("highlight")
             ? state.pendingHighlight
             : done.highlight,
-          pendingFocus: deliveredEffects.has("focus")
-            ? state.pendingFocus
-            : done.focus,
           pendingOpenModal: deliveredEffects.has("openModal")
             ? state.pendingOpenModal
             : openModalCitation,
@@ -503,10 +483,6 @@ export const useChatStore = create<ChatStoreState>((set, get) => ({
             if (effect.highlight !== undefined) {
               deliveredEffects.add("highlight");
               patch.pendingHighlight = effect.highlight;
-            }
-            if (effect.focus !== undefined) {
-              deliveredEffects.add("focus");
-              patch.pendingFocus = effect.focus;
             }
             if (effect.openModal !== undefined) {
               deliveredEffects.add("openModal");
@@ -640,8 +616,6 @@ export const useChatStore = create<ChatStoreState>((set, get) => ({
       pendingNavigate: undefined,
       pendingHighlight: undefined,
       activeHighlight: undefined,
-      pendingFocus: undefined,
-      activeFocus: undefined,
       pendingOpenModal: undefined,
       errorMessage: undefined,
       activeAbort: undefined,
@@ -664,8 +638,6 @@ export const useChatStore = create<ChatStoreState>((set, get) => ({
       pendingNavigate: undefined,
       pendingHighlight: undefined,
       activeHighlight: undefined,
-      pendingFocus: undefined,
-      activeFocus: undefined,
       pendingOpenModal: undefined,
       errorMessage: undefined,
       activeAbort: undefined,
@@ -688,8 +660,6 @@ export const useChatStore = create<ChatStoreState>((set, get) => ({
       pendingNavigate: undefined,
       pendingHighlight: undefined,
       activeHighlight: undefined,
-      pendingFocus: undefined,
-      activeFocus: undefined,
       pendingOpenModal: undefined,
       errorMessage: undefined,
       activeAbort: undefined,

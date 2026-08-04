@@ -294,7 +294,6 @@ export async function POST(req: NextRequest) {
 
       const citationTargets = new Set<CitationTarget>();
       let highlightTarget: AgentEntityId | undefined;
-      let focusTarget: AgentEntityId | undefined;
       let skillSelectTarget: AgentEntityId | undefined;
       let openModalTarget: CitationTarget | undefined;
       let navigateRoute: InternalRoute | undefined;
@@ -376,34 +375,23 @@ export async function POST(req: NextRequest) {
               for (const agentId of extractSearchAgentIds(chunk.result)) {
                 citationTargets.add(agentId);
               }
-            } else if (chunk.name === "highlight_resource") {
+            } else if (chunk.name === "reveal") {
               const target = extractTarget(chunk.result);
               if (target) {
                 citationTargets.add(target);
                 if (target !== "resume") {
-                  highlightTarget = target;
-                  send({ type: ChatEventType.ToolEffect, highlight: target });
+                  // Route by target kind: skills center the graph,
+                  // everything else is scrolled into view + highlighted.
+                  if (target.startsWith("skill:")) {
+                    skillSelectTarget = target;
+                    send({ type: ChatEventType.ToolEffect, skillSelect: target });
+                  } else {
+                    highlightTarget = target;
+                    send({ type: ChatEventType.ToolEffect, highlight: target });
+                  }
                 }
               }
-            } else if (chunk.name === "focus") {
-              const target = extractTarget(chunk.result);
-              if (target) {
-                citationTargets.add(target);
-                if (target !== "resume") {
-                  focusTarget = target;
-                  send({ type: ChatEventType.ToolEffect, focus: target });
-                }
-              }
-            } else if (chunk.name === "select_skill") {
-              const target = extractTarget(chunk.result);
-              if (target) {
-                citationTargets.add(target);
-                if (target !== "resume") {
-                  skillSelectTarget = target;
-                  send({ type: ChatEventType.ToolEffect, skillSelect: target });
-                }
-              }
-            } else if (chunk.name === "open_modal" || chunk.name === "expand_section") {
+            } else if (chunk.name === "open_detail") {
               const target = extractTarget(chunk.result);
               if (target) {
                 citationTargets.add(target);
@@ -480,7 +468,6 @@ export async function POST(req: NextRequest) {
               type: ChatEventType.Done,
               suggestions,
               highlight: highlightTarget,
-              focus: focusTarget,
               skillSelect: skillSelectTarget,
               openModal: openModalTarget,
               navigate: navigateRoute,

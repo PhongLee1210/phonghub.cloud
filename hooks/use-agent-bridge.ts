@@ -14,13 +14,13 @@ import { parseEntityId } from "@/lib/chat/protocol";
 import { AgentEntityId } from "@/types/chat";
 
 /**
- * Shared by the `highlight` and `focus` handlers below — both apply the same
- * visual-emphasis ring and auto-clear after HIGHLIGHT_DURATION_MS; the only
- * difference is whether the viewport scrolls to the entity.
+ * Applies the agent-highlight ring to an entity and auto-clears after
+ * HIGHLIGHT_DURATION_MS. Scrolls into view ONLY when the element isn't already
+ * on-screen — this absorbs the old separate "focus" (no-scroll) behavior, so
+ * the page never re-centers something the visitor is already looking at.
  */
 function useEntityEmphasis(
   target: AgentEntityId | undefined,
-  scrollIntoView: boolean,
   setActive: (id: AgentEntityId | undefined) => void,
   clear: () => void,
   reducedMotion: boolean
@@ -36,7 +36,9 @@ function useEntityEmphasis(
 
     setActive(target);
     el.classList.add("agent-highlighted");
-    if (scrollIntoView) {
+    const rect = el.getBoundingClientRect();
+    const inViewport = rect.top >= 0 && rect.bottom <= window.innerHeight;
+    if (!inViewport) {
       el.scrollIntoView({
         behavior: reducedMotion ? "auto" : "smooth",
         block: "center",
@@ -54,17 +56,17 @@ function useEntityEmphasis(
       el.classList.remove("agent-highlighted");
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [target, scrollIntoView, reducedMotion]);
+  }, [target, reducedMotion]);
 }
 
 /**
  * Bridges chat tool-call results to real page effects — one small handler
- * per tool result the model can produce (highlight_resource, focus,
- * open_modal/expand_section, navigate_to). Each is an independent effect
- * keyed off its own pending* store field rather than a single dynamic
+ * per effect the model can produce (reveal → highlight / skills graph,
+ * open_detail → modal, navigate_to → route change). Each is an independent
+ * effect keyed off its own pending* store field rather than a single dynamic
  * dispatch table, since React's rules of hooks don't allow looping over a
  * dynamic set of hooks — this is the closest a fixed-hook-count component
- * gets to "keyed by tool name."
+ * gets to "keyed by effect."
  */
 export function useAgentBridge() {
   const router = useRouter();
@@ -77,10 +79,6 @@ export function useAgentBridge() {
   const pendingHighlight = useChatStore((s) => s.pendingHighlight);
   const clearHighlight = useChatStore((s) => s.clearHighlight);
   const setActiveHighlight = useChatStore((s) => s.setActiveHighlight);
-
-  const pendingFocus = useChatStore((s) => s.pendingFocus);
-  const clearFocus = useChatStore((s) => s.clearFocus);
-  const setActiveFocus = useChatStore((s) => s.setActiveFocus);
 
   const pendingOpenModal = useChatStore((s) => s.pendingOpenModal);
   const clearOpenModal = useChatStore((s) => s.clearOpenModal);
@@ -98,17 +96,8 @@ export function useAgentBridge() {
 
   useEntityEmphasis(
     pendingHighlight,
-    true,
     setActiveHighlight,
     clearHighlight,
-    Boolean(reducedMotion)
-  );
-
-  useEntityEmphasis(
-    pendingFocus,
-    false,
-    setActiveFocus,
-    clearFocus,
     Boolean(reducedMotion)
   );
 

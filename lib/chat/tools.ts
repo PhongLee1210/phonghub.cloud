@@ -206,16 +206,32 @@ const searchContactTool = tool({
   }),
 });
 
-const highlightResourceTool = tool({
+/**
+ * Shared agentId schema for the two presentation tools (reveal / open_detail).
+ * Both act on a single resource identified by its agentId (or "resume").
+ */
+const targetSchema = z.object({
+  target: z
+    .string()
+    .describe(
+      "The agentId to act on — e.g. 'project:enrollment-platform', 'skill:react', 'experience:hiliosai', 'blog:my-post', or 'resume'."
+    ),
+});
+
+/**
+ * The two presentation tools consolidate the old 5-way split
+ * (highlight_resource / focus / open_modal / expand_section / select_skill)
+ * into an intent-based pair, so the model picks between "show it on the page"
+ * (reveal) and "open its detail" (open_detail) instead of guessing UX
+ * mechanics (scroll vs no-scroll vs graph) it has no viewport data for.
+ *
+ * reveal's scroll/no-scroll/graph decision is resolved client-side from page
+ * state + viewport (see app/api/chat/route.ts + hooks/use-agent-bridge.ts).
+ */
+const revealTool = tool({
   description:
-    "Visually highlight and scroll to a single resource already surfaced by a search tool earlier in this turn. Use the exact agentId from that search result (e.g. 'project:enrollment-platform', 'resume').",
-  inputSchema: z.object({
-    target: z
-      .string()
-      .describe(
-        "The agentId to highlight — e.g. 'project:enrollment-platform', 'skill:react', 'experience:hiliosai', 'blog:my-post', or 'resume'."
-      ),
-  }),
+    "Make a single resource prominent on the current page so the visitor can see it. Use the exact agentId from an earlier search result, or 'resume'. The page chooses how: a skill is centered in the skills graph; anything else is scrolled into view (only if not already visible) and briefly highlighted. Prefer this over open_detail when the visitor just wants to be pointed at something already summarized.",
+  inputSchema: targetSchema,
   execute: async ({ target }) => {
     const valid = target === "resume" || Boolean(parseEntityId(target));
     return valid
@@ -239,37 +255,10 @@ const navigateToTool = tool({
   },
 });
 
-const focusResourceTool = tool({
-  description:
-    "Draw quiet visual attention to a resource already visible on the current page, without scrolling — use instead of highlight_resource when the visitor is already looking at that section and a scroll-into-view would be distracting.",
-  inputSchema: z.object({
-    target: z
-      .string()
-      .describe(
-        "The agentId to focus — e.g. 'project:enrollment-platform', 'skill:react', 'experience:hiliosai', 'blog:my-post'."
-      ),
-  }),
-  execute: async ({ target }) => {
-    const valid = Boolean(parseEntityId(target));
-    return valid
-      ? { ok: true as const, target: target as AgentEntityId }
-      : { ok: false as const, target, reason: "unrecognized agentId format" };
-  },
-});
-
 /**
- * Shared by open_modal and expand_section — both surface the same resource
- * detail modal, just from a different conversational phrasing ("tell me
- * more about X" vs "show me X"). No distinct execute() logic between them.
+ * Validates a target and resolves it to a citation for the detail modal.
+ * Sole executor behind open_detail.
  */
-const modalTargetSchema = z.object({
-  target: z
-    .string()
-    .describe(
-      "The agentId to show — e.g. 'project:enrollment-platform', 'skill:react', 'experience:hiliosai', 'blog:my-post', or 'resume'."
-    ),
-});
-
 async function executeModalTarget({ target }: { target: string }) {
   const valid = target === "resume" || Boolean(parseEntityId(target));
   return valid
@@ -277,34 +266,11 @@ async function executeModalTarget({ target }: { target: string }) {
     : { ok: false as const, target, reason: "unrecognized agentId format" };
 }
 
-const openModalTool = tool({
+const openDetailTool = tool({
   description:
-    "Open a detail modal (title + description) for a single resource without navigating away from the current page. Use the exact agentId from an earlier search result, or 'resume'.",
-  inputSchema: modalTargetSchema,
+    "Open the full detail view (title + description modal) for a single resource without navigating away. Use when the visitor asks to 'tell me more' or 'expand' something — i.e. they want detail beyond the summary, not just to be shown the item. Use the exact agentId from an earlier search result, or 'resume'.",
+  inputSchema: targetSchema,
   execute: executeModalTarget,
-});
-
-const selectSkillTool = tool({
-  description:
-    "Recenter the interactive skills graph on the home page on a specific skill, switching its category tab if needed, so the visitor sees that skill's detail (proficiency, description, related projects). Use this instead of focus/highlight when discussing a skill so the visitor can see it selected in the graph. Use the exact agentId from a search_skills result, e.g. 'skill:react'.",
-  inputSchema: z.object({
-    target: z
-      .string()
-      .describe(
-        "The skill agentId to center the graph on, e.g. 'skill:react'."
-      ),
-  }),
-  execute: async ({ target }) => {
-    const parsed = parseEntityId(target);
-    const valid = Boolean(parsed && parsed.kind === "skill");
-    return valid
-      ? { ok: true as const, target: target as AgentEntityId }
-      : {
-          ok: false as const,
-          target,
-          reason: "target must be a skill agentId",
-        };
-  },
 });
 
 const captureLeadTool = tool({
@@ -321,13 +287,6 @@ const captureLeadTool = tool({
     visitor_name: args.visitor_name,
     visitor_email: args.visitor_email,
   }),
-});
-
-const expandSectionTool = tool({
-  description:
-    "Expand full detail for a single resource inline. Functionally identical to open_modal — use whichever phrasing best matches the visitor's request.",
-  inputSchema: modalTargetSchema,
-  execute: executeModalTarget,
 });
 
 /**
@@ -359,11 +318,8 @@ export const CHAT_TOOLS = {
   search_resume: searchResumeTool,
   search_blog: searchBlogTool,
   search_contact: searchContactTool,
-  highlight_resource: highlightResourceTool,
+  reveal: revealTool,
+  open_detail: openDetailTool,
   navigate_to: navigateToTool,
-  focus: focusResourceTool,
-  select_skill: selectSkillTool,
-  open_modal: openModalTool,
-  expand_section: expandSectionTool,
   capture_lead: captureLeadTool,
 } satisfies ToolSet;

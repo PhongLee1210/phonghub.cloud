@@ -141,7 +141,6 @@ export const ChatEventType = {
 export type ToolEffectEvent = {
   type: typeof ChatEventType.ToolEffect;
   highlight?: AgentEntityId;
-  focus?: AgentEntityId;
   openModal?: AgentCitation;
   navigate?: InternalRoute;
   skillSelect?: AgentEntityId;
@@ -151,12 +150,10 @@ export type DoneEvent = {
   type: typeof ChatEventType.Done;
   suggestions?: string[];
   highlight?: AgentEntityId;
-  /** No-scroll counterpart to `highlight` — set by the `focus` tool. */
-  focus?: AgentEntityId;
-  /** Set by `open_modal`/`expand_section` — the resource to show in the modal. */
+  /** Set by `open_detail` — the resource to show in the modal. */
   openModal?: CitationTarget;
   navigate?: InternalRoute;
-  /** Set by `select_skill` — recenters the home page skills graph on this skill. */
+  /** Set by `reveal` (skill target) — recenters the home page skills graph on this skill. */
   skillSelect?: AgentEntityId;
   /** Every resource the assistant surfaced this turn via a search/highlight tool call. */
   citations?: AgentCitation[];

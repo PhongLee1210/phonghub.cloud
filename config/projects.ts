@@ -533,4 +533,16 @@ export const PROJECTS: ProjectInterface[] = [
   },
 ];
 
-export const featuredProjects = PROJECTS.slice(0, 3);
+const FEATURED_PROJECT_IDS = [
+  "hiliosai-landing-sales-agent",
+  "ai-agents-enrollment",
+  "oasis-platform",
+];
+
+/**
+ * Curated spotlight set — the projects featured on the home showcase and
+ * returned as the agent's no-filter search_projects default.
+ */
+export const featuredProjects: ProjectInterface[] = FEATURED_PROJECT_IDS.map(
+  (id) => PROJECTS.find((p) => p.id === id)
+).filter((p): p is ProjectInterface => Boolean(p));

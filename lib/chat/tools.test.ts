@@ -96,21 +96,26 @@ describe("search_blog", () => {
   });
 });
 
-describe("highlight_resource", () => {
+describe("reveal", () => {
   test("accepts a well-formed entity id", async () => {
-    const result = await execute("highlight_resource", {
+    const result = await execute("reveal", {
       target: `project:${PROJECTS[0].id}`,
     });
     expect(result).toEqual({ ok: true, target: `project:${PROJECTS[0].id}` });
   });
 
+  test("accepts a skill agentId", async () => {
+    const result = await execute("reveal", { target: "skill:react" });
+    expect(result).toEqual({ ok: true, target: "skill:react" });
+  });
+
   test("accepts 'resume'", async () => {
-    const result = await execute("highlight_resource", { target: "resume" });
+    const result = await execute("reveal", { target: "resume" });
     expect(result).toEqual({ ok: true, target: "resume" });
   });
 
   test("rejects a malformed id", async () => {
-    const result = await execute("highlight_resource", { target: "not-an-id" });
+    const result = await execute("reveal", { target: "not-an-id" });
     expect(result).toEqual({
       ok: false,
       target: "not-an-id",
@@ -135,79 +140,25 @@ describe("navigate_to", () => {
   });
 });
 
-describe("focus", () => {
+describe("open_detail", () => {
   test("accepts a well-formed entity id", async () => {
-    const result = await execute("focus", {
-      target: `skill:${PROJECTS[0].techStack[0]}`,
-    });
-    expect(result).toMatchObject({ ok: true });
-  });
-
-  test("rejects a malformed id", async () => {
-    const result = await execute("focus", { target: "not-an-id" });
-    expect(result).toEqual({
-      ok: false,
-      target: "not-an-id",
-      reason: "unrecognized agentId format",
-    });
-  });
-});
-
-describe("open_modal", () => {
-  test("accepts a well-formed entity id", async () => {
-    const result = await execute("open_modal", {
+    const result = await execute("open_detail", {
       target: `project:${PROJECTS[0].id}`,
     });
     expect(result).toEqual({ ok: true, target: `project:${PROJECTS[0].id}` });
   });
 
   test("accepts 'resume'", async () => {
-    const result = await execute("open_modal", { target: "resume" });
+    const result = await execute("open_detail", { target: "resume" });
     expect(result).toEqual({ ok: true, target: "resume" });
   });
 
   test("rejects a malformed id", async () => {
-    const result = await execute("open_modal", { target: "not-an-id" });
+    const result = await execute("open_detail", { target: "not-an-id" });
     expect(result).toEqual({
       ok: false,
       target: "not-an-id",
       reason: "unrecognized agentId format",
-    });
-  });
-});
-
-describe("expand_section", () => {
-  test("accepts a well-formed entity id", async () => {
-    const result = await execute("expand_section", {
-      target: `project:${PROJECTS[0].id}`,
-    });
-    expect(result).toEqual({ ok: true, target: `project:${PROJECTS[0].id}` });
-  });
-});
-
-describe("select_skill", () => {
-  test("accepts a well-formed skill agentId", async () => {
-    const result = await execute("select_skill", { target: "skill:react" });
-    expect(result).toEqual({ ok: true, target: "skill:react" });
-  });
-
-  test("rejects a non-skill agentId", async () => {
-    const result = await execute("select_skill", {
-      target: `project:${PROJECTS[0].id}`,
-    });
-    expect(result).toEqual({
-      ok: false,
-      target: `project:${PROJECTS[0].id}`,
-      reason: "target must be a skill agentId",
-    });
-  });
-
-  test("rejects a malformed id", async () => {
-    const result = await execute("select_skill", { target: "not-an-id" });
-    expect(result).toEqual({
-      ok: false,
-      target: "not-an-id",
-      reason: "target must be a skill agentId",
     });
   });
 });
