@@ -236,7 +236,6 @@ All events are newline-delimited JSON (`application/x-ndjson`):
 | `lib/ai-tools/` | Client tool registry (define/registry) + zustand store |
 | `lib/lead/` | Lead schema, email template, lead rate limit |
 | `lib/data/` | Query helpers over config (projects/experience/skills) |
-| `lib/content/` | Normalizers aggregating all content into `ContentItem[]` |
 | `scripts/eval-chat.ts` | Live eval against running server |
 | `config/chat.ts` | Limits, rate limits, concurrency, context budgets, thinking labels |
 
@@ -246,7 +245,7 @@ All events are newline-delimited JSON (`application/x-ndjson`):
 
 Two layers:
 
-1. **Unit assertions** (`bun run test`) — **210 tests across 27 files** (319 expect calls). Pure functions, no LLM calls. Covers `lib/llm/*`, `lib/chat/*`, `lib/ai-tools/*`, `lib/data/*`, `lib/content/*`, `lib/device`, `lib/physics`. Uses a local `FakeProvider` injected via `__setProvidersForTests()`; no real API keys or network.
+1. **Unit assertions** (`bun run test`) — **180 tests across 21 files** (269 expect calls). Pure functions, no LLM calls. Covers `lib/llm/*`, `lib/chat/*`, `lib/ai-tools/*`, `lib/data/*`, `lib/device`, `lib/physics`. Uses a local `FakeProvider` injected via `__setProvidersForTests()`; no real API keys or network.
 2. **Live eval** (`bun run eval`, requires dev server) — sends **7 prompts** spanning 4 assertion sets.
 
 Assertion functions in `lib/chat/eval-assertions.ts`:

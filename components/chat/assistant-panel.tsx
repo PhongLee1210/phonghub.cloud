@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 
-import { ChatInput } from "@/components/chat/chat-input";
+import { PromptInput as ChatInput } from "@/components/chat/prompt-input/prompt-input";
 import { ChatMessageList } from "@/components/chat/chat-message-list";
 import { ConversationSidebar } from "@/components/chat/conversation-sidebar";
 import { Icons } from "@/components/common/icons";

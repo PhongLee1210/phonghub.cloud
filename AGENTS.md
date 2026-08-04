@@ -20,7 +20,7 @@ Run a single test file: `bun test lib/llm/index.test.ts` (still needs the `react
 ## Verification (do not skip)
 1. `bun run lint`
 2. `bunx tsc --noEmit`
-3. `bun run test` — covers `lib/llm/*`, `lib/chat/*`, `lib/ai-tools/*`, `lib/data/*`, `lib/content/*`, `lib/device`, `lib/physics` pure logic (gateway routing, fallback, token budget/quota, concurrency limiter, Redis guards, citation postprocess). Uses a local `FakeProvider`; no real API keys or network.
+3. `bun run test` — covers `lib/llm/*`, `lib/chat/*`, `lib/ai-tools/*`, `lib/data/*`, `lib/device`, `lib/physics` pure logic (gateway routing, fallback, token budget/quota, concurrency limiter, Redis guards, citation postprocess). Uses a local `FakeProvider`; no real API keys or network.
 4. There is **no component/integration/e2e suite** — for UI or route-handler changes, also verify the affected page in the browser.
 
 ### Validation Hierarchy

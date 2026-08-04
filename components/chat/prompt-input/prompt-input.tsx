@@ -7,7 +7,7 @@ import { chatConfig } from "@/config/chat";
 import { useChatStore } from "@/hooks/use-chat-store";
 import { cn } from "@/lib/utils";
 
-import styles from "./propmt-input.module.css";
+import styles from "./prompt-input.module.css";
 
 interface PromptInputProps {
   disabled: boolean;
