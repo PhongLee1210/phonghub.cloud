@@ -15,6 +15,16 @@ export interface ExperienceInterface {
   images?: string[];
 }
 
+export function sortByDateDesc(
+  a: ExperienceInterface,
+  b: ExperienceInterface,
+): number {
+  if (a.endDate === "Present" && b.endDate === "Present") return 0;
+  if (a.endDate === "Present") return -1;
+  if (b.endDate === "Present") return 1;
+  return b.endDate.getTime() - a.endDate.getTime();
+}
+
 export const EXPERIENCES: ExperienceInterface[] = [
   {
     id: "hiliosai",
@@ -119,3 +129,5 @@ export const EXPERIENCES: ExperienceInterface[] = [
     logo: "/experience/fpt-telecom-logo.webp",
   },
 ];
+
+EXPERIENCES.sort(sortByDateDesc);

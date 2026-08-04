@@ -30,18 +30,9 @@ interface TimelineProps {
 }
 
 const Timeline: React.FC<TimelineProps> = ({ experiences }) => {
-  // Sort experiences by date (most recent first); "Present" always sorts first
-  const sortedExperiences = [...experiences].sort((a, b) => {
-    if (a.endDate === "Present" || b.endDate === "Present") {
-      if (a.endDate === b.endDate) return 0;
-      return a.endDate === "Present" ? -1 : 1;
-    }
-    return b.endDate.getTime() - a.endDate.getTime();
-  });
-
   return (
     <div className="space-y-4">
-      {sortedExperiences.map((experience, index) => (
+      {experiences.map((experience, index) => (
         <AnimatedSection
           key={experience.id}
           delay={0.1 * (index + 1)}
