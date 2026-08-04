@@ -34,7 +34,7 @@ function findMarkdownFiles(dir: string): string[] {
 export async function getAllBlogPosts(
   contentDir: string
 ): Promise<ParsedBlogPost[]> {
-  cacheLife("hours");
+  if (process.env.__NEXT_USE_CACHE) cacheLife("hours");
 
   const absContentDir = path.isAbsolute(contentDir)
     ? contentDir
