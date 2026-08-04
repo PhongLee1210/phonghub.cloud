@@ -120,7 +120,7 @@ const MOBILE_DATA = generateParticleData(PARTICLE_COUNT_MOBILE);
 function Particles({ count }: { count: number }) {
   const meshRef = useRef<THREE.Points>(null);
   const linesRef = useRef<THREE.LineSegments>(null);
-  const { invalidate } = useThree();
+  const { gl, invalidate } = useThree();
   const cursorRef = useRef(new THREE.Vector2(0, 0));
 
   const data = count <= PARTICLE_COUNT_MOBILE ? MOBILE_DATA : DESKTOP_DATA;
@@ -144,6 +144,45 @@ function Particles({ count }: { count: number }) {
       geo.dispose();
     };
   }, [count]);
+
+  // R3F's unmountComponentAtNode schedules gl.forceContextLoss() on a 500 ms
+  // timer. In React Strict Mode (default in Next.js dev), the simulated
+  // unmount fires this timer, which kills the WebGL context of the
+  // still-mounted canvas ~500 ms later — leaving a blank canvas.
+  // Intercept the loss event, restore the context, and invalidate so Three.js
+  // re-uploads all resources and renders again.
+  useEffect(() => {
+    const canvas = gl.domElement;
+    const ctx = gl.getContext() as WebGLRenderingContext | null;
+    const loseExt = ctx?.getExtension("WEBGL_lose_context") as
+      | { restoreContext: () => void }
+      | null;
+
+    const handleContextLost = (event: Event) => {
+      event.preventDefault();
+      if (loseExt) {
+        setTimeout(() => {
+          try {
+            loseExt.restoreContext();
+          } catch {
+            // May throw if already restored — safe to ignore
+          }
+        }, 200);
+      }
+    };
+
+    const handleContextRestored = () => {
+      invalidate();
+    };
+
+    canvas.addEventListener("webglcontextlost", handleContextLost);
+    canvas.addEventListener("webglcontextrestored", handleContextRestored);
+
+    return () => {
+      canvas.removeEventListener("webglcontextlost", handleContextLost);
+      canvas.removeEventListener("webglcontextrestored", handleContextRestored);
+    };
+  }, [gl, invalidate]);
 
   useFrame((state) => {
     if (!meshRef.current) return;
@@ -298,7 +337,7 @@ export default function ParticleConstellation() {
       dpr={[1, 2]}
       gl={{ antialias: false, powerPreference: "low-power" }}
       camera={{ position: [0, 0, 5], fov: 50 }}
-      style={{ width: "100%", height: "100%" }}
+      style={{ width: "100%", height: "100%", pointerEvents: "none" }}
     >
       <Particles count={config.mobile ? PARTICLE_COUNT_MOBILE : PARTICLE_COUNT_DESKTOP} />
     </Canvas>
