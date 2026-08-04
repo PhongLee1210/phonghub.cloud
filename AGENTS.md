@@ -3,8 +3,8 @@
 High-signal instructions for AI coding agents working in this repo. Verify everything against the code; if docs and code disagree, trust the code.
 
 ## Project Overview
-- Personal portfolio + blog site for Le Thanh Phong (phonghub.cloud): experience, projects, skills, résumé, Markdown blog, and an AI chat widget.
-- Single Next.js App Router site, statically prerendered where possible. **No database, no separate backend.** Content lives in Markdown (`content/blog`) and static modules (`config/*.ts`); server actions live in `app/api/*` route handlers.
+- Personal portfolio + blog site for Le Thanh Phong (phonghub.cloud): experience, projects, skills, résumé, Markdown blog, an AI chat widget, and a lead-capture flow (contact form + in-chat).
+- Single Next.js App Router site, statically prerendered where possible. **No database.** Content lives in Markdown (`content/blog`) and static modules (`config/*.ts`); server logic lives in `app/api/*` route handlers (chat NDJSON stream, lead→Resend email, GitHub star, content APIs).
 
 ## Tech Stack
 - **Framework**: Next.js 16 (App Router), React 19, TypeScript (strict; `@/*` → repo root)
@@ -13,11 +13,12 @@ High-signal instructions for AI coding agents working in this repo. Verify every
 - **Forms/state**: `react-hook-form` + `zod`, `zustand`
 - **LLM gateway**: provider-agnostic internal layer in `lib/llm/` over the Vercel AI SDK (`ai`, `@ai-sdk/anthropic`, `@ai-sdk/openai`, `@ai-sdk/google`, `@ai-sdk/groq`, `@ai-sdk/mistral`)
 - **Rate limiting**: `@upstash/ratelimit` + `@upstash/redis`
-- **Content**: Markdown parsed with `gray-matter` / `remark` / `remark-html` / `marked`
+- **Email (lead capture)**: `resend` + `@react-email/components` (`/api/lead`)
+- **Content**: Markdown parsed with `gray-matter` / `remark` / `remark-html` / `marked`; rendered with `react-markdown` + `remark-gfm`
 - **Lint/format**: ESLint flat config (`eslint.config.mjs`, `eslint-config-next/core-web-vitals`), Prettier (`.prettierrc`)
 - **Deploy**: Vercel (`vercel.json`: `bun install` / `bun run build`, output `.next`)
 
-There is **no email backend** — the `/contact` page is a static `ProfileCard`, not a form-to-email service.
+Lead capture delivers email via Resend (`RESEND_API_KEY`) from both the `/contact` form and the in-chat `capture_lead` tool; both POST to `/api/lead`.
 
 ## Commands
 ```bash
@@ -35,7 +36,7 @@ Run a single test file: `bun test lib/llm/index.test.ts` (still needs the `react
 ## Verification (do not skip)
 1. `bun run lint`
 2. `bunx tsc --noEmit`
-3. `bun run test` — covers `lib/llm/*` and `lib/chat/*` pure logic (gateway routing, fallback, token budget/quota, concurrency limiter, Redis guards). Uses a local `FakeProvider`; no real API keys or network.
+3. `bun run test` — covers `lib/llm/*`, `lib/chat/*`, `lib/ai-tools/*`, `lib/data/*`, `lib/content/*`, `lib/device`, `lib/physics` pure logic (gateway routing, fallback, token budget/quota, concurrency limiter, Redis guards, citation postprocess). Uses a local `FakeProvider`; no real API keys or network.
 4. There is **no component/integration/e2e suite** — for UI or route-handler changes, also verify the affected page in the browser.
 
 ## The `bun:test` quirk
@@ -46,33 +47,36 @@ Every file in `lib/llm` and `lib/chat` imports the `server-only` package, which 
 - **`lib/llm/**` is ESLint-ignored** (so the provider adapters can legitimately import `@ai-sdk/*`). If you add lint rules, keep that ignore or the build breaks.
 - **`lib/llm` is guarded by `server-only`** — an accidental client import fails the build.
 - **Business logic (content loading, formatting, filtering) belongs in `lib/`** — UI components must not read the filesystem or parse Markdown directly; go through `lib/blog` and `lib/api.ts`.
-- **Server-only code (LLM keys, GitHub starring, email if ever added) belongs in `app/api/*` or `lib/llm` / `lib/github`.** Never prefix a secret env var with `NEXT_PUBLIC_`.
+- **Server-only code (LLM keys, GitHub starring, Resend email) belongs in `app/api/*` or `lib/llm` / `lib/github` / `lib/lead`.** Never prefix a secret env var with `NEXT_PUBLIC_`.
 - **Follow-up suggestions are not a tool call.** `suggest_followups` was removed from `lib/chat/tools.ts`; `lib/chat/suggestion-worker.ts` now fires a separate cheap/fast `streamLLM` call concurrently with the main chat stream (`Promise.all`'d with citation resolution in `app/api/chat/route.ts`) instead.
 
 ## Repository Structure
 ```
 app/
   (root)/         # Public pages: home, experience, projects, skills, resume, contact, blogs, list100
-  api/            # Route handlers: blog, chat (NDJSON stream), experiences, github, projects, skills
-components/        # UI grouped by feature (blog, chat, contact, experience, projects, skills, ui, ...)
-config/            # Static content/metadata: site, routes, pages, projects, project-snippets, experience, skills, socials, constants, chat
+  api/            # Route handlers: blog, chat (NDJSON stream), lead (Resend email), experiences, github (star), projects, skills
+components/        # UI grouped by feature (ai, blog, chat, contact, experience, projects, skills, ui, ...)
+config/            # Static content/metadata: site, routes, pages, projects, experience, skills, contact, socials, constants, chat
 content/blog/      # Markdown posts
 lib/
+  ai-tools/        # Client-side AI tool registry (define/registry) + zustand store
   blog/            # Markdown parsing/service
-  llm/             # Provider-agnostic LLM gateway (see lib/llm/README.md)
-  chat/            # System prompt, suggestion-worker (concurrent follow-up generation), token budget/quota, concurrency limiter, rate limit, client stream reader
+  chat/            # System prompt, tools (13), citation postprocess, suggestion-worker, token budget/quota, concurrency limiter, rate limit, client stream reader
+  content/         # Normalizers aggregating all content into ContentItem[]
+  data/            # Query helpers over config (projects/experience/skills)
   github/          # GitHub "star" client
-  content/         # Content helpers
-  code-tokenizer.ts, motion.ts, api.ts, utils.ts
+  lead/            # Lead schema (zod), email template (@react-email), lead rate limit
+  llm/             # Provider-agnostic LLM gateway (see lib/llm/README.md)
+  code-tokenizer.ts, device.ts, motion.ts, utils.ts
 hooks/, providers/ # Shared hooks + context providers (incl. chat zustand store)
-types/             # Client-safe shared types (chat wire protocol)
+types/             # Client-safe shared types (chat wire protocol, content)
 public/, assets/   # Static assets and fonts
-docs/              # GIT_WORKFLOW.md, chat-widget plans
+docs/              # GIT_WORKFLOW, MOBILE_FIRST, PHONG_AI_PORTFOLIO_ARCHITECTURE, TAILWIND-STYLES
 ```
 
 ## Operational gotchas (hard-earned)
 - **`NEXT_PUBLIC_APP_URL` must be a reachable URL at build time.** `next build` prerenders pages that fetch this app's own API routes (`/api/projects`, `/api/skills`, …) with **no local server running** — set it to your deployed URL (e.g. `https://phonghub.cloud`) or the build fails.
-- **Rate limiting is env-gated with split behavior.** If `UPSTASH_REDIS_REST_URL` / `UPSTASH_REDIS_REST_TOKEN` are unset, `/api/chat` and `/api/github/star` **reject in production** but **allow through in development** (with a console warning). Always set Upstash before deploy.
+- **Rate limiting is env-gated with split behavior.** If `UPSTASH_REDIS_REST_URL` / `UPSTASH_REDIS_REST_TOKEN` are unset, `/api/chat`, `/api/lead`, and `/api/github/star` **reject in production** but **allow through in development** (with a console warning). Always set Upstash before deploy.
 - **No provider spend caps are enforced by this repo.** Rate limiting bounds request volume, not $ per request. Set a spend/usage cap in each configured provider's console before public deploy (see `lib/llm/README.md`).
 - **Model routing env overrides** (`provider:model` format): `LLM_CHAT_MODEL`, `LLM_CHEAP_MODEL` override alias defaults in `lib/llm/config.ts`; `LLM_CHAT_FALLBACKS` (comma-separated) enables a pre-token-only fallback chain for the `chat` alias (off by default).
 - **Never modify generated files**: `.next/`, `next-env.d.ts`.
@@ -105,6 +109,5 @@ See [docs/GIT_WORKFLOW.md](docs/GIT_WORKFLOW.md): branch prefixes `feature/`, `f
 - [README.md](README.md) — project overview, full feature list, env var table
 - [.env.example](.env.example) — all env vars (annotated, server vs. public)
 - [lib/llm/README.md](lib/llm/README.md) — LLM gateway internals, adding a provider, env keys, test setup
-- [implementation-notes.md](implementation-notes.md) — build log + documented deviations (chat widget, rate limiting)
 - [docs/GIT_WORKFLOW.md](docs/GIT_WORKFLOW.md) — branch/commit/PR rules
 - [docs/PHONG_AI_PORTFOLIO_ARCHITECTURE.md](docs/PHONG_AI_PORTFOLIO_ARCHITECTURE.md) — AI chat agent flow: request guards, system prompt, tool loop, citation pipeline, stream protocol, eval

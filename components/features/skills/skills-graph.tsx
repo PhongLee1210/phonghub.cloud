@@ -269,7 +269,7 @@ export function SkillsGraph({ skills, projectsBySkill }: SkillsGraphProps) {
                         vectorEffect="non-scaling-stroke"
                         filter={`url(#${glowFilterId})`}
                         style={mounted && !reducedMotion ? { pathLength: edgePathLength } : undefined}
-                        initial={{ opacity: 0 }}
+                        initial={{ opacity: 0, d: staticD }}
                         animate={{
                           strokeWidth: reducedMotion
                             ? isActive ? 0.8 : 0.45

@@ -53,10 +53,12 @@ bottom-[calc(var(--safe-bottom,0px)+5rem)]
 | Layer | Z | Component |
 |---|---|---|
 | Nav | `z-[100]` | `MainNav` |
+| Mobile fullscreen chat | `z-[100]` | `AssistantPanel` (mobile takeover) |
 | Bottom tab bar | `z-[90]` | `BottomTabBar` |
-| Chat launcher FAB | `z-[60]` | `ChatLauncher` |
-| Chat panel | `z-[59]` | `ChatPanel` |
 | Overlay / modal | `z-[80]` | dialogs |
+| Chat launcher FAB | `z-[60]` | `ChatLauncher` |
+| Chat panel (mobile sheet) | `z-[59]` | `ChatPanel` |
+| Chat panel (desktop card) | `z-[58]` | `ChatWidget` desktop panel |
 
 New fixed components must fit explicitly in this stack. Never use arbitrary z values without placing them in the table.
 

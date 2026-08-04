@@ -25,9 +25,9 @@ function getRegistry(): Map<ProviderId, LLMProvider> {
       ALL_PROVIDERS.filter((p) => p.isConfigured()).map((p) => [p.id, p])
     );
 
-    // Soft reminder, not an enforced gate (see implementation-notes.md):
-    // spend caps are a manual step in each provider's own console — this
-    // just makes it visible once per cold start which providers are live.
+    // Soft reminder, not an enforced gate: spend caps are a manual step
+    // in each provider's own console — this just makes it visible once
+    // per cold start which providers are live.
     console.log(
       JSON.stringify({
         scope: "llm.gateway.startup",

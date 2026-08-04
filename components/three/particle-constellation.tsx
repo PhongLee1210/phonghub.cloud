@@ -268,11 +268,21 @@ function subscribeNoop() {
   return () => {};
 }
 
+let cachedClientConfig: { supported: boolean; mobile: boolean } | null = null;
+
+// useSyncExternalStore requires getSnapshot to return a referentially stable
+// value when nothing has changed, or React re-renders in an infinite loop.
 function getClientConfig() {
-  return {
-    supported: canWebGL(),
-    mobile: window.innerWidth < 768,
-  };
+  const next = { supported: canWebGL(), mobile: window.innerWidth < 768 };
+  if (
+    cachedClientConfig &&
+    cachedClientConfig.supported === next.supported &&
+    cachedClientConfig.mobile === next.mobile
+  ) {
+    return cachedClientConfig;
+  }
+  cachedClientConfig = next;
+  return next;
 }
 
 const SERVER_CONFIG = { supported: false, mobile: false };

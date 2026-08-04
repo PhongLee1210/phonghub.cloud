@@ -12,7 +12,7 @@
 - Experience timeline & details: `/experience`, `/experience/[experienceId]`
 - Skills page with proficiency indicators: `/skills`
 - Résumé download/view: `/resume`
-- Contact page: `/contact`
+- Contact page with lead form (email via Resend): `/contact`
 - Markdown blog with categories, tags & search: `/blogs`, `/blogs/[slug]`, `/blogs/category/[category]`, `/blogs/tag/[tag]`
 - **AI chat widget:** (floating launcher, all pages) — answers questions about Phong’s portfolio, projects, skills, experience; uses a provider-agnostic LLM gateway backend (see [Chat integration section below](#local-ai-integration-for-better-dev-experience))
 - “Star on GitHub” action: star the repo directly from the chat widget
@@ -27,7 +27,9 @@
 - **Content**: Markdown posts (`content/blog`), using `gray-matter` & `remark`
 - **Forms/validation**: `react-hook-form`, `zod`
 - **State**: `zustand`
-- **LLM gateway**: Internal abstraction over Vercel AI SDK (`ai`, `@ai-sdk/anthropic`, `@ai-sdk/openai`, `@ai-sdk/google`, `@ai-sdk/groq`), rate-limited via Upstash Redis.
+- **LLM gateway**: Internal abstraction over Vercel AI SDK (`ai`, `@ai-sdk/anthropic`, `@ai-sdk/openai`, `@ai-sdk/google`, `@ai-sdk/groq`, `@ai-sdk/mistral`), rate-limited via Upstash Redis.
+- **Email (lead capture)**: `resend` + `@react-email/components`.
+- **Markdown rendering**: `react-markdown`, `remark`, `remark-gfm`.
 - **Runtime/PM:** Bun (`bun.lock`)
 - **Lint/format:** ESLint + Prettier
 - **Deploy:** Vercel
@@ -64,6 +66,7 @@ cp .env.example .env.local
 | `NEXT_PUBLIC_GOOGLE_MEASUREMENT_ID`                   | Google Analytics measurement ID.                                   |
 | `NEXT_PUBLIC_GOOGLE_VERIFICATION`                     | Google Search Console verification.                                |
 | `NEXT_PUBLIC_RESUME_LINK`                             | Link used for résumé page and download.                            |
+| `RESEND_API_KEY`                                      | Resend API key for `/api/lead` (contact form + in-chat lead capture). |
 | `ANTHROPIC_API_KEY` / `OPENAI_API_KEY` / etc.         | LLM provider keys — set those used (see `lib/llm/README.md`).      |
 | `LLM_CHAT_MODEL`, `LLM_CHEAP_MODEL`                   | Optionally override default/generic LLM models by alias.           |
 | `LLM_CHAT_FALLBACKS`                                  | Optional comma-separated fallback chain for LLM provider failover. |
@@ -112,12 +115,12 @@ serena start-mcp-server --transport streamable-http --port 9121
 ```
 app/                  # Next.js App Router
 ├── (root)/           # Public pages: home, experience, projects, skills, resume, contact, blogs, list100
-├── api/              # Route handlers: projects/experiences/skills/blog/search/chat/github/star
+├── api/              # Route handlers: projects/experiences/skills/blog/chat/lead/github/star
 ├── sitemap.ts, manifest.ts, layout.tsx, globals.css
-components/           # UI grouped by major feature
-config/               # Static site meta/config, social/profiles, projects/skills, chat config, etc
+components/           # UI grouped by major feature (incl. chat, ai, contact)
+config/               # Static site meta/config, social/profiles, projects/skills, contact, chat config
 content/blog/         # Markdown blog posts (autodiscovered)
-lib/                  # Business logic/services: blog parsing, LLM gateway, chat, GitHub, etc
+lib/                  # Business logic/services: blog, LLM gateway, chat, ai-tools, lead, data, content, GitHub
 hooks/, providers/    # Shared React hooks and contexts
 types/                # Shared TS types
 public/, assets/      # Static files
@@ -148,9 +151,8 @@ Ready for Vercel using Bun (`bun install`, `bun run build`, output: `.next`). Se
 ## Documentation
 
 - [docs/GIT_WORKFLOW.md](docs/GIT_WORKFLOW.md) — branch, commit, PR conventions
-- [CLAUDE.md](CLAUDE.md) — for AI code agents
-- [docs/chat-widget-implementation-plan.html](docs/chat-widget-implementation-plan.html) — design & plan for LLM chat gateway
-- [implementation-notes.md](implementation-notes.md) — chat build notes
+- [docs/PHONG_AI_PORTFOLIO_ARCHITECTURE.md](docs/PHONG_AI_PORTFOLIO_ARCHITECTURE.md) — AI chat agent flow (guards, tools, citations, stream protocol, eval)
+- [CLAUDE.md](CLAUDE.md) / [AGENTS.md](AGENTS.md) — for AI code agents
 - [lib/llm/README.md](lib/llm/README.md) — LLM gateway usage, internal docs, env keys
 
 ## Contributing

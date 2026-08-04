@@ -35,14 +35,10 @@ Run before every commit:
 ```bash
 bun run lint
 bunx tsc --noEmit
-```
-
-`format` and `test` scripts are not configured yet in this repo (see [AGENTS.md](../AGENTS.md)). Add them here once available:
-
-```bash
-bun run format
 bun run test
 ```
+
+`bun run test` requires the `--conditions react-server` flag (already baked into the script). No `format` script is wired up yet — run Prettier directly (`bunx prettier .`) if needed.
 
 ## Pull Request Rules
 

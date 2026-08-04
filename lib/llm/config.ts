@@ -9,9 +9,8 @@ const PROVIDER_IDS: readonly ProviderId[] = [
   "mistral",
 ];
 
-// D2 defaults — reviewed defaults from the plan, adopted as-is (see
-// implementation-notes.md, Deviations §4). Override per environment via
-// LLM_CHAT_MODEL / LLM_CHEAP_MODEL without any code change.
+// D2 defaults — reviewed defaults, adopted as-is. Override per environment
+// via LLM_CHAT_MODEL / LLM_CHEAP_MODEL without any code change.
 const DEFAULT_MODEL_REFS: Record<ModelAlias, ModelRef> = {
   chat: "anthropic:claude-haiku-4-5",
   cheap: "groq:llama-3.1-8b-instant",

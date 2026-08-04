@@ -3,7 +3,7 @@
 Server-only module tree providing a single provider-agnostic entry point,
 `streamLLM(alias, req)`, to the rest of the app. Nothing outside this folder
 should import a provider SDK or `lib/llm/providers/*` directly — that
-boundary is enforced by the `no-restricted-imports` rule in `.eslintrc.json`.
+boundary is enforced by the `no-restricted-imports` rule in `eslint.config.mjs`.
 
 ## Files
 
@@ -61,10 +61,9 @@ when a fallback is actually active.
 (`config.ts`). Format: `provider:model`, e.g. `groq:llama-3.3-70b`.
 
 `LLM_CHAT_FALLBACKS` (comma-separated `provider:model` list) enables the D8
-fallback chain for the `"chat"` alias only. Left unset by default — see
-`implementation-notes.md` for the rationale. A pre-token 429/5xx on the
-primary triggers exactly one retry against the first fallback entry; never
-mid-stream.
+fallback chain for the `"chat"` alias only. Left unset by default. A
+pre-token 429/5xx on the primary triggers exactly one retry against the
+first fallback entry; never mid-stream.
 
 ## Testing without API keys
 

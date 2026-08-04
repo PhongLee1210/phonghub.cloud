@@ -16,9 +16,8 @@ function buildLimiters(): { window: Ratelimit; day: Ratelimit } | undefined {
   const redis = getRedisClient();
 
   if (!redis) {
-    // Deviation (see implementation-notes.md #3): fail closed in
-    // production, fail open in development so local iteration isn't
-    // blocked on provisioning Redis.
+    // Fail closed in production, fail open in development so local
+    // iteration isn't blocked on provisioning Redis.
     if (!warnedOnce) {
       console.warn(
         "[chat/rate-limit] UPSTASH_REDIS_REST_URL/TOKEN not set — " +
