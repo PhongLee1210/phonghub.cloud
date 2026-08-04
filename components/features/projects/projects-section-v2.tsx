@@ -29,7 +29,7 @@ export function ProjectsSectionV2({
       {hero ? <ScrollTheaterWrapper project={hero} /> : null}
 
       {gridProjects.length > 0 ? (
-        <div className="mx-auto w-full max-w-7xl px-4 pt-8 md:px-6">
+        <div id="projects-grid" className="mx-auto w-full max-w-7xl px-4 pt-8 md:px-6">
           <header className="mb-6 mt-2">
             <h3 className="font-heading text-lg font-semibold tracking-tight text-foreground">
               More featured projects

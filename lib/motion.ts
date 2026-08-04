@@ -166,6 +166,35 @@ export const BLOG_ENTRANCE_VARIANTS = [
   slideFromBelow,
 ] as const;
 
+// --- Scroll-driven robot companion waypoints ---
+// Each waypoint: position the robot lands at when that section is in view.
+// `rightPct` / `bottomPct` are viewport-relative percentages.
+// Robot lerps between consecutive waypoints as user scrolls.
+// All values are viewport-relative percentages (vw for size, vw for right, vh for bottom).
+// Scales naturally across screen widths.
+export interface RobotWaypoint {
+  sizeVw: number;
+  rightVw: number;
+  bottomVh: number;
+}
+
+export const ROBOT_WAYPOINTS: RobotWaypoint[] = [
+  // Hero — large, shifted left a bit
+  { sizeVw: 25, rightVw: 0, bottomVh: 10 },
+  // Skills — left side, inside viewport
+  { sizeVw: 20, rightVw: 70, bottomVh: 30 },
+  // Projects (Let's build something) — right side
+  { sizeVw: 10, rightVw: 3, bottomVh: 20 },
+  // Projects grid (More featured projects) — left side, bigger
+  { sizeVw: 30, rightVw: 10, bottomVh: 50 },
+  // Experience — right side
+  { sizeVw: 20, rightVw: 10, bottomVh: 35 },
+  // Blog — left side
+  { sizeVw: 18, rightVw: 0, bottomVh: 25 },
+  // CTA (Get in touch) — BIG, right side
+  { sizeVw: 50, rightVw: 20, bottomVh: 10 },
+] as const;
+
 // --- Magnetic button spring ---
 export const SPRING_MAGNETIC: Transition = {
   type: "spring",

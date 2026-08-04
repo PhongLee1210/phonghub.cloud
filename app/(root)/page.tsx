@@ -27,6 +27,9 @@ const CareerTimeline = dynamic(
 const AnimatedBlogGrid = dynamic(
   () => import("@/components/home/animated-blog-grid")
 );
+const RobotCompanion = dynamic(
+  () => import("@/components/home/robot-companion")
+);
 
 export const metadata: Metadata = {
   title: `${pagesConfig.home.metadata.title} | Phong Lee - Software Engineer`,
@@ -84,6 +87,7 @@ export default async function IndexPage() {
       <Suspense fallback={<div className="relative min-h-screen overflow-hidden" />}>
         <Hero />
       </Suspense>
+      <RobotCompanion />
       <SkillsSectionV2 />
       <ProjectsSectionV2 />
       <AnimatedSection
