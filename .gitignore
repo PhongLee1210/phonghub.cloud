@@ -44,3 +44,4 @@ opencode.json
 
 # AI session worktrees (ai session new <branch>)
 worktrees/
+.env*

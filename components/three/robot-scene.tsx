@@ -2,7 +2,7 @@
 
 import { Canvas, useFrame } from "@react-three/fiber";
 import { Environment, useGLTF } from "@react-three/drei";
-import { useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import * as THREE from "three";
 
 const MODEL_PATH = "/chat-robot.glb";
@@ -13,9 +13,15 @@ function Robot({ lookDir }: { lookDir: number }) {
   const ref = useRef<THREE.Group>(null);
   const currentLookRef = useRef(0);
 
-  useFrame((state) => {
+  // Self-managed, clamped time accumulator. Avoids jumps when the tab was
+  // backgrounded (frameloop paused) and also smooths over dropped frames,
+  // since state.clock.elapsedTime would otherwise leap by the paused interval.
+  const tRef = useRef(0);
+
+  useFrame((_, delta) => {
     if (!ref.current) return;
-    const t = state.clock.elapsedTime;
+    tRef.current += Math.min(delta, 0.1);
+    const t = tRef.current;
 
     // Vertical float — two frequencies layered
     ref.current.position.y = Math.sin(t * 1.2) * 0.06 + Math.sin(t * 2.1) * 0.015;
@@ -41,9 +47,20 @@ function Robot({ lookDir }: { lookDir: number }) {
 useGLTF.preload(MODEL_PATH);
 
 export default function RobotScene({ lookDir = 0 }: { lookDir?: number }) {
+  // Pause the WebGL render loop when the tab is hidden so we don't burn GPU in
+  // the background, and so returning to the tab resumes cleanly (no jump,
+  // thanks to the clamped accumulator above).
+  const [frameloop, setFrameloop] = useState<"always" | "never">("always");
+
+  useEffect(() => {
+    const onVisibility = () => setFrameloop(document.hidden ? "never" : "always");
+    document.addEventListener("visibilitychange", onVisibility);
+    return () => document.removeEventListener("visibilitychange", onVisibility);
+  }, []);
+
   return (
     <Canvas
-      frameloop="always"
+      frameloop={frameloop}
       dpr={[1, 1.5]}
       gl={{ alpha: true, antialias: true, powerPreference: "default" }}
       camera={{ position: [0, 0.3, 3.5], fov: 30 }}

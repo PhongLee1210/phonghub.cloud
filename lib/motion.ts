@@ -180,20 +180,30 @@ export interface RobotWaypoint {
 
 export const ROBOT_WAYPOINTS: RobotWaypoint[] = [
   // Hero — large, shifted left a bit
-  { sizeVw: 25, rightVw: 0, bottomVh: 10 },
+  { sizeVw: 35, rightVw: -10, bottomVh: -10 },
   // Skills — left side, inside viewport
-  { sizeVw: 20, rightVw: 70, bottomVh: 30 },
+  { sizeVw: 28, rightVw: 70, bottomVh: 30 },
   // Projects (Let's build something) — right side
-  { sizeVw: 10, rightVw: 3, bottomVh: 20 },
+  { sizeVw: 16, rightVw: 3, bottomVh: 20 },
   // Projects grid (More featured projects) — left side, bigger
-  { sizeVw: 30, rightVw: 10, bottomVh: 50 },
+  { sizeVw: 40, rightVw: 10, bottomVh: 50 },
   // Experience — right side
-  { sizeVw: 20, rightVw: 10, bottomVh: 35 },
+  { sizeVw: 27, rightVw: 10, bottomVh: 35 },
   // Blog — left side
-  { sizeVw: 18, rightVw: 0, bottomVh: 25 },
+  { sizeVw: 23, rightVw: 0, bottomVh: 25 },
   // CTA (Get in touch) — BIG, right side
-  { sizeVw: 50, rightVw: 10, bottomVh: 10 },
+  { sizeVw: 60, rightVw: -10, bottomVh: -10 },
 ] as const;
+
+/**
+ * Largest waypoint size (vw). The WebGL canvas is pinned to this size so it
+ * never resizes during scroll — the robot is visually scaled down to its
+ * current waypoint size via `transform: scale(sizeVw / ROBOT_MAX_SIZE_VW)`.
+ * Resizing a WebGL drawing buffer mid-scroll is what caused the flicker.
+ */
+export const ROBOT_MAX_SIZE_VW = Math.max(
+  ...ROBOT_WAYPOINTS.map((w) => w.sizeVw)
+);
 
 // --- Magnetic button spring ---
 export const SPRING_MAGNETIC: Transition = {
