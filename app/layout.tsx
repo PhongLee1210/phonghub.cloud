@@ -2,6 +2,7 @@ import "./globals.css";
 
 import { GoogleAnalytics } from "@next/third-parties/google";
 import { Inter as FontSans, Karla, Miniver } from "next/font/google";
+import dynamic from "next/dynamic";
 import localFont from "next/font/local";
 
 import { Analytics } from "@/components/common/analytics";
@@ -12,6 +13,13 @@ import { siteConfig } from "@/config/site";
 import { cn } from "@/lib/utils";
 import { ModalProvider } from "@/providers/modal-provider";
 import { DevTools } from "@/components/common/dev-tools";
+
+// Mounted once at the root so it persists across route navigation instead of
+// unmounting/remounting on every visit to "/" - floats on the home page,
+// docks small above the chat launcher everywhere else.
+const RobotCompanion = dynamic(
+  () => import("@/components/home/robot-companion")
+);
 
 const fontSans = FontSans({
   subsets: ["latin"],
@@ -144,6 +152,7 @@ export default function RootLayout({ children }: RootLayoutProps) {
           <Analytics />
           <Toaster />
           <ModalProvider />
+          <RobotCompanion />
           <GlobalChatWidgetLoader />
           <DevTools />
         </ThemeProvider>

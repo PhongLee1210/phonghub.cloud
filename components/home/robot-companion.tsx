@@ -1,10 +1,11 @@
 "use client";
 
 import dynamic from "next/dynamic";
-import { motion, useMotionValue, useMotionValueEvent, useScroll } from "framer-motion";
+import { usePathname } from "next/navigation";
+import { animate, motion, useMotionValue, useMotionValueEvent, useScroll } from "framer-motion";
 import { useEffect, useLayoutEffect, useRef, useState, useSyncExternalStore } from "react";
 
-import { ROBOT_MAX_SIZE_VW, ROBOT_WAYPOINTS, type RobotWaypoint } from "@/lib/motion";
+import { ROBOT_MAX_SIZE_VW, ROBOT_WAYPOINTS, SPRING_MAGNETIC, type RobotWaypoint } from "@/lib/motion";
 
 const RobotScene = dynamic(
   () => import("@/components/three/robot-scene"),
@@ -14,12 +15,35 @@ const RobotScene = dynamic(
 const useIsomorphicLayoutEffect =
   typeof window !== "undefined" ? useLayoutEffect : useEffect;
 
+// Docked position/size (fixed px, not vw/vh) for every route other than "/" -
+// perched just above the chat launcher (components/chat/chat-launcher.tsx,
+// which sits at bottom-[...+5rem] right-4 on mobile / bottom-[...+0.75rem]
+// right-6 on desktop, z-[60]). Fixed px so it doesn't drift with viewport
+// width the way the scroll-driven vw/vh waypoints intentionally do.
+const DOCK_SIZE_PX = 56;
+const DOCK_RIGHT_PX = 20;
+const DOCK_BOTTOM_PX = 132;
+const DOCK_Z_INDEX = 30;
+const FLOAT_Z_INDEX = 35;
+
+let webglChecked: boolean | null = null;
+
+// Probes WebGL support once and caches the result for the life of the page.
+// Re-probing on every mount (e.g. every time the user navigates back to the
+// home page) leaked one live WebGL context per probe - browsers cap the
+// number of live contexts per page, so after enough round trips getContext()
+// started returning null and the robot vanished permanently.
 function canWebGL(): boolean {
+  if (webglChecked !== null) return webglChecked;
   if (typeof document === "undefined") return false;
   try {
     const canvas = document.createElement("canvas");
-    return !!(canvas.getContext("webgl2") || canvas.getContext("webgl"));
+    const gl = canvas.getContext("webgl2") || canvas.getContext("webgl");
+    webglChecked = !!gl;
+    (gl as WebGLRenderingContext | null)?.getExtension("WEBGL_lose_context")?.loseContext();
+    return webglChecked;
   } catch {
+    webglChecked = false;
     return false;
   }
 }
@@ -28,13 +52,8 @@ function subscribeNoop() {
   return () => {};
 }
 
-let cachedDesktop: boolean | null = null;
-
 function getIsDesktop() {
-  const next = canWebGL() && window.innerWidth >= 1024;
-  if (cachedDesktop !== null && cachedDesktop === next) return cachedDesktop;
-  cachedDesktop = next;
-  return next;
+  return canWebGL() && window.innerWidth >= 1024;
 }
 
 const SERVER_VALUE = false;
@@ -110,6 +129,8 @@ const SECTION_SELECTORS = [
 
 export default function RobotCompanion() {
   const isDesktop = useSyncExternalStore(subscribeNoop, getIsDesktop, () => SERVER_VALUE);
+  const pathname = usePathname();
+  const isHome = pathname === "/";
   const [visible, setVisible] = useState(false);
 
   useEffect(() => {
@@ -127,25 +148,58 @@ export default function RobotCompanion() {
   // recompute() directly - once per scroll tick (useMotionValueEvent) and
   // once whenever the measured tops change.
   const topsRef = useRef<number[]>([]);
-  const transform = useMotionValue("translate3d(0px, 0px, 0px) scale(0)");
+  const x = useMotionValue(0);
+  const y = useMotionValue(0);
+  const scale = useMotionValue(0);
 
-  const recompute = () => {
-    if (typeof window === "undefined") return;
+  const homeTarget = () => {
     const { sizeVw, rightVw, bottomVh } = waypointInterpolate(
       ROBOT_WAYPOINTS,
       topsRef.current,
       scrollY.get(),
     );
-    const scale = sizeVw / ROBOT_MAX_SIZE_VW;
-    const rightPx = (rightVw / 100) * window.innerWidth;
-    const bottomPx = (bottomVh / 100) * window.innerHeight;
-    transform.set(`translate3d(${-rightPx}px, ${-bottomPx}px, 0px) scale(${scale})`);
+    return {
+      x: -(rightVw / 100) * window.innerWidth,
+      y: -(bottomVh / 100) * window.innerHeight,
+      scale: sizeVw / ROBOT_MAX_SIZE_VW,
+    };
+  };
+
+  const dockTarget = () => ({
+    x: -DOCK_RIGHT_PX,
+    y: -DOCK_BOTTOM_PX,
+    scale: DOCK_SIZE_PX / ((ROBOT_MAX_SIZE_VW / 100) * window.innerWidth),
+  });
+
+  // Scroll only drives position while on the home page - set directly (no
+  // spring) so the float stays 1:1 with scroll, same as before this changed.
+  const recompute = () => {
+    if (typeof window === "undefined" || !isHome) return;
+    const t = homeTarget();
+    x.set(t.x);
+    y.set(t.y);
+    scale.set(t.scale);
   };
 
   useMotionValueEvent(scrollY, "change", recompute);
 
+  // Docking / undocking (route change) is the one transition that should
+  // visibly animate - the robot "flies" from wherever it was on the home page
+  // down into the corner dock, and back out again on return.
+  useEffect(() => {
+    if (!isDesktop || typeof window === "undefined") return;
+    const target = isHome ? homeTarget() : dockTarget();
+    const controls = [
+      animate(x, target.x, SPRING_MAGNETIC),
+      animate(y, target.y, SPRING_MAGNETIC),
+      animate(scale, target.scale, SPRING_MAGNETIC),
+    ];
+    return () => controls.forEach((c) => c.stop());
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isHome, isDesktop]);
+
   useIsomorphicLayoutEffect(() => {
-    if (!isDesktop) return;
+    if (!isDesktop || !isHome) return;
 
     const measure = () => {
       const tops: number[] = [];
@@ -178,17 +232,20 @@ export default function RobotCompanion() {
       ro.disconnect();
       window.removeEventListener("load", measure);
     };
-  }, [isDesktop]);
+  }, [isDesktop, isHome]);
 
   if (!isDesktop) return null;
 
   return (
     <motion.div
-      className="pointer-events-none fixed bottom-0 right-0 z-[35]"
+      className="pointer-events-none fixed bottom-0 right-0"
       style={{
         width: `${ROBOT_MAX_SIZE_VW}vw`,
         height: `${ROBOT_MAX_SIZE_VW}vw`,
-        transform,
+        x,
+        y,
+        scale,
+        zIndex: isHome ? FLOAT_Z_INDEX : DOCK_Z_INDEX,
         transformOrigin: "100% 100%",
         opacity: visible ? 1 : 0,
         willChange: "transform",
