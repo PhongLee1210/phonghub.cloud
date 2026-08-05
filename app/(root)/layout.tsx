@@ -1,3 +1,5 @@
+import { Suspense } from "react";
+
 import { BottomTabBar } from "@/components/common/bottom-tab-bar";
 import { MainNav } from "@/components/common/main-nav";
 import { ModeToggle } from "@/components/common/mode-toggle";
@@ -13,7 +15,9 @@ interface MarketingLayoutProps {
 export default function MarketingLayout({ children }: MarketingLayoutProps) {
   return (
     <div className="relative flex min-h-screen flex-col">
-      <HeroCanvas />
+      <Suspense fallback={<div className="pointer-events-none fixed inset-0 z-0" />}>
+        <HeroCanvas />
+      </Suspense>
       <MainNav items={routesConfig.mainNav}>
         <ModeToggle />
       </MainNav>

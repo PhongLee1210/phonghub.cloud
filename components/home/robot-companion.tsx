@@ -148,9 +148,13 @@ export default function RobotCompanion() {
   // recompute() directly - once per scroll tick (useMotionValueEvent) and
   // once whenever the measured tops change.
   const topsRef = useRef<number[]>([]);
+  // Motion values driven directly by scroll (no spring — spring creates visible
+  // lag that "snaps" when scroll stops). Route-change transitions use animate()
+  // on these same values for smooth dock/undock.
   const x = useMotionValue(0);
   const y = useMotionValue(0);
   const scale = useMotionValue(0);
+  const lookDirRef = useRef(0);
 
   const homeTarget = () => {
     const { sizeVw, rightVw, bottomVh } = waypointInterpolate(
@@ -175,10 +179,11 @@ export default function RobotCompanion() {
   // spring) so the float stays 1:1 with scroll, same as before this changed.
   const recompute = () => {
     if (typeof window === "undefined" || !isHome) return;
-    const t = homeTarget();
-    x.set(t.x);
-    y.set(t.y);
-    scale.set(t.scale);
+    const wp = waypointInterpolate(ROBOT_WAYPOINTS, topsRef.current, scrollY.get());
+    x.set(-(wp.rightVw / 100) * window.innerWidth);
+    y.set(-(wp.bottomVh / 100) * window.innerHeight);
+    scale.set(wp.sizeVw / ROBOT_MAX_SIZE_VW);
+    lookDirRef.current = Math.max(-1, Math.min(1, (wp.rightVw - 30) / 40));
   };
 
   useMotionValueEvent(scrollY, "change", recompute);
@@ -252,7 +257,11 @@ export default function RobotCompanion() {
         transition: "opacity 0.6s ease-out",
       }}
     >
-      <RobotScene />
+      {/* On non-home routes the robot is docked tiny (56px) — stop the render
+          loop entirely so the GPU idles. The last frame stays visible on the
+          canvas (WebGL preserveDrawingBuffer isn't needed — browsers keep the
+          buffer when frameloop stops). On home, full idle animation runs. */}
+      <RobotScene lookDirRef={lookDirRef} active={isHome} />
     </motion.div>
   );
 }

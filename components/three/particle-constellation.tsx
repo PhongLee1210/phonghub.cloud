@@ -334,7 +334,7 @@ export default function ParticleConstellation() {
   return (
     <Canvas
       frameloop="demand"
-      dpr={[1, 2]}
+      dpr={[1, 1.5]}
       gl={{ antialias: false, powerPreference: "low-power" }}
       camera={{ position: [0, 0, 5], fov: 50 }}
       style={{ width: "100%", height: "100%", pointerEvents: "none" }}

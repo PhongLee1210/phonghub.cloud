@@ -21,6 +21,7 @@ export function HeroCanvas() {
     <div
       aria-hidden="true"
       className="pointer-events-none fixed inset-0 z-0 opacity-50"
+      style={{ willChange: "transform" }}
     >
       {showFallback ? (
         <div

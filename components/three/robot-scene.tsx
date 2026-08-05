@@ -2,12 +2,12 @@
 
 import { Canvas, useFrame } from "@react-three/fiber";
 import { Environment, useGLTF } from "@react-three/drei";
-import { useEffect, useRef, useState } from "react";
+import { type MutableRefObject, useEffect, useRef, useState } from "react";
 import * as THREE from "three";
 
 const MODEL_PATH = "/chat-robot.glb";
 
-function Robot({ lookDir }: { lookDir: number }) {
+function Robot({ lookDirRef }: { lookDirRef: MutableRefObject<number> }) {
   const { scene } = useGLTF(MODEL_PATH);
   const ref = useRef<THREE.Group>(null);
   const currentLookRef = useRef(0);
@@ -23,7 +23,7 @@ function Robot({ lookDir }: { lookDir: number }) {
 
     ref.current.position.x = Math.sin(t * 0.7) * 0.02;
 
-    currentLookRef.current += (lookDir - currentLookRef.current) * 0.03;
+    currentLookRef.current += (lookDirRef.current - currentLookRef.current) * 0.03;
     const lookOffset = currentLookRef.current * 0.4;
 
     ref.current.rotation.y = -Math.PI / 2 + lookOffset + Math.sin(t * 0.4) * 0.08;
@@ -37,8 +37,18 @@ function Robot({ lookDir }: { lookDir: number }) {
 
 useGLTF.preload(MODEL_PATH);
 
-export default function RobotScene({ lookDir = 0 }: { lookDir?: number }) {
-  const [frameloop, setFrameloop] = useState<"always" | "never">("always");
+const DEFAULT_LOOK_DIR = { current: 0 };
+
+export default function RobotScene({
+  lookDirRef = DEFAULT_LOOK_DIR,
+  active = true,
+}: {
+  lookDirRef?: MutableRefObject<number>;
+  active?: boolean;
+}) {
+  // Combine visibility + active prop: stop render loop when tab hidden OR
+  // robot is docked on non-home route. Last frame stays visible on canvas.
+  const [tabVisible, setTabVisible] = useState(true);
   // Bumped to force a full Canvas remount after a lost WebGL context - a lost
   // context can't resume in place (its GL resources are gone), and without a
   // `webglcontextlost` handler the browser leaves the canvas permanently
@@ -46,10 +56,12 @@ export default function RobotScene({ lookDir = 0 }: { lookDir?: number }) {
   const [canvasKey, setCanvasKey] = useState(0);
 
   useEffect(() => {
-    const onVisibility = () => setFrameloop(document.hidden ? "never" : "always");
+    const onVisibility = () => setTabVisible(!document.hidden);
     document.addEventListener("visibilitychange", onVisibility);
     return () => document.removeEventListener("visibilitychange", onVisibility);
   }, []);
+
+  const frameloop = active && tabVisible ? "always" : "never";
 
   return (
     <Canvas
@@ -71,7 +83,7 @@ export default function RobotScene({ lookDir = 0 }: { lookDir?: number }) {
       }}
     >
       <Environment preset="apartment" />
-      <Robot lookDir={lookDir} />
+      <Robot lookDirRef={lookDirRef} />
     </Canvas>
   );
 }

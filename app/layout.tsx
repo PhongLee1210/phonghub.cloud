@@ -5,6 +5,8 @@ import { Inter as FontSans, Karla, Miniver } from "next/font/google";
 import dynamic from "next/dynamic";
 import localFont from "next/font/local";
 
+import { Suspense } from "react";
+
 import { Analytics } from "@/components/common/analytics";
 import { ThemeProvider } from "@/components/common/theme-provider";
 import { GlobalChatWidgetLoader } from "@/components/chat/global-chat-widget-loader";
@@ -152,7 +154,9 @@ export default function RootLayout({ children }: RootLayoutProps) {
           <Analytics />
           <Toaster />
           <ModalProvider />
-          <RobotCompanion />
+          <Suspense fallback={null}>
+            <RobotCompanion />
+          </Suspense>
           <GlobalChatWidgetLoader />
           <DevTools />
         </ThemeProvider>

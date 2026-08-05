@@ -186,7 +186,7 @@ export const ROBOT_WAYPOINTS: RobotWaypoint[] = [
   // Projects (Let's build something) — right side
   { sizeVw: 16, rightVw: 3, bottomVh: 20 },
   // Projects grid (More featured projects) — left side, bigger
-  { sizeVw: 40, rightVw: 10, bottomVh: 50 },
+  { sizeVw: 40, rightVw: 10, bottomVh: 0 },
   // Experience — right side
   { sizeVw: 27, rightVw: 10, bottomVh: 35 },
   // Blog — left side
