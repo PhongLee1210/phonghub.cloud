@@ -72,7 +72,7 @@ hooks/, providers/ # Shared hooks + context providers (incl. chat zustand store)
 types/             # Client-safe shared types (chat wire protocol, content)
 public/, assets/   # Static assets and fonts
 docs/
-  engineering/     # CODING-STANDARD, RENDERING-STANDARD (donut pattern)
+  engineering/     # CODING-STANDARD, RENDERING-STANDARD (donut pattern), TDD (Red-Green-Refactor)
   design/          # TAILWIND-STYLES, MOBILE-FIRST
   process/         # GIT-WORKFLOW
   architecture/    # AI-CHAT-ARCHITECTURE
@@ -111,6 +111,7 @@ The only place that links to `docs/*`. Individual docs are self-contained (no cr
 |---|---|---|
 | Coding Standard | [docs/engineering/CODING-STANDARD.md](docs/engineering/CODING-STANDARD.md) | Conventions, comments, constants/enums, runtime guards, logging |
 | Rendering Standard | [docs/engineering/RENDERING-STANDARD.md](docs/engineering/RENDERING-STANDARD.md) | Donut pattern, `cacheComponents`, SSR/hydration, browser-extension isolation |
+| TDD | [docs/engineering/TDD.md](docs/engineering/TDD.md) | Red-Green-Refactor workflow, test count per feature/fix, bug-fix discipline, exceptions |
 | Tailwind Styles | [docs/design/TAILWIND-STYLES.md](docs/design/TAILWIND-STYLES.md) | Tokens, primitives, focus rings, themes, dead-CSS policy |
 | Mobile-First | [docs/design/MOBILE-FIRST.md](docs/design/MOBILE-FIRST.md) | Breakpoints, safe areas, z-stack, springs, sheets |
 | Git Workflow | [docs/process/GIT-WORKFLOW.md](docs/process/GIT-WORKFLOW.md) | Branches, commits, PRs |
