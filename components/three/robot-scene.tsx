@@ -1,9 +1,10 @@
 "use client";
 
-import { Canvas, useFrame } from "@react-three/fiber";
-import { Environment, useGLTF } from "@react-three/drei";
-import { type MutableRefObject, useEffect, useRef, useState } from "react";
+import { Canvas, useFrame, useThree } from "@react-three/fiber";
+import { useGLTF } from "@react-three/drei";
+import { type MutableRefObject, useEffect, useMemo, useRef, useState } from "react";
 import * as THREE from "three";
+import { RoomEnvironment } from "three/examples/jsm/environments/RoomEnvironment.js";
 
 const MODEL_PATH = "/chat-robot.glb";
 
@@ -36,6 +37,37 @@ function Robot({ lookDirRef }: { lookDirRef: MutableRefObject<number> }) {
 }
 
 useGLTF.preload(MODEL_PATH);
+
+/**
+ * Image-based lighting, generated on the GPU instead of downloaded.
+ *
+ * drei's `<Environment preset="apartment" />` resolves to an HDR fetched from
+ * `raw.githack.com/pmndrs/drei-assets` at runtime — a third-party request on
+ * the critical path of the home route, for ~1 MB. The robot's material is
+ * metallic (glTF `metallicFactor` defaults to 1, driven by its ORM texture),
+ * so it can't simply drop to analytic lights: with nothing to reflect it
+ * renders near-black. `RoomEnvironment` is three's procedural studio box, so
+ * PMREM builds the same kind of lighting locally with no network at all.
+ */
+function ProceduralEnvironment() {
+  const gl = useThree((state) => state.gl);
+
+  // Built once per renderer. `attach` (rather than assigning scene.environment)
+  // keeps the wiring declarative, so R3F detaches it on unmount and the React
+  // Compiler doesn't see a mutation of the scene it treats as immutable.
+  const envTarget = useMemo(() => {
+    const pmrem = new THREE.PMREMGenerator(gl);
+    const room = new RoomEnvironment();
+    const target = pmrem.fromScene(room, 0.04);
+    room.dispose();
+    pmrem.dispose();
+    return target;
+  }, [gl]);
+
+  useEffect(() => () => envTarget.dispose(), [envTarget]);
+
+  return <primitive object={envTarget.texture} attach="environment" />;
+}
 
 const DEFAULT_LOOK_DIR = { current: 0 };
 
@@ -82,7 +114,7 @@ export default function RobotScene({
         );
       }}
     >
-      <Environment preset="apartment" />
+      <ProceduralEnvironment />
       <Robot lookDirRef={lookDirRef} />
     </Canvas>
   );

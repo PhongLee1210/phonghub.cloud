@@ -1,6 +1,7 @@
 import type { ToolExecutionOptions } from "ai";
 import { describe, expect, test } from "bun:test";
 
+import { THINKING_STEP_LABELS } from "@/config/chat";
 import { PROJECTS } from "@/config/projects";
 import { RESUME_RESOURCE } from "@/config/resume";
 import { CHAT_TOOLS } from "@/lib/chat/tools";
@@ -160,5 +161,35 @@ describe("open_detail", () => {
       target: "not-an-id",
       reason: "unrecognized agentId format",
     });
+  });
+});
+
+describe("THINKING_STEP_LABELS coverage", () => {
+  // Regression guard: thinking-checklist.tsx falls back to the raw step key
+  // (`THINKING_STEP_LABELS[s] ?? s`), so a tool without a label leaks its
+  // internal name into the UI — visitors were reading "capture_lead".
+  test("every chat tool has a visitor-facing label", () => {
+    const unlabelled = Object.keys(CHAT_TOOLS).filter(
+      (name) => !(name in THINKING_STEP_LABELS)
+    );
+    expect(unlabelled).toEqual([]);
+  });
+
+  test("every client tool name has a label", () => {
+    // Client tools are registered in the browser (lib/ai-tools/) and their
+    // names reach the same checklist. Kept as an explicit list because the
+    // registry is populated at runtime, not importable here.
+    const CLIENT_TOOL_NAMES = ["get_page_context"];
+    const unlabelled = CLIENT_TOOL_NAMES.filter(
+      (name) => !(name in THINKING_STEP_LABELS)
+    );
+    expect(unlabelled).toEqual([]);
+  });
+
+  test("no label is an empty string", () => {
+    const empty = Object.entries(THINKING_STEP_LABELS)
+      .filter(([, label]) => label.trim().length === 0)
+      .map(([key]) => key);
+    expect(empty).toEqual([]);
   });
 });

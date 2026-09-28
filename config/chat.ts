@@ -116,9 +116,14 @@ export const THINKING_STEP_LABELS: Record<string, string> = {
   search_skills: "Searching skills",
   search_resume: "Checking the resume",
   search_blog: "Searching blog posts",
+  search_contact: "Looking up contact details",
   reveal: "Highlighting",
   open_detail: "Opening details",
   navigate_to: "Preparing navigation",
+  capture_lead: "Opening the contact form",
+  // Client-side tool (components/ai/page-context-tool.tsx) — its name reaches
+  // the same checklist as the server tools.
+  get_page_context: "Checking this page",
 };
 
 /** How long an agent highlight ring stays lit before auto-clearing.

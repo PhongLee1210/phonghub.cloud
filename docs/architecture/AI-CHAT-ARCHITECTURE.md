@@ -1,6 +1,6 @@
 # Phong AI Portfolio — Architecture Overview
 
-_Last updated: 2026-08-02_
+_Last updated: 2026-09-28_
 
 ## What It Is
 
@@ -46,7 +46,7 @@ streamLLM("chat", { messages, tools: allTools, ... })
  │  LLM receives:                                       │
  │  • system: persona + guardrails                      │
  │  • history: trimmed conversation messages            │
- │  • tools: 13 CHAT_TOOLS + any pre-resolved client    │
+ │  • tools: 10 CHAT_TOOLS + any pre-resolved client    │
  │           tools (e.g. get_page_context)              │
  └──────────────────────────────────────────────────────┘
         │
@@ -56,8 +56,7 @@ streamLLM("chat", { messages, tools: allTools, ... })
         ▼
   chunk.type === "tool_result"
         │  → search tools:          extract agentIds → citationTargets Set
-        │  → highlight/focus/       emit ToolEffect mid-turn + capture target
-        │    select_skill/open_modal
+        │  → reveal / open_detail:  emit ToolEffect mid-turn + capture target
         │  → navigate_to:           emit ToolEffect.navigate
         │  → search_contact:        emit Action { action: "contact_card" }
         │  → capture_lead:          emit Action { action: "lead_capture", payload }
@@ -74,7 +73,7 @@ streamLLM("chat", { messages, tools: allTools, ... })
         │  → emit Token (normalized text)
         │  → resolveCitations(orderedTargets)  ┐ Promise.all
         │  → getSuggestions() (parallel cheap) ┘
-        │  → emit Done { citations, suggestions, highlight, focus,
+        │  → emit Done { citations, suggestions, highlight,
         │                skillSelect, openModal, navigate }
 ```
 
@@ -103,7 +102,7 @@ The persona defines:
 
 ---
 
-## CHAT_TOOLS (13)
+## CHAT_TOOLS (10)
 
 **Search tools** — retrieve author data at query time, each capped at 5 results:
 
@@ -120,10 +119,8 @@ The persona defines:
 
 | Tool | Effect |
 |------|--------|
-| `highlight_resource` | Scroll + visually highlight a card |
-| `focus` | Quiet focus (no scroll) |
-| `select_skill` | Recenter the home skills graph on a skill |
-| `open_modal` / `expand_section` | Open a detail modal (shared execute) |
+| `reveal` | Make one resource prominent. The server routes by target kind: a `skill:` target recenters the home skills graph, anything else is scrolled into view (only when off-screen) and highlighted. Absorbs the former `highlight_resource`, `focus` and `select_skill`. |
+| `open_detail` | Open the detail modal for one resource without navigating. Absorbs the former `open_modal` / `expand_section`. |
 | `navigate_to` | Navigate to a site page (ALLOWED_ROUTES only) |
 
 **Action tool** — surfaces a form in chat:
@@ -203,11 +200,11 @@ All events are newline-delimited JSON (`application/x-ndjson`):
 |------------|-------------|------------|
 | `thinking` | Before LLM call, during tool calls | `step: "preparing" \| "thinking" \| <tool_name>` |
 | `token` | Normalized assistant text (at done time) | `text: string` |
-| `tool_effect` | Per UI tool call, mid-turn (exactly one field set) | `highlight \| focus \| skillSelect \| openModal(resolved) \| navigate` |
+| `tool_effect` | Per UI tool call, mid-turn (exactly one field set) | `highlight \| skillSelect \| openModal(resolved) \| navigate` |
 | `action` | Contact card, lead capture, or star intent | `action: "contact_card" \| "lead_capture" \| "star_repo"`, optional `payload: LeadCapturePayload` |
 | `card` | Legacy project card | `card: ProjectCardPayload` |
 | `navigate` | Legacy navigate | `href: InternalRoute` |
-| `done` | Stream complete | `citations, suggestions, highlight, focus, skillSelect, openModal, navigate` |
+| `done` | Stream complete | `citations, suggestions, highlight, skillSelect, openModal, navigate` |
 | `error` | Any failure | `code, message` |
 
 ---
@@ -220,7 +217,7 @@ All events are newline-delimited JSON (`application/x-ndjson`):
 | `app/api/lead/route.ts` | Lead capture POST — rate limit, zod, Resend |
 | `lib/chat/context.ts` | `buildSystemPrompt()` — lean prompt (cached) |
 | `lib/chat/prompt.ts` | Persona, GUARDRAILS, ALLOWED_ROUTES, `isAllowedRoute()` |
-| `lib/chat/tools.ts` | `CHAT_TOOLS` (13), `buildClientTools()` |
+| `lib/chat/tools.ts` | `CHAT_TOOLS` (10), `buildClientTools()` |
 | `lib/chat/citation-postprocess.ts` | `normalizeCitationMarkers()` — agentId → `[n]` |
 | `lib/chat/resources.ts` | `resolveCitation()` — agentId → AgentCitation |
 | `lib/chat/client.ts` | `streamChat()` — client NDJSON reader + dispatcher |

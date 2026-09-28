@@ -67,6 +67,7 @@ lib/
   github/          # GitHub "star" client
   lead/            # Lead schema (zod), email template (@react-email), lead rate limit
   llm/             # Provider-agnostic LLM gateway (see lib/llm/README.md)
+  agent-presence.ts # Agent→3D companion state bus (module-level, read in useFrame — never React state)
   code-tokenizer.ts, device.ts, motion.ts, utils.ts
 hooks/, providers/ # Shared hooks + context providers (incl. chat zustand store)
 types/             # Client-safe shared types (chat wire protocol, content)
