@@ -450,6 +450,16 @@
     animation: agent-highlight-pulse 1.6s ease-in-out 2;
   }
 
+  /* Citation preview ring — quieter than .agent-highlighted, which means the
+     agent acted on this. This one only means "the thing you are hovering is
+     right here", so it does not pulse and does not compete for attention. */
+  .agent-previewed {
+    outline: 1px solid hsl(var(--ring) / 0.7);
+    outline-offset: 2px;
+    border-radius: var(--radius);
+    transition: outline-color 120ms ease-out;
+  }
+
   @keyframes agent-highlight-pulse {
     0%,
     100% {

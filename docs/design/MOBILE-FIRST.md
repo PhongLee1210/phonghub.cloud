@@ -57,6 +57,7 @@ bottom-[calc(var(--safe-bottom,0px)+5rem)]
 | Bottom tab bar | `z-[90]` | `BottomTabBar` |
 | Overlay / modal | `z-[80]` | dialogs |
 | Chat launcher FAB | `z-[60]` | `ChatLauncher` |
+| Citation preview overlay | `z-[57]` | `CitationConnector` / `CitationPreviewCard` (below the desktop panel on purpose, so the line tucks under its edge) |
 | Chat panel (mobile sheet) | `z-[59]` | `ChatPanel` |
 | Chat panel (desktop card) | `z-[58]` | `ChatWidget` desktop panel |
 
