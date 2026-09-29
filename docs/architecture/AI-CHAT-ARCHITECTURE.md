@@ -104,7 +104,22 @@ The persona defines:
 
 ## CHAT_TOOLS (10)
 
-**Search tools** — retrieve author data at query time, each capped at 5 results:
+**Search tools** — retrieve author data at query time, each capped at 5 results.
+
+`search_projects`, `search_experiences`, `search_skills` and `search_blog` accept a free-text `query`, resolved by `lib/retrieval` through a three-stage ladder:
+
+```
+query "nextjs"
+   │
+   ├─ 1. EXACT   normalized term === normalized title or tag        → score 1
+   ├─ 2. ALIAS   curated shorthand ("ts", "postgres") → real name   → score 0.95
+   └─ 3. FUZZY   containment, then trigram similarity >= 0.45,
+                 then prose containment in the body                 → 0.8 / sim / 0.5
+                 below threshold → [] (deliberately, not a guess)
+```
+
+Normalization strips case and punctuation, so `Next.js`, `NextJS` and `next js` are one term. A structured filter (`category`, `techStack`, `tag`, `currentOnly`, `mostRecentOnly`) is exact and wins when present; `query` is the fallback. A non-exact hit carries `matchedOn: "ALIAS" | "FUZZY"` in its payload so the persona can flag a near miss rather than present it as a direct hit. `/api/blog/search` shares the same ranker, so the on-site search box and the agent agree.
+
 
 | Tool | Returns | Data source |
 |------|---------|-------------|

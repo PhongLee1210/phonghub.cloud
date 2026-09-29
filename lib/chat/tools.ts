@@ -5,10 +5,10 @@ import { z } from "zod";
 
 import { ValidCategory, ValidSkills } from "@/config/constants";
 import { CONTACT_INFO } from "@/config/contact";
-import { ExperienceInterface } from "@/config/experience";
-import { ProjectInterface } from "@/config/projects";
+import { EXPERIENCES, ExperienceInterface } from "@/config/experience";
+import { PROJECTS, ProjectInterface } from "@/config/projects";
 import { RESUME_RESOURCE } from "@/config/resume";
-import { ISkill, SkillCategoryEnum } from "@/config/skills";
+import { ISkill, SKILLS, SkillCategoryEnum } from "@/config/skills";
 import { listPublishedPosts } from "@/lib/blog/service";
 import { isAllowedRoute } from "@/lib/chat/prompt";
 import { buildEntityId, parseEntityId } from "@/lib/chat/protocol";
@@ -26,6 +26,13 @@ import {
 } from "@/lib/data/projects";
 import { filterSkillsByCategory, getStrongestSkills } from "@/lib/data/skills";
 import { LEAD_TOPICS } from "@/lib/lead/schema";
+import {
+  blogDocsFrom,
+  MatchKind,
+  rankDocs,
+  searchDocs,
+  type SearchHit,
+} from "@/lib/retrieval/search";
 import { AgentEntityId } from "@/types/chat";
 
 const CONTENT_DIR = "content/blog";
@@ -41,10 +48,50 @@ interface ResourceSummary {
   title: string;
   summary: string;
   rating?: number;
+  /**
+   * Only set when the result came back from an alias or a fuzzy match rather
+   * than an exact one, so the persona can say "the closest thing is…" instead
+   * of presenting a near miss as a direct hit.
+   */
+  matchedOn?: MatchKind;
 }
 
 /** Caps every search tool's result list — keeps tool-result payloads small. */
 const MAX_SEARCH_RESULTS = 5;
+
+/**
+ * Turns ranked hits back into the lean payload shape the tools return.
+ *
+ * A hit carries only an agentId, so the config entry is looked up again here;
+ * a hit whose entry has since disappeared is dropped rather than failing the
+ * whole search.
+ */
+function summarizeHits(hits: readonly SearchHit[]): ResourceSummary[] {
+  const summaries: ResourceSummary[] = [];
+
+  for (const hit of hits) {
+    const parsed = parseEntityId(hit.agentId);
+    if (!parsed) continue;
+
+    let summary: ResourceSummary | undefined;
+    if (parsed.kind === "project") {
+      const project = PROJECTS.find((p) => p.id === parsed.id);
+      if (project) summary = toProjectSummary(project);
+    } else if (parsed.kind === "experience") {
+      const experience = EXPERIENCES.find((e) => e.id === parsed.id);
+      if (experience) summary = toExperienceSummary(experience);
+    } else if (parsed.kind === "skill") {
+      const skill = SKILLS.find((s) => s.key === parsed.id);
+      if (skill) summary = toSkillSummary(skill);
+    }
+    if (!summary) continue;
+
+    if (hit.matchedOn !== MatchKind.EXACT) summary.matchedOn = hit.matchedOn;
+    summaries.push(summary);
+  }
+
+  return summaries;
+}
 
 function toProjectSummary(project: ProjectInterface): ResourceSummary {
   return {
@@ -73,8 +120,14 @@ function toSkillSummary(skill: ISkill): ResourceSummary {
 
 const searchProjectsTool = tool({
   description:
-    "Search Phong's projects. Filter by category or tech stack, or set mostRecentOnly to get just the latest (or currently ongoing) project. With no filters, returns the featured projects.",
+    "Search Phong's projects. Pass `query` for free text (a technology, a domain, anything the visitor said) — it tolerates spelling and casing. Or filter by category or tech stack, or set mostRecentOnly to get just the latest (or currently ongoing) project. With no arguments, returns the featured projects.",
   inputSchema: z.object({
+    query: z
+      .string()
+      .optional()
+      .describe(
+        "Free-text search over project names, tech stack and descriptions, e.g. 'nextjs', 'AI agents', 'lead capture'."
+      ),
     category: z
       .string()
       .optional()
@@ -94,8 +147,16 @@ const searchProjectsTool = tool({
         "Set true to return only the single most recent (or ongoing) project."
       ),
   }),
-  execute: async ({ category, techStack, mostRecentOnly }) => {
+  execute: async ({ query, category, techStack, mostRecentOnly }) => {
     if (mostRecentOnly) return [toProjectSummary(findMostRecentProject())];
+
+    // A structured filter is exact and cheap, so it wins when the model
+    // supplied one; free text falls through to the retrieval ladder.
+    if (!category && !techStack && query) {
+      return summarizeHits(
+        searchDocs(query, { kind: "project", limit: MAX_SEARCH_RESULTS })
+      );
+    }
 
     let results: ProjectInterface[];
     if (category) {
@@ -111,8 +172,14 @@ const searchProjectsTool = tool({
 
 const searchExperiencesTool = tool({
   description:
-    "Search Phong's work experience. Set currentOnly for his current company, mostRecentOnly for his latest role, or omit both for the full career timeline.",
+    "Search Phong's work experience. Pass `query` for free text (a company, a role, a technology). Set currentOnly for his current company, mostRecentOnly for his latest role, or omit everything for the full career timeline.",
   inputSchema: z.object({
+    query: z
+      .string()
+      .optional()
+      .describe(
+        "Free-text search over roles, companies, skills and achievements."
+      ),
     currentOnly: z
       .boolean()
       .optional()
@@ -122,7 +189,12 @@ const searchExperiencesTool = tool({
       .optional()
       .describe("Set true to return only the most recent role."),
   }),
-  execute: async ({ currentOnly, mostRecentOnly }) => {
+  execute: async ({ query, currentOnly, mostRecentOnly }) => {
+    if (!currentOnly && !mostRecentOnly && query) {
+      return summarizeHits(
+        searchDocs(query, { kind: "experience", limit: MAX_SEARCH_RESULTS })
+      );
+    }
     if (currentOnly) {
       const current = findCurrentCompany();
       return current ? [toExperienceSummary(current)] : [];
@@ -139,6 +211,12 @@ const searchSkillsTool = tool({
   description:
     "Search Phong's skills. Filter by category (e.g. 'frameworks', 'backend', 'ai-llm'), or omit it for his strongest skills overall. Each result includes a `rating` (1-5, where 5 = expert) — mention his proficiency level when relevant.",
   inputSchema: z.object({
+    query: z
+      .string()
+      .optional()
+      .describe(
+        "Free-text skill search, e.g. 'nextjs', 'ts', 'postgres'. Tolerates shorthand and spelling."
+      ),
     category: z
       .string()
       .optional()
@@ -146,7 +224,12 @@ const searchSkillsTool = tool({
         "Skill category key, e.g. 'languages', 'frameworks', 'ai-llm'."
       ),
   }),
-  execute: async ({ category }) => {
+  execute: async ({ query, category }) => {
+    if (!category && query) {
+      return summarizeHits(
+        searchDocs(query, { kind: "skill", limit: MAX_SEARCH_RESULTS })
+      );
+    }
     const results = category
       ? filterSkillsByCategory(category as SkillCategoryEnum)
       : getStrongestSkills();
@@ -168,16 +251,45 @@ const searchResumeTool = tool({
 
 const searchBlogTool = tool({
   description:
-    "Search Phong's blog posts. Filter by category or tag, or omit both to list the most recent posts.",
+    "Search Phong's blog posts. Pass `query` to search by topic — without it this only lists recent posts, so always pass it when the visitor asked about a subject. Or filter by category or tag.",
   inputSchema: z.object({
+    query: z
+      .string()
+      .optional()
+      .describe(
+        "Free-text topic search over post titles, tags and summaries."
+      ),
     category: z
       .string()
       .optional()
       .describe("Blog post category to filter by."),
     tag: z.string().optional().describe("A tag to filter blog posts by."),
   }),
-  execute: async ({ category, tag }) => {
+  execute: async ({ query, category, tag }) => {
     const posts = await listPublishedPosts(CONTENT_DIR, { forAgent: true });
+
+    // Without a query this tool used to return the five most recent posts
+    // whatever the visitor asked, and the model would then cite them as if
+    // they answered the question.
+    if (!category && !tag && query) {
+      const hits = rankDocs(blogDocsFrom(posts), query, MAX_SEARCH_RESULTS);
+      const bySlug = new Map(posts.map((post) => [post.slug, post]));
+      return hits.flatMap((hit) => {
+        const post = bySlug.get(hit.agentId.slice("blog:".length));
+        if (!post) return [];
+        return [
+          {
+            agentId: hit.agentId as CitationTarget,
+            title: post.title,
+            summary: post.summary,
+            ...(hit.matchedOn !== MatchKind.EXACT
+              ? { matchedOn: hit.matchedOn }
+              : {}),
+          },
+        ];
+      });
+    }
+
     const filtered = posts.filter(
       (post) =>
         (!category || post.category === category) &&
