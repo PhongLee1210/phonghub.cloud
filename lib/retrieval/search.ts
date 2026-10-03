@@ -1,13 +1,6 @@
 import { normalizeTerm, resolveAlias } from "./normalize";
 import { similarity } from "./trigram";
-import {
-  STATIC_INDEX,
-  type DocKind,
-  type SearchDoc,
-} from "./index-builder";
-
-export type { DocKind, SearchDoc };
-export { blogDocsFrom } from "./index-builder";
+import { STATIC_INDEX, type DocKind, type SearchDoc } from "./index-builder";
 
 /**
  * How a result was found. Surfaced to the model so it can say "the closest

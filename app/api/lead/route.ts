@@ -6,7 +6,15 @@ import { LeadEmail } from "@/lib/lead/email-template";
 import { checkLeadRateLimit } from "@/lib/lead/rate-limit";
 import { leadFormSchema } from "@/lib/lead/schema";
 
-const resend = new Resend(process.env.RESEND_API_KEY);
+/**
+ * Constructed per request, not at module scope: the Resend constructor throws
+ * when the key is absent, and at module scope that threw during `next build`'s
+ * page-data collection — so a build without the secret (CI, a preview box)
+ * failed outright instead of just failing to send at runtime.
+ */
+function getResend(): Resend {
+  return new Resend(process.env.RESEND_API_KEY);
+}
 
 function getClientIp(req: NextRequest): string {
   const forwardedFor = req.headers.get("x-forwarded-for");
@@ -42,7 +50,7 @@ export async function POST(req: NextRequest) {
 
   const { name, email, topic, message, source } = parsed.data;
 
-  const { error } = await resend.emails.send({
+  const { error } = await getResend().emails.send({
     from: "Portfolio <onboarding@resend.dev>",
     to: CONTACT_INFO.email,
     replyTo: email,

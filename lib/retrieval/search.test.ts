@@ -1,13 +1,13 @@
 import { describe, expect, test } from "bun:test";
 
 import { filterProjectsByTechStack } from "@/lib/data/projects";
+import { type SearchDoc } from "./index-builder";
 import {
   FUZZY_MATCH_THRESHOLD,
   MatchKind,
   passesThreshold,
   rankDocs,
   searchDocs,
-  type SearchDoc,
 } from "./search";
 
 function doc(partial: Partial<SearchDoc> & { title: string }): SearchDoc {

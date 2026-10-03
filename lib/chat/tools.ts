@@ -9,7 +9,7 @@ import { EXPERIENCES, ExperienceInterface } from "@/config/experience";
 import { PROJECTS, ProjectInterface } from "@/config/projects";
 import { RESUME_RESOURCE } from "@/config/resume";
 import { ISkill, SKILLS, SkillCategoryEnum } from "@/config/skills";
-import { listPublishedPosts } from "@/lib/blog/service";
+import { type BlogPostSummary, listPublishedPosts } from "@/lib/blog/service";
 import { isAllowedRoute } from "@/lib/chat/prompt";
 import { buildEntityId, parseEntityId } from "@/lib/chat/protocol";
 import { CitationTarget } from "@/lib/chat/resources";
@@ -31,8 +31,9 @@ import {
   MatchKind,
   rankDocs,
   searchDocs,
+  type DocKind,
   type SearchHit,
-} from "@/lib/retrieval/search";
+} from "@/lib/retrieval";
 import { AgentEntityId } from "@/types/chat";
 
 const CONTENT_DIR = "content/blog";
@@ -60,30 +61,48 @@ interface ResourceSummary {
 const MAX_SEARCH_RESULTS = 5;
 
 /**
- * Turns ranked hits back into the lean payload shape the tools return.
- *
- * A hit carries only an agentId, so the config entry is looked up again here;
- * a hit whose entry has since disappeared is dropped rather than failing the
- * whole search.
+ * A hit carries only an agentId, so its source record has to be looked up
+ * again to build the payload. Config-backed kinds resolve from the modules
+ * imported above; blog posts come from the filesystem, so the blog tool passes
+ * its own resolver over the page of posts it already loaded.
  */
-function summarizeHits(hits: readonly SearchHit[]): ResourceSummary[] {
+type SummaryResolver = (
+  kind: DocKind,
+  id: string
+) => ResourceSummary | undefined;
+
+const resolveFromConfig: SummaryResolver = (kind, id) => {
+  if (kind === "project") {
+    const project = PROJECTS.find((p) => p.id === id);
+    return project ? toProjectSummary(project) : undefined;
+  }
+  if (kind === "experience") {
+    const experience = EXPERIENCES.find((e) => e.id === id);
+    return experience ? toExperienceSummary(experience) : undefined;
+  }
+  if (kind === "skill") {
+    const skill = SKILLS.find((s) => s.key === id);
+    return skill ? toSkillSummary(skill) : undefined;
+  }
+  return undefined;
+};
+
+/**
+ * Turns ranked hits back into the lean payload shape every search tool
+ * returns. A hit whose record has since disappeared is dropped rather than
+ * failing the whole search.
+ */
+function summarizeHits(
+  hits: readonly SearchHit[],
+  resolve: SummaryResolver = resolveFromConfig
+): ResourceSummary[] {
   const summaries: ResourceSummary[] = [];
 
   for (const hit of hits) {
     const parsed = parseEntityId(hit.agentId);
     if (!parsed) continue;
 
-    let summary: ResourceSummary | undefined;
-    if (parsed.kind === "project") {
-      const project = PROJECTS.find((p) => p.id === parsed.id);
-      if (project) summary = toProjectSummary(project);
-    } else if (parsed.kind === "experience") {
-      const experience = EXPERIENCES.find((e) => e.id === parsed.id);
-      if (experience) summary = toExperienceSummary(experience);
-    } else if (parsed.kind === "skill") {
-      const skill = SKILLS.find((s) => s.key === parsed.id);
-      if (skill) summary = toSkillSummary(skill);
-    }
+    const summary = resolve(parsed.kind as DocKind, parsed.id);
     if (!summary) continue;
 
     if (hit.matchedOn !== MatchKind.EXACT) summary.matchedOn = hit.matchedOn;
@@ -91,6 +110,13 @@ function summarizeHits(hits: readonly SearchHit[]): ResourceSummary[] {
   }
 
   return summaries;
+}
+
+/** The free-text branch shared by the project, experience and skill tools. */
+function searchStatic(kind: DocKind, query: string): ResourceSummary[] {
+  return summarizeHits(
+    searchDocs(query, { kind, limit: MAX_SEARCH_RESULTS })
+  );
 }
 
 function toProjectSummary(project: ProjectInterface): ResourceSummary {
@@ -115,6 +141,14 @@ function toSkillSummary(skill: ISkill): ResourceSummary {
     title: skill.name,
     summary: skill.description,
     rating: skill.rating,
+  };
+}
+
+function toBlogSummary(post: BlogPostSummary): ResourceSummary {
+  return {
+    agentId: buildEntityId("blog", post.slug),
+    title: post.title,
+    summary: post.summary,
   };
 }
 
@@ -153,9 +187,7 @@ const searchProjectsTool = tool({
     // A structured filter is exact and cheap, so it wins when the model
     // supplied one; free text falls through to the retrieval ladder.
     if (!category && !techStack && query) {
-      return summarizeHits(
-        searchDocs(query, { kind: "project", limit: MAX_SEARCH_RESULTS })
-      );
+      return searchStatic("project", query);
     }
 
     let results: ProjectInterface[];
@@ -191,9 +223,7 @@ const searchExperiencesTool = tool({
   }),
   execute: async ({ query, currentOnly, mostRecentOnly }) => {
     if (!currentOnly && !mostRecentOnly && query) {
-      return summarizeHits(
-        searchDocs(query, { kind: "experience", limit: MAX_SEARCH_RESULTS })
-      );
+      return searchStatic("experience", query);
     }
     if (currentOnly) {
       const current = findCurrentCompany();
@@ -226,9 +256,7 @@ const searchSkillsTool = tool({
   }),
   execute: async ({ query, category }) => {
     if (!category && query) {
-      return summarizeHits(
-        searchDocs(query, { kind: "skill", limit: MAX_SEARCH_RESULTS })
-      );
+      return searchStatic("skill", query);
     }
     const results = category
       ? filterSkillsByCategory(category as SkillCategoryEnum)
@@ -274,19 +302,9 @@ const searchBlogTool = tool({
     if (!category && !tag && query) {
       const hits = rankDocs(blogDocsFrom(posts), query, MAX_SEARCH_RESULTS);
       const bySlug = new Map(posts.map((post) => [post.slug, post]));
-      return hits.flatMap((hit) => {
-        const post = bySlug.get(hit.agentId.slice("blog:".length));
-        if (!post) return [];
-        return [
-          {
-            agentId: hit.agentId as CitationTarget,
-            title: post.title,
-            summary: post.summary,
-            ...(hit.matchedOn !== MatchKind.EXACT
-              ? { matchedOn: hit.matchedOn }
-              : {}),
-          },
-        ];
+      return summarizeHits(hits, (_kind, slug) => {
+        const post = bySlug.get(slug);
+        return post ? toBlogSummary(post) : undefined;
       });
     }
 
@@ -295,11 +313,7 @@ const searchBlogTool = tool({
         (!category || post.category === category) &&
         (!tag || post.tags.includes(tag))
     );
-    return filtered.slice(0, MAX_SEARCH_RESULTS).map((post) => ({
-      agentId: buildEntityId("blog", post.slug),
-      title: post.title,
-      summary: post.summary,
-    }));
+    return filtered.slice(0, MAX_SEARCH_RESULTS).map(toBlogSummary);
   },
 });
 

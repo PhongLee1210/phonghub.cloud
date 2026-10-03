@@ -1,5 +1,5 @@
 import { BlogPostSummary, listPublishedPosts } from "@/lib/blog/service";
-import { blogDocsFrom, rankDocs } from "@/lib/retrieval/search";
+import { blogDocsFrom, rankDocs } from "@/lib/retrieval";
 import { NextRequest, NextResponse } from "next/server";
 
 /** Matches the agent's own blog search cap, so both surfaces behave alike. */
